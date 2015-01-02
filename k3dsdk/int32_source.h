@@ -37,7 +37,7 @@ public:
 		return m_output_int32;
 	}
 
-	sigc::slot<void, k3d::ihint*> make_update_int32_slot()
+	hint::slot_t make_update_int32_slot()
 	{
 		return m_output_int32.make_slot();
 	}
@@ -51,7 +51,7 @@ protected:
 			+ init_description("Output int32")
 			+ init_value(0))
 	{
-		m_output_int32.set_update_slot(sigc::mem_fun(*this, &int32_source<derived_t>::execute));
+		m_output_int32.set_update_slot(boost::bind(&int32_source<derived_t>::execute, this));
 	}
 
 private:

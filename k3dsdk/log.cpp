@@ -269,14 +269,14 @@ public:
 	signal_buf() :
 		m_stream(0)
 	{
-		connect(sigc::ptr_fun(log_cerr));
-		connect(sigc::ptr_fun(log_cache));
-    connect(sigc::ptr_fun(log_file));
+		connect(log_cerr);
+		connect(log_cache);
+		connect(log_file);
 
 #ifdef K3D_API_WIN32
-		connect(sigc::ptr_fun(log_output_debug_string));
+		connect(log_output_debug_string);
 #else // K3D_API_WIN32
-		connect(sigc::ptr_fun(log_syslog));
+		connect(log_syslog);
 #endif // !K3D_API_WIN32
 	}
 
@@ -285,7 +285,7 @@ public:
 		m_stream = &Stream;
 	}
 
-	sigc::connection connect(const sigc::slot<void, const time_t, const log_level_t, const std::string&>& Slot)
+	boost::signals2::connection connect(const log_signal_t::slot_type& Slot)
 	{
 		return m_signal.connect(Slot);
 	}
@@ -303,7 +303,7 @@ protected:
 			const time_t current_time = time(0);
 			const log_level_t current_log_level = static_cast<log_level_t>(log_level(*m_stream));
 
-			m_signal.emit(current_time, current_log_level, m_buffer);
+			m_signal(current_time, current_log_level, m_buffer);
 			m_buffer.clear();
 
 			log_level(*m_stream) = 0;
@@ -315,7 +315,7 @@ protected:
 private:
 	std::ostream* m_stream;
 	std::string m_buffer;
-	sigc::signal<void, const time_t, const log_level_t, const std::string&> m_signal;
+	log_signal_t m_signal;
 };
 
 ///////////////////////////////////////////////////////////
@@ -347,7 +347,7 @@ public:
 		return m_instance;
 	}
 
-	sigc::connection connect(const sigc::slot<void, const time_t, const log_level_t, const std::string&>& Slot)
+	boost::signals2::connection connect(const log_signal_t::slot_type& Slot)
 	{
 		return log_stream_init::buf()->connect(Slot);
 	}
@@ -457,7 +457,7 @@ void log_minimum_level(const log_level_t Level)
 /////////////////////////////////////////////////////////////////////////////
 // connect_log_message
 
-sigc::connection connect_log_message(const sigc::slot<void, const time_t, const log_level_t, const std::string&>& Slot)
+boost::signals2::connection connect_log_message(const log_signal_t::slot_type& Slot)
 {
 	return detail::log_stream::instance().connect(Slot);
 }
@@ -465,7 +465,7 @@ sigc::connection connect_log_message(const sigc::slot<void, const time_t, const 
 /////////////////////////////////////////////////////////////////////////////
 // get_log_cache
 
-void get_log_cache(const sigc::slot<void, const time_t, const log_level_t, const std::string&>& Slot)
+void get_log_cache(const log_signal_t::slot_type& Slot)
 {
 	for(size_t i = 0; i != detail::g_log_timestamp_cache.size(); ++i)
 		Slot(detail::g_log_timestamp_cache[i], detail::g_log_level_cache[i], detail::g_log_message_cache[i]);

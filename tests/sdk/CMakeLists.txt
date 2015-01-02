@@ -26,6 +26,9 @@ K3D_TEST(sdk.bitmap.conversion TARGET test-bitmap-conversion LABELS sdk)
 ADD_EXECUTABLE(test-circular-signals circular_signals.cpp)
 K3D_TEST(sdk.circular-signals TARGET test-circular-signals LABELS sdk)
 
+ADD_EXECUTABLE(test-signals signals.cpp)
+K3D_TEST(sdk.signals TARGET test-signals LABELS sdk)
+
 ADD_EXECUTABLE(test-hint-mapping hint_mapping.cpp)
 K3D_TEST(sdk.hint-mapping TARGET test-hint-mapping LABELS sdk)
 

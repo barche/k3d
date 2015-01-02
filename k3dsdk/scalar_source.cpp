@@ -31,10 +31,10 @@ scalar_source::scalar_source(iplugin_factory& Factory, idocument& Document, cons
 	base(Factory, Document),
 	m_output(init_owner(*this) + init_name("output") + init_label(_("Output")) + init_description(OutputDescription) + init_value(0.0))
 {
-	m_output.set_update_slot(sigc::mem_fun(*this, &scalar_source::execute));
+	m_output.set_update_slot(boost::bind(&scalar_source::execute, this, _1, _2));
 }
 
-sigc::slot<void, ihint*> scalar_source::make_update_value_slot()
+hint::slot_t scalar_source::make_update_value_slot()
 {
 	return m_output.make_slot();
 }

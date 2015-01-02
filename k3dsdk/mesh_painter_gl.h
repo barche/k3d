@@ -65,9 +65,9 @@ public:
 
 protected:
 	/// Returns a slot that will schedule an asynchronous screen update when called
-	sigc::slot<void, ihint*> make_async_redraw_slot()
+	hint::slot_t make_async_redraw_slot()
 	{
-		return sigc::mem_fun(*this, &mesh_painter::async_redraw);
+		return boost::bind(&mesh_painter::async_redraw, this);
 	}
 
 	/// Schedules an asynchronous screen update

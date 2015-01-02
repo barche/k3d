@@ -8,7 +8,7 @@
 
 int main(int argc, char* argv[])
 {
-	print_size(sigc::connection);
+	print_size(boost::signals2::connection);
 		
 	print_size(k3d_data(k3d::bool_t, no_name, no_signal, no_undo, local_storage, no_constraint, no_property, no_serialization));
 	print_size(k3d_data(k3d::bool_t, no_name, change_signal, no_undo, local_storage, no_constraint, no_property, no_serialization));

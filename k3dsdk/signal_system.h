@@ -20,7 +20,16 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include <sigc++/sigc++.h>
+
+#include <boost/signals2.hpp>
+
+namespace k3d
+{
+
+// Typedefs for some common signals
+typedef boost::signals2::signal<void()> void_signal_t;
+
+} // namespace k3d
 
 #endif // !K3DSDK_SIGNAL_SYSTEM_H
 

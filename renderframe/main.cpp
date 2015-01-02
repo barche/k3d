@@ -201,7 +201,7 @@ bool exec_command(const element& XMLCommand, const k3d::filesystem::path& FrameD
 		std::copy(arguments.begin(), arguments.end(), std::ostream_iterator<k3d::string_t>(k3d::log(), " "));
 		k3d::log() << std::endl;
 
-		Glib::spawn_sync(working_directory, arguments, environment, Glib::SPAWN_SEARCH_PATH, sigc::slot<void>(), &standard_output, &standard_error, &exit_status);
+		Glib::spawn_sync(working_directory, arguments, environment, Glib::SPAWN_SEARCH_PATH, k3d::void_signal_t::slot_type(), &standard_output, &standard_error, &exit_status);
 
 		if(!standard_output.empty())
 			k3d::log() << info << "stdout: " << standard_output << std::endl;

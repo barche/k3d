@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
 	const k3d::filesystem::path output_path = k3d::filesystem::native_path(k3d::ustring::from_utf8(argv[2]));
 
 	k3d::plugin_factory_collection plugins;
-	plugins.connect_message_signal(sigc::ptr_fun(plugin_message_handler));
+	plugins.connect_message_signal(plugin_message_handler);
 	plugins.load_module(module_path, k3d::plugin_factory_collection::IGNORE_PROXIES);
 
 	const k3d::iplugin_factory_collection::factories_t factories = plugins.factories();

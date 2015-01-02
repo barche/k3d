@@ -49,7 +49,7 @@ void property_collection::register_property(iproperty& Property)
 {
 	m_properties.erase(std::remove(m_properties.begin(), m_properties.end(), &Property), m_properties.end());
 	m_properties.push_back(&Property);
-	m_changed_signal.emit(0);
+	m_changed_signal(0);
 }
 
 void property_collection::register_properties(const properties_t& Properties)
@@ -61,13 +61,13 @@ void property_collection::register_properties(const properties_t& Properties)
 	}
 	m_properties.erase(std::remove(m_properties.begin(), m_properties.end(), static_cast<iproperty*>(0)), m_properties.end());
 
-	m_changed_signal.emit(0);
+	m_changed_signal(0);
 }
 
 void property_collection::unregister_property(iproperty& Property)
 {
 	m_properties.erase(std::remove(m_properties.begin(), m_properties.end(), &Property), m_properties.end());
-	m_changed_signal.emit(0);
+	m_changed_signal(0);
 }
 
 void property_collection::unregister_properties(const properties_t& Properties)
@@ -75,7 +75,7 @@ void property_collection::unregister_properties(const properties_t& Properties)
 	for(properties_t::const_iterator property = Properties.begin(); property != Properties.end(); ++property)
 		m_properties.erase(std::remove(m_properties.begin(), m_properties.end(), *property), m_properties.end());
 
-	m_changed_signal.emit(0);
+	m_changed_signal(0);
 }
 
 const iproperty_collection::properties_t& property_collection::properties()
@@ -83,7 +83,7 @@ const iproperty_collection::properties_t& property_collection::properties()
 	return m_properties;
 }
 
-sigc::connection property_collection::connect_properties_changed_signal(const sigc::slot<void, ihint*>& Slot)
+boost::signals2::connection property_collection::connect_properties_changed_signal(const hint::slot_t& Slot)
 {
 	return m_changed_signal.connect(Slot);
 }

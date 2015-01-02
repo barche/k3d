@@ -61,9 +61,9 @@ protected:
 	}
 	
 	/// Slot to call when the file needs to be written
-	sigc::slot<void, ihint*> make_write_file_slot()
+	hint::slot_t make_write_file_slot()
 	{
-		return sigc::mem_fun(*this, &mesh_writer::write_file);
+		return boost::bind(&mesh_writer::write_file, this);
 	}
 
 	/// Stores the input mesh.

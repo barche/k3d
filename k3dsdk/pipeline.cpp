@@ -79,7 +79,7 @@ public:
 					dependency->second->property_changed_signal().connect(
 						signal::make_loop_safe_slot(
 							dependency->first->property_changed_signal()));
-				m_delete_connections[dependency->second] = dependency->second->property_deleted_signal().connect(sigc::bind(sigc::mem_fun(*this, &implementation::on_property_deleted), dependency->second));
+				m_delete_connections[dependency->second] = dependency->second->property_deleted_signal().connect(boost::bind(&implementation::on_property_deleted, this, dependency->second));
 			}
 
 			dependency->first->property_set_dependency(dependency->second);
@@ -90,11 +90,11 @@ public:
 			state_recorder->current_change_set()->record_old_state(new set_dependencies_container(*this, old_dependencies));
 
 		// Notify observers that the pipeline has changed ...
-		changed_signal.emit(Dependencies);
+		changed_signal(Dependencies);
 
 		// Synthesize change notifications for every property whose parent was set ...
 		for(dependencies_t::iterator dependency = Dependencies.begin(); dependency != Dependencies.end(); ++dependency)
-			dependency->first->property_changed_signal().emit(Hint);
+			dependency->first->property_changed_signal()(Hint);
 	}
 
 	void clear()
@@ -152,7 +152,7 @@ public:
 		{
 			result = dependencies.insert(std::make_pair(Property, static_cast<iproperty*>(0))).first;
 			m_delete_connections[Property].disconnect();
-			m_delete_connections[Property] = Property->property_deleted_signal().connect(sigc::bind(sigc::mem_fun(*this, &implementation::on_property_deleted), Property));
+			m_delete_connections[Property] = Property->property_deleted_signal().connect(boost::bind(&implementation::on_property_deleted, this, Property));
 		}
 
 		return result;
@@ -213,7 +213,7 @@ public:
 	/// Stores the set of all property dependencies
 	ipipeline::dependencies_t dependencies;
 	/// Defines storage for per-property signal connections
-	typedef std::map<iproperty*, sigc::connection> connections_t;
+	typedef std::map<iproperty*, boost::signals2::connection> connections_t;
 	/// Stores connections between property change signals (so a change to a source property is automatically passed-along to its dependent properties)
 	connections_t m_change_connections;
 	/// Stores connections to property delete signals (so we can clean-up when a property goes away)

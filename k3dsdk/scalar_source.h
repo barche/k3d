@@ -40,7 +40,7 @@ public:
 	scalar_source(iplugin_factory& Factory, idocument& Document, const char* const OutputDescription);
 
 	/// Returns a slot that should be connected to input properties to signal that the output value has changed.
-	sigc::slot<void, ihint*> make_update_value_slot();
+	hint::slot_t make_update_value_slot();
 
 private:
 	/// Stores the output value

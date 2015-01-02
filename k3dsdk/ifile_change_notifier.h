@@ -55,7 +55,7 @@ public:
 	* location.  Returns a nonzero watch identifier that can be used to cancel the watch later-on,
 	* or 0 if there is an error.
 	*/
-	virtual uint_t watch_file(const filesystem::path& Path, const sigc::slot<void>& Slot) = 0;
+	virtual uint_t watch_file(const filesystem::path& Path, const k3d::void_signal_t::slot_type& Slot) = 0;
 
 	/// Stop watching the given path.
 	virtual void unwatch_file(const uint_t WatchID) = 0;

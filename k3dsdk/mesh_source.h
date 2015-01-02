@@ -47,7 +47,7 @@ public:
 	}
 
 	/// Returns a slot that should be connected to input properties to signal that the output has changed
-	sigc::slot<void, ihint*> make_update_mesh_slot()
+	hint::slot_t make_update_mesh_slot()
 	{
 		return m_output_mesh.make_slot();
 	}
@@ -57,7 +57,7 @@ protected:
 		base_t(Factory, Document),
 		m_output_mesh(init_owner(*this) + init_name("output_mesh") + init_label(_("Output Mesh")) + init_description("Output mesh"))
 	{
-		m_output_mesh.set_update_slot(sigc::mem_fun(*this, &mesh_source<base_t>::execute));
+		m_output_mesh.set_update_slot(boost::bind(&mesh_source<base_t>::execute, this));
 	}
 
 	/// Stores the output mesh, which is created / updated on-demand.

@@ -45,13 +45,13 @@ public:
 	void unregister_property(iproperty& Property);
 	void unregister_properties(const properties_t& Properties);
 	const properties_t& properties();
-	sigc::connection connect_properties_changed_signal(const sigc::slot<void, ihint*>& Slot);
+	boost::signals2::connection connect_properties_changed_signal(const hint::slot_t& Slot);
 
 private:
 	/// Contains the collection of all properties
 	properties_t m_properties;
 	/// Change-notification signal for the collection
-	sigc::signal<void, ihint*> m_changed_signal;
+	boost::signals2::signal<void(ihint*)> m_changed_signal;
 };
 
 } // namespace k3d

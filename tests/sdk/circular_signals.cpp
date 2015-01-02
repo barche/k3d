@@ -40,14 +40,14 @@ private:
 
 unsigned long break_cycles::emissions = 0;
 
-typedef sigc::signal0<void, break_cycles> signal_type;
+typedef boost::signals2::signal<void(), break_cycles> signal_type;
 
 void run_test(signal_type& Signal)
 {
 	static unsigned long test_number = 0;
 
 	std::cerr << "running test " << ++test_number << " " << std::flush;
-	Signal.emit();
+	Signal();
 	std::cerr << std::endl;
 }
 
@@ -59,10 +59,10 @@ int main(int argc, char* argv[])
 		signal_type A;
 		signal_type B;
 
-		A.connect(sigc::bind(sigc::ptr_fun(on_signal), "A"));
+		A.connect(boost::bind(on_signal, "A"));
 		A.connect(k3d::signal::make_loop_safe_slot(B));
 
-		B.connect(sigc::bind(sigc::ptr_fun(on_signal), "B"));
+		B.connect(boost::bind(on_signal, "B"));
 		B.connect(k3d::signal::make_loop_safe_slot(A));
 
 		run_test(A);
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
 
 		// Test C <--> C
 		signal_type C;
-		C.connect(sigc::bind(sigc::ptr_fun(on_signal), "C"));
+		C.connect(boost::bind(on_signal, "C"));
 		C.connect(k3d::signal::make_loop_safe_slot(C));
 
 		run_test(C);
@@ -80,13 +80,13 @@ int main(int argc, char* argv[])
 		signal_type E;
 		signal_type F;
 
-		D.connect(sigc::bind(sigc::ptr_fun(on_signal), "D"));
+		D.connect(boost::bind(on_signal, "D"));
 		D.connect(k3d::signal::make_loop_safe_slot(E));
 
-		E.connect(sigc::bind(sigc::ptr_fun(on_signal), "E"));
+		E.connect(boost::bind(on_signal, "E"));
 		E.connect(k3d::signal::make_loop_safe_slot(F));
 
-		F.connect(sigc::bind(sigc::ptr_fun(on_signal), "F"));
+		F.connect(boost::bind(on_signal, "F"));
 		F.connect(k3d::signal::make_loop_safe_slot(E));
 
 		run_test(D);
@@ -102,17 +102,17 @@ int main(int argc, char* argv[])
 		signal_type I;
 		signal_type J;
 
-		G.connect(sigc::bind(sigc::ptr_fun(on_signal), "G"));
+		G.connect(boost::bind(on_signal, "G"));
 		G.connect(k3d::signal::make_loop_safe_slot(H));
 		G.connect(k3d::signal::make_loop_safe_slot(J));
 
-		H.connect(sigc::bind(sigc::ptr_fun(on_signal), "H"));
+		H.connect(boost::bind(on_signal, "H"));
 		H.connect(k3d::signal::make_loop_safe_slot(I));
 
-		I.connect(sigc::bind(sigc::ptr_fun(on_signal), "I"));
+		I.connect(boost::bind(on_signal, "I"));
 		I.connect(k3d::signal::make_loop_safe_slot(H));
 
-		J.connect(sigc::bind(sigc::ptr_fun(on_signal), "J"));
+		J.connect(boost::bind(on_signal, "J"));
 
 		run_test(G);
 		run_test(H);

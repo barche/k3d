@@ -52,18 +52,20 @@ public:
 	typedef typename boost::remove_pointer<pointer_t>::type non_pointer_t;
 	typedef pointer_demand_storage<pointer_t, signal_policy_t> this_t;
 	typedef std::vector<ihint*> pending_hints_t;
+	typedef boost::signals2::signal<void(const pending_hints_t&, non_pointer_t&)> update_signal_t;
 
 	/// Set the slot that will be called to bring the underlying data up-to-date
-	void set_update_slot(const sigc::slot<void, const pending_hints_t&, non_pointer_t&>& Slot)
+	void set_update_slot(const typename update_signal_t::slot_type& Slot)
 	{
-		m_update_slot = Slot;
+		m_update_signal.disconnect_all_slots();
+		m_update_signal.connect(Slot);
 		update();
 	}
 
 	/// Returns a slot that will invoke the update() method
-	sigc::slot<void, ihint*> make_slot()
+	hint::slot_t make_slot()
 	{
-		return sigc::mem_fun(*this, &this_t::update);
+		return boost::bind(&this_t::update, this, _1);
 	}
 
 	/// Store an object as the new value, taking control of its lifetime
@@ -112,7 +114,7 @@ public:
 
 			// Create a temporary copy of pending hints in-case we are updated while executing ...
 			const pending_hints_t pending_hints(m_pending_hints);
-			m_update_slot(pending_hints, *m_value);
+			m_update_signal(pending_hints, *m_value);
 			
 			std::for_each(m_pending_hints.begin(), m_pending_hints.end(), delete_object());
 			m_pending_hints.clear();
@@ -140,7 +142,7 @@ private:
 	/// Storage for this policy's value
 	boost::scoped_ptr<non_pointer_t> m_value;
 	/// Stores a slot that will be called to bring this policy's value up-to-date
-	sigc::slot<void, const pending_hints_t&, non_pointer_t&> m_update_slot;
+	update_signal_t m_update_signal;
 	/// Stores a collection of pending hints to be updated
 	pending_hints_t m_pending_hints;
 	/// Used to prevent problems with recursion while executing

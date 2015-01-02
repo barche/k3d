@@ -37,7 +37,7 @@ public:
 		return m_output_double;
 	}
 
-	sigc::slot<void, ihint*> make_update_double_slot()
+	hint::slot_t make_update_double_slot()
 	{
 		return m_output_double.make_slot();
 	}
@@ -51,7 +51,7 @@ protected:
 			+ init_description("Output double")
 			+ init_value(0.0))
 	{
-		m_output_double.set_update_slot(sigc::mem_fun(*this, &double_source<derived_t>::execute));
+		m_output_double.set_update_slot(boost::bind(&double_source<derived_t>::execute, this));
 	}
 
 private:

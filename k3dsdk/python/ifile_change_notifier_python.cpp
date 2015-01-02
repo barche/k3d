@@ -71,7 +71,7 @@ private:
 
 static uint_t watch_file(iunknown_wrapper& Self, const filesystem::path& Path, file_change_receiver& Receiver)
 {
-	return Self.wrapped<k3d::ifile_change_notifier>().watch_file(Path, sigc::bind(sigc::mem_fun(Receiver, &file_change_receiver::file_changed), Path));
+	return Self.wrapped<k3d::ifile_change_notifier>().watch_file(Path, boost::bind(&file_change_receiver::file_changed, Receiver, Path));
 }
 
 static void unwatch_file(iunknown_wrapper& Self, const uint_t WatchID)

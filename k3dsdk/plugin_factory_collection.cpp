@@ -86,8 +86,6 @@ private:
 	const std::string m_name;
 };
 
-typedef sigc::signal<void, const std::string&> message_signal_t;
-
 /////////////////////////////////////////////////////////////////////////////
 // plugin_registry
 
@@ -96,7 +94,7 @@ class plugin_registry :
 	public iplugin_registry
 {
 public:
-	plugin_registry(message_signal_t& MessageSignal, iplugin_factory_collection::factories_t& Factories) :
+	plugin_registry(plugin_factory_collection::message_signal_t& MessageSignal, iplugin_factory_collection::factories_t& Factories) :
 		m_message_signal(MessageSignal),
 		m_factories(Factories)
 	{
@@ -104,7 +102,7 @@ public:
 
 	void register_factory(iplugin_factory& Factory)
 	{
-		m_message_signal.emit(string_cast(boost::format(_("Loading plugin %1%")) % Factory.name()));
+		m_message_signal(string_cast(boost::format(_("Loading plugin %1%")) % Factory.name()));
 
 		// Ensure we don't have any duplicate class IDs ...
 		if(std::count_if(m_factories.begin(), m_factories.end(), same_factory_id(Factory.factory_id())))
@@ -125,7 +123,7 @@ public:
 	}
 
 private:
-	message_signal_t& m_message_signal;
+	plugin_factory_collection::message_signal_t& m_message_signal;
 	iplugin_factory_collection::factories_t& m_factories;
 };
 
@@ -150,7 +148,7 @@ iplugin_factory* load_proxied_factory(const uuid& FactoryID)
 	// It's a K-3D module, all-right - give it a chance to register its plugins
 	log() << info << "Loading plugin module " << proxied_modules[FactoryID].native_console_string() << std::endl;
 
-	message_signal_t message_signal;
+	plugin_factory_collection::message_signal_t message_signal;
 	iplugin_factory_collection::factories_t factories;
 	plugin_registry registry(message_signal, factories);
 	register_plugins(registry);
@@ -381,7 +379,7 @@ struct plugin_factory_collection::implementation
 {
 	bool proxy_module(const filesystem::path& Path, const filesystem::path& ProxyPath)
 	{
-		m_message_signal.emit(string_cast(boost::format(_("Proxying plugin module %1%")) % Path.native_utf8_string().raw()));
+		m_message_signal(string_cast(boost::format(_("Proxying plugin module %1%")) % Path.native_utf8_string().raw()));
 
 		try
 		{
@@ -406,7 +404,7 @@ struct plugin_factory_collection::implementation
 					continue;
 
 				const std::string factory_name = xml::attribute_text(*xml_plugin, "name");
-				m_message_signal.emit(string_cast(boost::format(_("Proxying plugin %1%")) % factory_name));
+				m_message_signal(string_cast(boost::format(_("Proxying plugin %1%")) % factory_name));
 
 				const uuid plugin_factory_id = xml::attribute_value<uuid>(*xml_plugin, "factory_id", uuid::null());
 				if(plugin_factory_id == uuid::null())
@@ -500,7 +498,7 @@ struct plugin_factory_collection::implementation
 	}
 
 	/// Stores a signal that will be emitted to display loading progress
-	detail::message_signal_t m_message_signal;
+	message_signal_t m_message_signal;
 	/// Stores the set of available plugin factories
 	factories_t m_factories;
 };
@@ -518,7 +516,7 @@ plugin_factory_collection::~plugin_factory_collection()
 	delete m_implementation;
 }
 
-sigc::connection plugin_factory_collection::connect_message_signal(const sigc::slot<void, const std::string&>& Slot)
+boost::signals2::connection plugin_factory_collection::connect_message_signal(const message_signal_t::slot_type& Slot)
 {
 	return m_implementation->m_message_signal.connect(Slot);
 }
@@ -527,7 +525,7 @@ void plugin_factory_collection::bind_module(const std::string& ModuleName, regis
 {
 	return_if_fail(RegisterPlugins);
 
-	m_implementation->m_message_signal.emit(string_cast(boost::format(_("Binding plugin module %1%")) % ModuleName));
+	m_implementation->m_message_signal(string_cast(boost::format(_("Binding plugin module %1%")) % ModuleName));
 
 	detail::plugin_registry registry(m_implementation->m_message_signal, m_implementation->m_factories);
 	RegisterPlugins(registry);
@@ -548,7 +546,7 @@ void plugin_factory_collection::load_module(const filesystem::path& Path, const 
 	}
 
 	// OK, just load the module ...
-	m_implementation->m_message_signal.emit(string_cast(boost::format(_("Loading plugin module %1%")) % Path.native_utf8_string().raw()));
+	m_implementation->m_message_signal(string_cast(boost::format(_("Loading plugin module %1%")) % Path.native_utf8_string().raw()));
 
 	register_plugins_entry_point register_plugins = 0;
 	os_load_module(Path, register_plugins);
@@ -562,7 +560,7 @@ void plugin_factory_collection::load_module(const filesystem::path& Path, const 
 
 void plugin_factory_collection::load_modules(const filesystem::path& Path, const bool Recursive, const load_proxy_t LoadProxies)
 {
-	m_implementation->m_message_signal.emit(string_cast(boost::format(_("Searching for plugins in %1%")) % Path.native_utf8_string().raw()));
+	m_implementation->m_message_signal(string_cast(boost::format(_("Searching for plugins in %1%")) % Path.native_utf8_string().raw()));
 
 	// Create a sorted list of files in this directory ...
 	std::vector<filesystem::path> files;

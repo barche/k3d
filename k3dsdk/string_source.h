@@ -37,7 +37,7 @@ public:
 		return m_output_string;
 	}
 
-	sigc::slot<void, ihint*> make_update_string_slot()
+	hint::slot_t make_update_string_slot()
 	{
 		return m_output_string.make_slot();
 	}
@@ -51,7 +51,7 @@ protected:
 			+ init_description("Output string")
 			+ init_value(string_t()))
 	{
-		m_output_string.set_update_slot(sigc::mem_fun(*this, &string_source<derived_t>::execute));
+		m_output_string.set_update_slot(boost::bind(&string_source<derived_t>::execute, this));
 	}
 
 private:

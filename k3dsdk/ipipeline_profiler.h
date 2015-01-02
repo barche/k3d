@@ -38,6 +38,7 @@ class ipipeline_profiler :
 	public virtual iunknown
 {
 public:
+	typedef boost::signals2::signal<void(inode&, const string_t&, double)> node_execution_signal_t;
 	/// Called by a node to indicate that it has begun processing the given task.  Note: it is critical that every call to start_execution() is balanced with a call to finish_execution().
 	virtual void start_execution(inode& Node, const string_t& Task) = 0;
 	/// Called by a node to indicate that it has finished processing the given task.  Note: it is critical that every call to finish_execution() matches a call to start_execution().
@@ -47,7 +48,7 @@ public:
 	virtual void add_timing_entry(inode& Node, const string_t& Task, const double TimingValue) = 0;
 	
 	/// Connects a slot that will be called to report the time in seconds that a node spent processing a given task
-	virtual sigc::connection connect_node_execution_signal(const sigc::slot<void, inode&, const string_t&, double>& Slot) = 0;
+	virtual boost::signals2::connection connect_node_execution_signal(const node_execution_signal_t::slot_type& Slot) = 0;
 
 	/// RAII helper class that records profile information for the current scope with return- and exception-safety
 	class profile

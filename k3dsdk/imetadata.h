@@ -52,7 +52,7 @@ public:
 	virtual void erase_metadata_value(const string_t& Name) = 0;
 
 	/// Connects a slot to a signal that will be emitted whenever the metadata contents change
-	virtual sigc::connection connect_metadata_changed_signal(const sigc::slot<void>& Slot) = 0;
+	virtual boost::signals2::connection connect_metadata_changed_signal(const k3d::void_signal_t::slot_type& Slot) = 0;
 
 protected:
 	imetadata() {}

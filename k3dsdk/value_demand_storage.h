@@ -20,6 +20,8 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+#include <k3dsdk/signal_system.h>
+
 #include <boost/scoped_ptr.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits.hpp>
@@ -44,18 +46,20 @@ class value_demand_storage :
 public:
 	typedef value_demand_storage<value_t, signal_policy_t> this_t;
 	typedef std::vector<ihint*> pending_hints_t;
+	typedef boost::signals2::signal<void(const pending_hints_t&, value_t&)> update_signal_t;
 
 	/// Set the slot that will be called to bring the underlying data up-to-date
-	void set_update_slot(const sigc::slot<void, const pending_hints_t&, value_t&>& Slot)
+	void set_update_slot(const typename update_signal_t::slot_type& Slot)
 	{
-		m_update_slot = Slot;
+		m_update_signal.disconnect_all_slots();
+		m_update_signal.connect(Slot);
 		update();
 	}
 
 	/// Returns a slot that will invoke the update() method
-	sigc::slot<void, ihint*> make_slot()
+	hint::slot_t make_slot()
 	{
-		return sigc::mem_fun(*this, &this_t::update);
+		return boost::bind(&this_t::update, this, _1);
 	}
 
 	/// Schedule an update for the value the next time it's read
@@ -72,7 +76,7 @@ public:
 		{
 			// Create a temporary copy of pending hints in-case we are updated while executing ...
 			const pending_hints_t pending_hints(m_pending_hints);
-			m_update_slot(pending_hints, m_value);
+			m_update_signal(pending_hints, m_value);
 			
 			std::for_each(m_pending_hints.begin(), m_pending_hints.end(), delete_object());
 			m_pending_hints.clear();
@@ -98,7 +102,7 @@ private:
 	/// Storage for this policy's value
 	value_t m_value;
 	/// Stores a slot that will be called to bring this policy's value up-to-date
-	sigc::slot<void, const pending_hints_t&, value_t&> m_update_slot;
+	update_signal_t m_update_signal;
 	/// Stores a collection of pending hints to be updated
 	pending_hints_t m_pending_hints;
 };

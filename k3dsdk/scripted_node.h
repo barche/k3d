@@ -47,7 +47,7 @@ public:
 		m_user_property_changed_signal(*this),
 		m_executing(false)
 	{
-		m_script.changed_signal().connect(sigc::mem_fun(*this, &scripted_node::on_script_changed));
+		m_script.changed_signal().connect(boost::bind(&scripted_node::on_script_changed, this));
 	}
 
 protected:
@@ -56,7 +56,7 @@ protected:
 		m_script.set_value(Script);
 	}
 
-	void connect_script_changed_signal(const sigc::slot<void, ihint*>& Slot)
+	void connect_script_changed_signal(const hint::slot_t& Slot)
 	{
 		m_script.changed_signal().connect(Slot);
 		m_user_property_changed_signal.connect(Slot);

@@ -42,11 +42,11 @@ public:
 	metadata_t get_metadata();
 	const string_t get_metadata_value(const string_t& Name);
 	void erase_metadata_value(const string_t& Name);
-	sigc::connection connect_metadata_changed_signal(const sigc::slot<void>& Slot);
+	boost::signals2::connection connect_metadata_changed_signal(const k3d::void_signal_t::slot_type& Slot);
 
 private:
 	metadata_t m_storage;
-	sigc::signal<void> m_changed_signal;
+	boost::signals2::signal<void()> m_changed_signal;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////

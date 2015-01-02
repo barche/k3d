@@ -32,7 +32,7 @@
 #include <k3dsdk/iscripted_action.h>
 #include <k3dsdk/plugin.h>
 #include <k3dsdk/result.h>
-#include <k3dsdk/signal_accumulators.h>
+#include <k3dsdk/signal_combiners.h>
 #include <k3dsdk/state_change_set.h>
 
 #include <fstream>
@@ -54,6 +54,10 @@ class application_implementation::implementation :
 	public k3d::iapplication
 {
 public:
+
+	typedef boost::signals2::signal< void () > close_signal_t;
+	typedef boost::signals2::signal<void(idocument&)> close_document_signal_t;
+
 	implementation()
 	{
 	}
@@ -61,7 +65,7 @@ public:
 	~implementation()
 	{
 		// Notify observers that we're going away ...
-		m_close_signal.emit();
+		m_close_signal();
 
 		// Delete any remaining documents ...
 		for(document_collection_t::iterator document = m_documents.begin(); document != m_documents.end(); document = m_documents.begin())
@@ -70,7 +74,7 @@ public:
 
 	bool exit()
 	{
-		return m_exit_signal.emit();
+		return m_exit_signal();
 	}
 
 	k3d::idocument* create_document()
@@ -114,7 +118,7 @@ public:
 	void close_document(k3d::idocument& Document)
 	{
 		// Notify observers that the document will be closed
-		m_close_document_signal.emit(Document);
+		m_close_document_signal(Document);
 
 		// Shut-down any auto-start plugins associated with this document ...
 		const auto_start_plugins_t::iterator plugin_begin = m_auto_start_plugins.lower_bound(&Document);
@@ -152,12 +156,12 @@ public:
 		return m_startup_message_signal;
 	}
 
-	sigc::connection connect_close_signal(const sigc::slot<void>& Slot)
+	boost::signals2::connection connect_close_signal(const close_signal_t::slot_type& Slot)
 	{
 		return m_close_signal.connect(Slot);
 	}
 
-	sigc::connection connect_close_document_signal(const sigc::slot<void, idocument&>& Slot)
+	boost::signals2::connection connect_close_document_signal(const close_document_signal_t::slot_type& Slot)
 	{
 		return m_close_document_signal.connect(Slot);
 	}
@@ -171,11 +175,11 @@ public:
 	/// Signal emitted to display progress during application startup
 	startup_message_signal_t m_startup_message_signal;
 	/// Signal emitted when the application is closing
-	sigc::signal<void> m_close_signal;
+	close_signal_t m_close_signal;
 	/// Signal emitted when an open document is closed
-	sigc::signal<void, idocument&> m_close_document_signal;
+	close_document_signal_t m_close_document_signal;
 	/// Signal emitted to request application close
-	sigc::signal0<bool, signal::cancelable> m_exit_signal;
+	application_implementation::exit_signal_t m_exit_signal;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -196,7 +200,7 @@ iapplication& application_implementation::interface()
 	return *m_implementation;
 }
 
-sigc::connection application_implementation::connect_exit_signal(const sigc::slot<bool>& Slot)
+boost::signals2::connection application_implementation::connect_exit_signal(const exit_signal_t::slot_type& Slot)
 {
 	return m_implementation->m_exit_signal.connect(Slot);
 }

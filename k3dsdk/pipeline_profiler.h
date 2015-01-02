@@ -42,7 +42,7 @@ public:
 	void finish_execution(inode& Node, const string_t& Task);
 	void add_timing_entry(inode& Node, const string_t& Task, const double TimingValue);
 	
-	sigc::connection connect_node_execution_signal(const sigc::slot<void, inode&, const string_t&, double>& Slot);
+	boost::signals2::connection connect_node_execution_signal(const node_execution_signal_t::slot_type& Slot);
 
 private:
 	class implementation;

@@ -48,7 +48,7 @@ public:
 		return m_input_bitmap;
 	}
 
-	sigc::slot<void, ihint*> make_update_bitmap_slot()
+	hint::slot_t make_update_bitmap_slot()
 	{
 		return m_output_bitmap.make_slot();
 	}
@@ -67,7 +67,7 @@ protected:
 			+ init_label(_("Output Bitmap"))
 			+ init_description(_("Output bitmap")))
 	{
-		m_output_bitmap.set_update_slot(sigc::mem_fun(*this, &bitmap_modifier<derived_t>::execute));
+		m_output_bitmap.set_update_slot(boost::bind(&bitmap_modifier<derived_t>::execute, this));
 
 		m_input_bitmap.changed_signal().connect(hint::converter<
 			hint::convert<hint::bitmap_dimensions_changed, hint::unchanged,

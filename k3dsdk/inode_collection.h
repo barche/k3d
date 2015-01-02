@@ -51,13 +51,13 @@ public:
 	virtual void remove_nodes(const nodes_t& Objects) = 0;
 
 	/// Defines a signal that will be emitted whenever nodes are added to the collection
-	typedef sigc::signal<void, const nodes_t&> add_nodes_signal_t;
+  typedef boost::signals2::signal<void(const nodes_t&)> add_nodes_signal_t;
 	virtual add_nodes_signal_t& add_nodes_signal() = 0;
 	/// Defines a signal that will be emitted whenever nodes are removed from the collection
-	typedef sigc::signal<void, const nodes_t&> remove_nodes_signal_t;
+  typedef boost::signals2::signal<void(const nodes_t&)> remove_nodes_signal_t;
 	virtual remove_nodes_signal_t& remove_nodes_signal() = 0;
 	/// Defines a signal that will be emitted whenever an node is renamed
-	typedef sigc::signal<void, inode*> rename_node_signal_t;
+  typedef boost::signals2::signal<void(inode*)> rename_node_signal_t;
 	virtual rename_node_signal_t& rename_node_signal() = 0;
 
 protected:

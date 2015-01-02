@@ -57,10 +57,10 @@ public:
 	/// Returns a reference to the object that owns the property (if any)
 	virtual inode* property_node() = 0;
 	/// Defines a signal that will be emitted if the property value changes.  The signal includes a pointer to an optional "hint" object that may provide additional information about what changed.
-	typedef sigc::signal<void, ihint*> changed_signal_t;
+  typedef boost::signals2::signal<void(ihint*)> changed_signal_t;
 	virtual changed_signal_t& property_changed_signal() = 0;
 	/// Defines a signal that will be emitted when the property is destroyed
-	typedef sigc::signal<void> deleted_signal_t;
+  typedef boost::signals2::signal<void()> deleted_signal_t;
 	virtual deleted_signal_t& property_deleted_signal() = 0;
 
 	/// Returns this property's pipeline dependency, if any.  Note: there may be dependency cycles, don't use this to perform lookups directly, use k3d::property_lookup() instead

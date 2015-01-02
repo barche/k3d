@@ -760,7 +760,7 @@ int k3d_main(std::vector<k3d::string_t> raw_arguments)
 
 		// Handle creation of the required user interface plugin ...
 		k3d::plugin_factory_collection ui_plugins;
-		ui_plugins.connect_message_signal(sigc::ptr_fun(startup_message_handler));
+		ui_plugins.connect_message_signal(startup_message_handler);
 		create_user_interface(ui_plugins, quit, error);
 		if(quit)
 			return error ? 1 : 0;
@@ -792,7 +792,7 @@ int k3d_main(std::vector<k3d::string_t> raw_arguments)
 
 		// Load plugins ...
 		k3d::plugin_factory_collection plugins;
-		plugins.connect_message_signal(sigc::ptr_fun(startup_message_handler));
+		plugins.connect_message_signal(startup_message_handler);
 		load_modules(plugins, quit, error);
 		if(quit)
 			return error ? 1 : 0;
@@ -808,7 +808,7 @@ int k3d_main(std::vector<k3d::string_t> raw_arguments)
 		k3d::application_implementation application;
 
 		// We want to be notified when the user requests a shutdown ...
-		application.connect_exit_signal(sigc::ptr_fun(exit_request_handler));
+		application.connect_exit_signal(exit_request_handler);
 
 		// Register it with the library as the global application object ...
 		k3d::register_application(application.interface());

@@ -42,8 +42,8 @@ node::node(iplugin_factory& Factory, idocument& Document) :
 	m_document(Document),
 	m_name(init_owner(*this) + init_name("name") + init_label(_("Name")) + init_description(_("Assign a human-readable name to identify this node.")) + init_value<std::string>(""))
 {
-	m_deleted_signal.connect(sigc::mem_fun(*this, &node::on_deleted));
-	m_name.changed_signal().connect(sigc::hide(m_name_changed_signal.make_slot()));
+	m_deleted_signal.connect(boost::bind(&node::on_deleted, this));
+	m_name.changed_signal().connect(boost::bind(boost::ref(m_name_changed_signal)));
 }
 
 node::~node()
@@ -65,7 +65,7 @@ void node::on_deleted()
 	// Signal that our properties are going away ...
 	const property_collection::properties_t props = properties();
 	for(property_collection::properties_t::const_iterator property = props.begin(); property != props.end(); ++property)
-		(**property).property_deleted_signal().emit();
+		(**property).property_deleted_signal()();
 }
 
 iplugin_factory& node::factory()

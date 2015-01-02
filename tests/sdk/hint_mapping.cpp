@@ -27,13 +27,13 @@ int main(int argc, char* arv[])
 	k3d_data(k3d::bitmap*, no_name, change_signal, no_undo, pointer_demand_storage, no_constraint, no_property, no_serialization) output_bitmap(init_value<k3d::bitmap*>(0));
 
 	// We want to print to the console whenever a signal is emitted ...
-	input_bitmap.changed_signal().connect(sigc::bind(sigc::ptr_fun(signal_changed), "input changed"));
-	border.changed_signal().connect(sigc::bind(sigc::ptr_fun(signal_changed), "border changed"));
-	color.changed_signal().connect(sigc::bind(sigc::ptr_fun(signal_changed), "color changed"));
-	output_bitmap.changed_signal().connect(sigc::bind(sigc::ptr_fun(signal_changed), "output changed"));
+	input_bitmap.changed_signal().connect(boost::bind(signal_changed, _1, "input changed"));
+	border.changed_signal().connect(boost::bind(signal_changed, _1, "border changed"));
+	color.changed_signal().connect(boost::bind(signal_changed, _1, "color changed"));
+	output_bitmap.changed_signal().connect(boost::bind(signal_changed, _1, "output changed"));
 
 	// We want to print whenever the output property is executed ...
-	output_bitmap.set_update_slot(sigc::ptr_fun(property_executed));
+	output_bitmap.set_update_slot(property_executed);
 
 	// Setup our "network" of mappings from input signals to output signals ...
 	input_bitmap.changed_signal().connect(k3d::hint::converter<
@@ -49,19 +49,19 @@ int main(int argc, char* arv[])
 
 	// Exercise the hint-mapping network ...
 	std::cerr << "****************" << std::endl;
-	input_bitmap.changed_signal().emit(k3d::hint::bitmap_dimensions_changed::instance());
+	input_bitmap.changed_signal()(k3d::hint::bitmap_dimensions_changed::instance());
 
 	std::cerr << "****************" << std::endl;
-	input_bitmap.changed_signal().emit(k3d::hint::bitmap_pixels_changed::instance());
+	input_bitmap.changed_signal()(k3d::hint::bitmap_pixels_changed::instance());
 
 	std::cerr << "****************" << std::endl;
-	input_bitmap.changed_signal().emit(0);
+	input_bitmap.changed_signal()(0);
 
 	std::cerr << "****************" << std::endl;
-	border.changed_signal().emit(0);
+	border.changed_signal()(0);
 
 	std::cerr << "****************" << std::endl;
-	color.changed_signal().emit(0);
+	color.changed_signal()(0);
 
 	std::cerr << "****************" << std::endl;
 	output_bitmap.internal_value();

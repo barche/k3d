@@ -68,8 +68,11 @@ public:
 	{
 	};
 
+	/// Type of the signal to redirect output
+	typedef boost::signals2::signal<void(const string_t&)> output_signal_t;
+
 	/// Defines a slot that can be called to redirect script output.
-	typedef sigc::slot<void, const string_t&> output_t;
+	typedef output_signal_t::slot_type output_t;
 
 	/**	\brief Executes a script
 		\param ScriptName A human readable identifier for the script, which should be used in error messages, etc.

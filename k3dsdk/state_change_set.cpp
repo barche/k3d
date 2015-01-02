@@ -56,8 +56,8 @@ public:
 	state_collection_t m_old_states;
 	state_collection_t m_new_states;
 
-	sigc::signal<void> m_undo_signal;
-	sigc::signal<void> m_redo_signal;
+	boost::signals2::signal<void()> m_undo_signal;
+	boost::signals2::signal<void()> m_redo_signal;
 };
 	
 /////////////////////////////////////////////////////////////////////////////
@@ -85,12 +85,12 @@ void state_change_set::record_new_state(istate_container* const NewState)
 	m_implementation->m_new_states.push_back(NewState);
 }
 
-sigc::connection state_change_set::connect_undo_signal(const sigc::slot<void>& Slot)
+boost::signals2::connection state_change_set::connect_undo_signal(const k3d::void_signal_t::slot_type& Slot)
 {
 	return m_implementation->m_undo_signal.connect(Slot);
 }
 
-sigc::connection state_change_set::connect_redo_signal(const sigc::slot<void>& Slot)
+boost::signals2::connection state_change_set::connect_redo_signal(const k3d::void_signal_t::slot_type& Slot)
 {
 	return m_implementation->m_redo_signal.connect(Slot);
 }
@@ -98,13 +98,13 @@ sigc::connection state_change_set::connect_redo_signal(const sigc::slot<void>& S
 void state_change_set::undo()
 {
 	std::for_each(m_implementation->m_old_states.rbegin(), m_implementation->m_old_states.rend(), std::mem_fun(&istate_container::restore_state));
-	m_implementation->m_undo_signal.emit();
+	m_implementation->m_undo_signal();
 }
 
 void state_change_set::redo()
 {
 	std::for_each(m_implementation->m_new_states.begin(), m_implementation->m_new_states.end(), std::mem_fun(&istate_container::restore_state));
-	m_implementation->m_redo_signal.emit();
+	m_implementation->m_redo_signal();
 }
 
 size_t state_change_set::undo_count() const

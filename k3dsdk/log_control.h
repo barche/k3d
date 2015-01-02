@@ -49,11 +49,12 @@ void log_syslog(bool_t Enable);
 /// Sets the minimum level of message to be logged (default: K3D_LOG_LEVEL_WARNING)
 void log_minimum_level(const log_level_t Level);
 
+typedef boost::signals2::signal<void(const time_t, const log_level_t, const std::string&)> log_signal_t;
 
 /// Connects a slot to a signal that will be emitted whenever messages are added to the log 
-sigc::connection connect_log_message(const sigc::slot<void, const time_t, const log_level_t, const string_t&>& Slot);
+boost::signals2::connection connect_log_message(const log_signal_t::slot_type& Slot);
 /// Retrieves the current contents of the log cache by repeatedly calling the given slot
-void get_log_cache(const sigc::slot<void, const time_t, const log_level_t, const string_t&>& Slot);
+void get_log_cache(const log_signal_t::slot_type& Slot);
 
 } // namespace k3d
 

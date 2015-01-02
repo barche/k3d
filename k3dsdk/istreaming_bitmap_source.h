@@ -48,12 +48,17 @@ public:
 	/// Define storage for a pixel coordinate
 	typedef bitmap::coord_t coordinate;
 
+	/// Signal types
+	typedef boost::signals2::signal<void(coordinate, coordinate)> bitmap_start_signal_t;
+	typedef boost::signals2::signal<void(coordinate, coordinate, const bucket&)> bitmap_bucket_signal_t;
+
+
 	/// Connects a slot that will be called when streaming begins
-	virtual sigc::connection connect_bitmap_start_signal(const sigc::slot<void, coordinate, coordinate>& Slot) = 0;
+	virtual boost::signals2::connection connect_bitmap_start_signal(const bitmap_start_signal_t::slot_type& Slot) = 0;
 	/// Connects a slot that will be called when streaming begins
-	virtual sigc::connection connect_bitmap_bucket_signal(const sigc::slot<void, coordinate, coordinate, const bucket&>& Slot) = 0;
+	virtual boost::signals2::connection connect_bitmap_bucket_signal(const bitmap_bucket_signal_t::slot_type& Slot) = 0;
 	/// Connects a slot that will be called when streaming finishes
-	virtual sigc::connection connect_bitmap_finish_signal(const sigc::slot<void>& Slot) = 0;
+	virtual boost::signals2::connection connect_bitmap_finish_signal(const k3d::void_signal_t::slot_type& Slot) = 0;
 
 protected:
 	istreaming_bitmap_source() {}

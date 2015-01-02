@@ -53,8 +53,10 @@ public:
 		IGNORE_PROXIES
 	};
 
+	typedef boost::signals2::signal<void(const std::string&)> message_signal_t;
+
 	/// Connects a signal emitted to display human-readable progress messages while loading plugin modules
-	sigc::connection connect_message_signal(const sigc::slot<void, const std::string&>& Slot);
+	boost::signals2::connection connect_message_signal(const message_signal_t::slot_type& Slot);
 
 	/// Binds a statically-linked plugin module
 	void bind_module(const std::string& ModuleName, register_plugins_entry_point RegisterPlugins);

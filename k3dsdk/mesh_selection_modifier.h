@@ -54,7 +54,7 @@ public:
 	}
 
 	/// Returns a slot that should be connected to input properties to signal that the output mesh has changed
-	sigc::slot<void, ihint*> make_update_mesh_slot()
+	hint::slot_t make_update_mesh_slot()
 	{
 		return m_output_mesh.make_slot();
 	}
@@ -68,7 +68,7 @@ protected:
 		m_input_mesh.changed_signal().connect(hint::converter<
 			hint::convert<hint::any, hint::none> >(make_update_mesh_slot()));
 
-		m_output_mesh.set_update_slot(sigc::mem_fun(*this, &mesh_selection_modifier<base_t>::execute));
+		m_output_mesh.set_update_slot(boost::bind(&mesh_selection_modifier<base_t>::execute, this));
 	}
 
 	/// Called whenever the output mesh has been modified and needs to be updated.

@@ -95,9 +95,9 @@ struct null_property_collection :
 		return properties;
 	}
 
-	sigc::connection connect_properties_changed_signal(const sigc::slot<void, ihint*>&)
+	boost::signals2::connection connect_properties_changed_signal(const hint::slot_t&)
 	{
-		return sigc::connection();
+		return boost::signals2::connection();
 	}
 };
 
@@ -525,7 +525,7 @@ protected:
 
 	~renderman_attribute_property()
 	{
-		m_deleted_signal.emit();
+		m_deleted_signal();
 	}
 
 private:
@@ -643,7 +643,7 @@ protected:
 
 	~renderman_option_property()
 	{
-		m_deleted_signal.emit();
+		m_deleted_signal();
 	}
 
 private:

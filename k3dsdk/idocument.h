@@ -26,7 +26,7 @@
 */
 
 #include <k3dsdk/iunknown.h>
-#include <k3dsdk/signal_accumulators.h>
+#include <k3dsdk/signal_combiners.h>
 #include <k3dsdk/signal_system.h>
 #include <k3dsdk/uuid.h>
 
@@ -66,7 +66,7 @@ public:
 	virtual iproperty& title() = 0;
 
 	/// Defines a signal emitted when the document closes
-	typedef sigc::signal<void> close_signal_t;
+  typedef boost::signals2::signal<void()> close_signal_t;
 	virtual close_signal_t& close_signal() = 0;
 
 protected:

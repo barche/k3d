@@ -20,6 +20,7 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+#include <k3dsdk/hints.h>
 #include <k3dsdk/idocument.h>
 #include <k3dsdk/ienumeration_property.h>
 #include <k3dsdk/ihint.h>
@@ -368,7 +369,7 @@ protected:
 
 	~read_only_property()
 	{
-		m_deleted_signal.emit();
+		m_deleted_signal();
 	}
 
 private:
@@ -478,7 +479,7 @@ protected:
 
 	~writable_property()
 	{
-		m_deleted_signal.emit();
+		m_deleted_signal();
 	}
 
 private:
@@ -604,7 +605,7 @@ protected:
 
 	~string_property()
 	{
-		m_deleted_signal.emit();
+		m_deleted_signal();
 	}
 
 private:
@@ -720,7 +721,7 @@ public:
 		if(Reference != m_reference)
 		{
 			m_reference = Reference;
-			m_reference_changed_signal.emit();
+			m_reference_changed_signal();
 		}
 	}
 
@@ -757,7 +758,7 @@ protected:
 
 	~path_property()
 	{
-		m_deleted_signal.emit();
+		m_deleted_signal();
 	}
 
 private:
@@ -889,7 +890,7 @@ protected:
 
 	~script_property()
 	{
-		m_deleted_signal.emit();
+		m_deleted_signal();
 	}
 
 private:
@@ -1026,14 +1027,14 @@ public:
 		return m_values;
 	}
 
-	sigc::connection connect_enumeration_values_changed(const sigc::slot<void>& Slot)
+	boost::signals2::connection connect_enumeration_values_changed(const k3d::void_signal_t::slot_type& Slot)
 	{
 		return m_values_changed_signal.connect(Slot);
 	}
 
 	void notify_enumeration_values_changed()
 	{
-		m_values_changed_signal.emit();
+		m_values_changed_signal();
 	}
 
 protected:
@@ -1051,7 +1052,7 @@ protected:
 
 	~enumeration_property()
 	{
-		m_deleted_signal.emit();
+		m_deleted_signal();
 	}
 
 private:
@@ -1059,7 +1060,7 @@ private:
 	const char* const m_label;
 	const char* const m_description;
 	const ienumeration_property::enumeration_values_t& m_values;
-	sigc::signal<void> m_values_changed_signal;
+	boost::signals2::signal<void()> m_values_changed_signal;
 	deleted_signal_t m_deleted_signal;
 	iproperty* m_dependency;
 };
@@ -1170,7 +1171,7 @@ protected:
 
 	~list_property()
 	{
-		m_deleted_signal.emit();
+		m_deleted_signal();
 	}
 
 private:
@@ -1297,7 +1298,7 @@ protected:
 
 	~node_property()
 	{
-		m_deleted_signal.emit();
+		m_deleted_signal();
 	}
 
 private:
@@ -1420,7 +1421,7 @@ protected:
 
 	~measurement_property()
 	{
-		m_deleted_signal.emit();
+		m_deleted_signal();
 	}
 
 private:
@@ -1681,8 +1682,7 @@ protected:
 /// Undo policy for data containers that stores state changes for undo/redo
 template <typename value_t, class storage_policy_t>
 class with_undo :
-	public storage_policy_t,
-	public virtual sigc::trackable
+	public storage_policy_t
 {
 public:
 	/// Returns true iff the next write to the underlying storage will generate undo/redo data (useful if you need to perform additional undo/redo related operations, such as creating a signal connection)
@@ -1720,7 +1720,7 @@ protected:
 		{
 			m_changes = true;
 			/// Note ... we don't save the connection here because connections are automatically disconnected when the signal is emitted
-			m_state_recorder.connect_recording_done_signal(sigc::mem_fun(*this, &this_t::on_recording_done));
+			m_state_recorder.connect_recording_done_signal(boost::bind(&this_t::on_recording_done, this));
 			storage_policy_t::start_recording(m_state_recorder);
 		}
 
@@ -1827,8 +1827,7 @@ private:
 /// Storage policy for data containers that store a pointer to a document node that could be deleted by the user at any time - note that value_t should be the interface type used to access the node
 template<typename value_t, class signal_policy_t>
 class node_storage :
-	public signal_policy_t,
-	public virtual sigc::trackable
+	public signal_policy_t
 {
 public:
 	/// Returns an interface pointer to the node (could be NULL)
@@ -1869,9 +1868,9 @@ protected:
 	{
 		if(m_node)
 		{
-			m_node_deleted_connection = m_node->deleted_signal().connect(sigc::mem_fun(*this, &node_storage::on_node_deleted));
+			m_node_deleted_connection = m_node->deleted_signal().connect(boost::bind(&node_storage::on_node_deleted, this));
 			if(inode_change_signal* const node_change_signal = dynamic_cast<inode_change_signal*>(m_node))
-				m_node_changed_connection = node_change_signal->connect_node_changed_signal(signal_policy_t::changed_signal().make_slot());
+				m_node_changed_connection = node_change_signal->connect_node_changed_signal(boost::ref(signal_policy_t::changed_signal()));
 		}
 	}
 
@@ -1904,9 +1903,9 @@ protected:
 
 		if(m_node)
 		{
-			m_node_deleted_connection = m_node->deleted_signal().connect(sigc::mem_fun(*this, &node_storage::on_node_deleted));
+			m_node_deleted_connection = m_node->deleted_signal().connect(boost::bind(&node_storage::on_node_deleted, this));
 			if(inode_change_signal* const node_change_signal = dynamic_cast<inode_change_signal*>(m_node))
-				m_node_changed_connection = node_change_signal->connect_node_changed_signal(signal_policy_t::changed_signal().make_slot());
+				m_node_changed_connection = node_change_signal->connect_node_changed_signal(boost::ref(signal_policy_t::changed_signal()));
 		}
 
 		signal_policy_t::set_value(Hint);
@@ -1927,8 +1926,8 @@ private:
 
 	/// Local storage for the node stored by this policy
 	inode* m_node;
-	sigc::connection m_node_deleted_connection;
-	sigc::connection m_node_changed_connection;
+	boost::signals2::connection m_node_deleted_connection;
+	boost::signals2::connection m_node_changed_connection;
 
 	/// Provides an implementation of istate_container for storing nodes by value (ValueType must have a copy constructor and assignment operator)
 	class value_container :
@@ -1967,31 +1966,35 @@ class pointer_storage :
 public:
 	typedef typename boost::remove_pointer<pointer_t>::type non_pointer_t;
 	typedef pointer_storage<pointer_t, signal_policy_t> this_t;
+	typedef boost::signals2::signal<void(non_pointer_t&)> initialize_signal_t;
+	typedef boost::signals2::signal<void(non_pointer_t&)> update_signal_t;
 
 	/// Set a slot that will be called to initialize the value when first created
-	void set_initialize_slot(const sigc::slot<void, non_pointer_t&>& Slot)
+	void set_initialize_slot(const typename initialize_signal_t::slot_type& Slot)
 	{
-		m_initialize_slot = Slot;
+		m_initialize_signal.disconnect_all_slots();
+		m_initialize_signal.connect(Slot);
 		reset();
 	}
 
 	/// Set the slot that will be called to update the value whenever it changes
-	void set_update_slot(const sigc::slot<void, non_pointer_t&>& Slot)
+	void set_update_slot(const typename update_signal_t::slot_type& Slot)
 	{
-		m_update_slot = Slot;
+		m_update_signal.disconnect_all_slots();
+		m_update_signal.connect(Slot);
 		update();
 	}
 
 	/// Returns a slot that will invoke the reset() method
-	sigc::slot<void, ihint*> make_reset_slot()
+	hint::slot_t make_reset_slot()
 	{
-		return sigc::bind<0>(sigc::mem_fun(*this, &this_t::reset), static_cast<pointer_t>(0));
+		return hint::slot_t(boost::bind(&this_t::reset, this, static_cast<pointer_t>(0), static_cast<ihint*>(0)));
 	}
 
 	/// Returns a slot that will invoke the update() method
-	sigc::slot<void, ihint*> make_update_slot()
+	hint::slot_t make_update_slot()
 	{
-		return sigc::mem_fun(*this, &this_t::update);
+		return boost::bind(&this_t::update, this, _1);
 	}
 
 	/// Store an object as the new value, taking control of its lifetime
@@ -2029,7 +2032,7 @@ public:
 			// Note: we create the value and update its state in two steps
 			// because m_data_slot() may cause this method to be executed in a loop
 			m_value.reset(new non_pointer_t());
-			m_initialize_slot(*m_value);
+			m_initialize_signal(*m_value);
 
 			m_executing = false;
 		}
@@ -2039,7 +2042,7 @@ public:
 			m_executing = true;
 
 			m_update = false;
-			m_update_slot(*m_value);
+			m_update_signal(*m_value);
 
 			m_executing = false;
 		}
@@ -2061,10 +2064,10 @@ private:
 	std::auto_ptr<non_pointer_t> m_value;
 	/// Set to true if this policy's value is stale and needs to be updated
 	bool m_update;
-	/// Stores a slot that will be executed to initialize this policy's value
-	sigc::slot<void, non_pointer_t&> m_initialize_slot;
-	/// Stores a slot that will be executed to update this policy's value
-	sigc::slot<void, non_pointer_t&> m_update_slot;
+	/// Stores a signal that will be executed to initialize this policy's value
+	initialize_signal_t m_initialize_signal;
+	/// Stores a signal that will be executed to update this policy's value
+	update_signal_t m_update_signal;
 	/// Set to true during initialization / update of the policy value, to prevent problems with recursion
 	bool m_executing;
 };
@@ -2104,7 +2107,7 @@ class change_signal
 {
 public:
 	/// Defines a signal emitted when the underlying data changes.  The signal includes an optional "hint" that describes the nature of the change.
-	typedef sigc::signal<void, ihint*> changed_signal_t;
+	typedef boost::signals2::signal<void(ihint*)> changed_signal_t;
 
 	/// Returns a reference to the signal that is emitted whenever the underlying data changes
 	changed_signal_t& changed_signal()
@@ -2124,13 +2127,13 @@ protected:
 
 	void set_value(ihint* const Hint)
 	{
-		m_changed_signal.emit(Hint);
+		m_changed_signal(Hint);
 	}
 
 	void finish_recording(istate_recorder& StateRecorder)
 	{
-		StateRecorder.current_change_set()->connect_undo_signal(sigc::bind(m_changed_signal.make_slot(), static_cast<ihint*>(0)));
-		StateRecorder.current_change_set()->connect_redo_signal(sigc::bind(m_changed_signal.make_slot(), static_cast<ihint*>(0)));
+		StateRecorder.current_change_set()->connect_undo_signal(boost::bind(boost::ref(m_changed_signal), static_cast<ihint*>(0)));
+		StateRecorder.current_change_set()->connect_redo_signal(boost::bind(boost::ref(m_changed_signal), static_cast<ihint*>(0)));
 	}
 
 private:
@@ -2143,7 +2146,7 @@ class explicit_change_signal
 {
 public:
 	/// Defines a signal emitted when the underlying data changes.  The signal includes an optional "hint" that describes the nature of the change.
-	typedef sigc::signal<void, k3d::ihint*> changed_signal_t;
+	typedef boost::signals2::signal<void(k3d::ihint*)> changed_signal_t;
 
 	/// Returns a reference to the signal that is emitted whenever the underlying data changes.
 	changed_signal_t& changed_signal()
@@ -2152,7 +2155,7 @@ public:
 	}
 
 	/// Connects a slot to a signal that is emitted whenever the underlying data is modified explicitly through set_value, never by undo/redo
-	const sigc::connection connect_explicit_change_signal(const sigc::slot<void, k3d::ihint*>& Slot)
+	const boost::signals2::connection connect_explicit_change_signal(const hint::slot_t& Slot)
 	{
 		return m_explicit_change_signal.connect(Slot);
 	}
@@ -2169,14 +2172,14 @@ protected:
 
 	void set_value(k3d::ihint* const Hint)
 	{
-		m_changed_signal.emit(Hint);
-		m_explicit_change_signal.emit(Hint);
+		m_changed_signal(Hint);
+		m_explicit_change_signal(Hint);
 	}
 
 	void finish_recording(k3d::istate_recorder& StateRecorder)
 	{
-		StateRecorder.current_change_set()->connect_undo_signal(sigc::bind(m_changed_signal.make_slot(), static_cast<k3d::ihint*>(0)));
-		StateRecorder.current_change_set()->connect_redo_signal(sigc::bind(m_changed_signal.make_slot(), static_cast<k3d::ihint*>(0)));
+		StateRecorder.current_change_set()->connect_undo_signal(boost::bind(boost::ref(m_changed_signal), static_cast<k3d::ihint*>(0)));
+		StateRecorder.current_change_set()->connect_redo_signal(boost::bind(boost::ref(m_changed_signal), static_cast<k3d::ihint*>(0)));
 	}
 
 private:
@@ -2601,8 +2604,7 @@ namespace detail
 
 template<typename instance_t>
 class instance_container :
-	public istate_container,
-	public sigc::trackable
+	public istate_container
 {
 public:
 	instance_container(instance_t* const Instance, const bool Owned) :
@@ -2648,8 +2650,8 @@ void undoable_new(object_t* const Object, idocument& Document)
 	// Create an instance container that only deletes the object if it has been undone
 	typedef detail::instance_container<object_t> container_t;
 	container_t* const container = new container_t(Object, false);
-	changeset->connect_undo_signal(sigc::bind(sigc::mem_fun(*container, &container_t::on_owned), true));
-	changeset->connect_redo_signal(sigc::bind(sigc::mem_fun(*container, &container_t::on_owned), false));
+	changeset->connect_undo_signal(boost::bind(&container_t::on_owned, container, true));
+	changeset->connect_redo_signal(boost::bind(&container_t::on_owned, container, false));
 
 	changeset->record_old_state(container);
 }
@@ -2672,8 +2674,8 @@ void undoable_delete(object_t* const Object, idocument& Document)
 	// Create an instance container that only deletes the object if it hasn't been undone
 	typedef detail::instance_container<object_t> container_t;
 	container_t* const container = new container_t(Object, true);
-	changeset->connect_undo_signal(sigc::bind(sigc::mem_fun(*container, &container_t::on_owned), false));
-	changeset->connect_redo_signal(sigc::bind(sigc::mem_fun(*container, &container_t::on_owned), true));
+	changeset->connect_undo_signal(boost::bind(&container_t::on_owned, container, false));
+	changeset->connect_redo_signal(boost::bind(&container_t::on_owned, container, true));
 
 	changeset->record_old_state(container);
 }

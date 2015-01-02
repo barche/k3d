@@ -58,11 +58,11 @@ public:
 	virtual idocument& document() = 0;
 
 	/// Defines a signal that will be emitted iff the node is deleted
-	typedef sigc::signal<void> deleted_signal_t;
+  typedef boost::signals2::signal<void()> deleted_signal_t;
 	virtual deleted_signal_t& deleted_signal() = 0;
 
 	/// Defines a signal that will be emitted if the node name changes (including via undo / redo)
-	typedef sigc::signal<void> name_changed_signal_t;
+  typedef boost::signals2::signal<void()> name_changed_signal_t;
 	virtual name_changed_signal_t& name_changed_signal() = 0;
 
 protected:

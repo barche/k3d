@@ -54,6 +54,9 @@ public:
 	struct node;
 	typedef std::vector<node*> nodes_t;
 
+	/// Node added signal type
+	typedef boost::signals2::signal<void(const node*)> node_added_signal_t;
+
 	/// Encapsulates a single "node" in the hierarchy of recorded state changes
 	struct node
 	{
@@ -84,14 +87,14 @@ public:
 	virtual void mark_saved() = 0;
 
 	/// Connects a slot that will be called when recording finishes
-	virtual sigc::connection connect_recording_done_signal(const sigc::slot<void>& Slot) = 0;
+	virtual boost::signals2::connection connect_recording_done_signal(const k3d::void_signal_t::slot_type& Slot) = 0;
 	
 	/// Connects a slot that will be called after a node is added to the hierarchy
-	virtual sigc::connection connect_node_added_signal(const sigc::slot<void, const node*>& Slot) = 0;
+	virtual boost::signals2::connection connect_node_added_signal(const node_added_signal_t::slot_type& Slot) = 0;
 	/// Connects a slot that will be called when the current node has changed
-	virtual sigc::connection connect_current_node_changed_signal(const sigc::slot<void>& Slot) = 0;
+	virtual boost::signals2::connection connect_current_node_changed_signal(const k3d::void_signal_t::slot_type& Slot) = 0;
 	/// Connects a slot that will be called when the last saved node has changed
-	virtual sigc::connection connect_last_saved_node_changed_signal(const sigc::slot<void>& Slot) = 0;
+	virtual boost::signals2::connection connect_last_saved_node_changed_signal(const k3d::void_signal_t::slot_type& Slot) = 0;
 
 protected:
 	istate_recorder() {}

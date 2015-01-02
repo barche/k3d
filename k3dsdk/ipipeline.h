@@ -55,7 +55,7 @@ public:
 	virtual const dependencies_t& dependencies() = 0;
 
 	/// Defines a signal that will be emitted whenever a set of dependencies are altered
-	typedef sigc::signal<void, const dependencies_t&> dependency_signal_t;
+  typedef boost::signals2::signal<void(const dependencies_t&)> dependency_signal_t;
 	virtual dependency_signal_t& dependency_signal() = 0;
 
 protected:

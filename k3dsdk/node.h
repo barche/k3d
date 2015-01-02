@@ -46,8 +46,7 @@ class node :
 	public ipersistent,
 	public property_collection,
 	public persistent_property_collection,
-	public metadata::storage,
-	public sigc::trackable
+	public metadata::storage
 {
 public:
 	node(iplugin_factory& Factory, idocument& Document);

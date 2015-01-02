@@ -39,11 +39,12 @@ class file_signal
 {
 public:
 	/// Connects a slot to a signal that will be called with Python output
-	sigc::connection connect_output_signal(const sigc::slot<void, const string_t&>& Slot);
+	boost::signals2::connection connect_output_signal(const signal_t::slot_type& Slot);
 
 private:
 	friend void write(file_signal&, const string_t&);
-	sigc::signal<void, const string_t&> signal;
+	typedef boost::signals2::signal<void(const string_t&)> signal_t;
+	signal_t signal;
 };
 
 void define_class_file_signal();

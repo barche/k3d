@@ -97,9 +97,9 @@ public:
 	}
 
 protected:
-	sigc::slot<void, ihint*> make_async_redraw_slot()
+	hint::slot_t make_async_redraw_slot()
 	{
-		return sigc::mem_fun(*this, &renderable<base_t>::async_redraw);
+		return boost::bind(&renderable<base_t>::async_redraw, this);
 	}
 
 	void async_redraw(ihint*)

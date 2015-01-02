@@ -50,7 +50,7 @@ public:
 		m_input_matrix.changed_signal().connect(hint::converter<
 			hint::convert<hint::any, hint::none> >(make_update_matrix_slot()));
 
-		m_output_matrix.set_update_slot(sigc::mem_fun(*this, &transformable<base_t>::execute));
+		m_output_matrix.set_update_slot(boost::bind(&transformable<base_t>::execute, this));
 	}
 
 	iproperty& matrix_source_output()
@@ -64,7 +64,7 @@ public:
 	}
 
 	/// Returns a slot that should be connected to input properties to signal that the output has changed
-	sigc::slot<void, ihint*> make_update_matrix_slot()
+	hint::slot_t make_update_matrix_slot()
 	{
 		return m_output_matrix.make_slot();
 	}

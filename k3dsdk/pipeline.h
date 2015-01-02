@@ -36,8 +36,7 @@ class istate_recorder;
 
 /// Provides a concrete implementation of ipipeline that can be used to manage arbitrary connections between properties
 class pipeline :
-	public ipipeline,
-	public sigc::trackable
+	public ipipeline
 {
 public:
 	/// Initialize the pipeline with (optional) undo/redo suppport

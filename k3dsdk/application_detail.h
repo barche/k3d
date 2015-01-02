@@ -24,7 +24,7 @@
 	\author Tim Shead (tshead@k-3d.com)
 */
 
-#include <k3dsdk/signal_accumulators.h>
+#include <k3dsdk/signal_combiners.h>
 #include <k3dsdk/signal_system.h>
 
 namespace k3d
@@ -36,6 +36,9 @@ class iapplication;
 class application_implementation
 {
 public:
+	/// Type of the exit signal
+	typedef boost::signals2::signal<bool(), signal::cancelable> exit_signal_t;
+
 	application_implementation();
 	~application_implementation();
 
@@ -43,11 +46,12 @@ public:
 	iapplication& interface();
 
 	/// Connects a slot that will be called to request application exit - observers may return false to indicate that this isn't possible (e.g. because we're embedded in a scripting engine)
-	sigc::connection connect_exit_signal(const sigc::slot<bool>& Slot);
+	boost::signals2::connection connect_exit_signal(const exit_signal_t::slot_type& Slot);
 
 private:
 	class implementation;
 	implementation* const m_implementation;
+
 };
 
 } // namespace k3d

@@ -39,7 +39,7 @@ public:
 	}
 
 	/// Returns a slot that should be connected to input properties to signal that the output has changed
-	sigc::slot<void, ihint*> make_update_color_slot()
+	hint::slot_t make_update_color_slot()
 	{
 		return m_output_color.make_slot();
 	}
@@ -53,7 +53,7 @@ protected:
 			+ init_description(_("Output color"))
 			+ init_value(k3d::color(1, 1, 1)))
 	{
-		m_output_color.set_update_slot(sigc::mem_fun(*this, &color_source<derived_t>::execute));
+		m_output_color.set_update_slot(boost::bind(&color_source<derived_t>::execute, this));
 	}
 
 private:

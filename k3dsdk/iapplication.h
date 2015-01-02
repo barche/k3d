@@ -40,6 +40,9 @@ class iapplication :
 	public virtual iunknown
 {
 public:
+	/// Document closed signal type
+	typedef boost::signals2::signal<void(idocument&)> close_document_signal_t;
+
 	/// Exit K-3D if safe to do so
 	virtual bool exit() = 0;
 
@@ -56,14 +59,14 @@ public:
 	// Signals
 
 	/// Defines a signal emitted to display progress messages to the user during application startup
-	typedef sigc::signal<void, const std::string&> startup_message_signal_t;
+	typedef boost::signals2::signal<void(const std::string&)> startup_message_signal_t;
 	virtual startup_message_signal_t& startup_message_signal() = 0;
 
 	/// Connects a slot to a signal emitted when the application is closing
-	virtual sigc::connection connect_close_signal(const sigc::slot<void>& Slot) = 0;
+	virtual boost::signals2::connection connect_close_signal(const k3d::void_signal_t::slot_type& Slot) = 0;
 
 	/// Connects a slot to a signal emitted when an existing document is closed
-	virtual sigc::connection connect_close_document_signal(const sigc::slot<void, idocument&>& Slot) = 0;
+	virtual boost::signals2::connection connect_close_document_signal(const close_document_signal_t::slot_type& Slot) = 0;
 
 protected:
 	iapplication() {}

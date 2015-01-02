@@ -65,7 +65,7 @@ public:
 	virtual void deselect_all() = 0;
 	
 	/// Changed signal emitted when the selection changed
-	typedef sigc::signal<void, ihint*> changed_signal_t;
+  typedef boost::signals2::signal<void(ihint*)> changed_signal_t;
 	virtual changed_signal_t& selection_changed_signal() = 0;
 
 protected:

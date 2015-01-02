@@ -44,7 +44,7 @@ public:
 			return;
 
 		emitting = true;
-		signal.emit();
+		signal();
 		emitting = false;
 	}
 
@@ -54,7 +54,7 @@ public:
 			return;
 
 		emitting = true;
-		signal.emit(Hint);
+		signal(Hint);
 		emitting = false;
 	}
 

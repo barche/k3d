@@ -50,8 +50,8 @@ public:
 	{
 		m_input_mesh.changed_signal().connect(make_reset_mesh_slot());
 
-		m_output_mesh.set_initialize_slot(sigc::mem_fun(*this, &mesh_modifier<base_t>::initialize_mesh));
-		m_output_mesh.set_update_slot(sigc::mem_fun(*this, &mesh_modifier<base_t>::update_mesh));
+		m_output_mesh.set_initialize_slot(boost::bind(&mesh_modifier<base_t>::initialize_mesh, this, _1));
+		m_output_mesh.set_update_slot(boost::bind(&mesh_modifier<base_t>::update_mesh, this, _1));
 	}
 
 	iproperty& mesh_source_output()
@@ -64,12 +64,12 @@ public:
 		return m_input_mesh;
 	}
 
-	sigc::slot<void, ihint*> make_reset_mesh_slot()
+	hint::slot_t make_reset_mesh_slot()
 	{
 		return m_output_mesh.make_reset_slot();
 	}
 
-	sigc::slot<void, ihint*> make_update_mesh_slot()
+	hint::slot_t make_update_mesh_slot()
 	{
 		return m_output_mesh.make_update_slot();
 	}

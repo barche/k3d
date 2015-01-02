@@ -36,19 +36,19 @@ class node_change_signal :
 	public inode_change_signal
 {
 public:
-	sigc::connection connect_node_changed_signal(const sigc::slot<void, ihint*>& Slot)
+	boost::signals2::connection connect_node_changed_signal(const hint::slot_t& Slot)
 	{
 		return m_node_changed_signal.connect(Slot);
 	}
 
 protected:
-	signal::loop_safe_slot<sigc::signal<void, ihint*> > make_node_change_slot()
+	signal::loop_safe_slot<boost::signals2::signal<void(ihint*)> > make_node_change_slot()
 	{
 		return signal::make_loop_safe_slot(m_node_changed_signal);
 	}
 
 private:
-	sigc::signal<void, ihint*> m_node_changed_signal;
+	boost::signals2::signal<void(ihint*)> m_node_changed_signal;
 };
 
 } // namespace k3d

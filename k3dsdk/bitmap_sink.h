@@ -38,9 +38,9 @@ public:
 		return m_input_bitmap;
 	}
 
-	sigc::slot<void, ihint*> make_input_changed_slot()
+	hint::slot_t make_input_changed_slot()
 	{
-		return sigc::mem_fun(*this, &bitmap_sink<derived_t>::input_changed);
+		return boost::bind(&bitmap_sink<derived_t>::input_changed, this);
 	}
 
 protected:

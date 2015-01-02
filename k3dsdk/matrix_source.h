@@ -38,7 +38,7 @@ public:
 		base_t(Factory, Document),
 		m_output_matrix(init_owner(*this) + init_name("output_matrix") + init_label(_("Output Matrix")) + init_description("Output Matrix") + init_value(identity3()))
 	{
-		m_output_matrix.set_update_slot(sigc::mem_fun(*this, &matrix_source<base_t>::execute));
+		m_output_matrix.set_update_slot(boost::bind(&matrix_source<base_t>::execute, this));
 	}
 
 	iproperty& matrix_source_output()
@@ -47,7 +47,7 @@ public:
 	}
 
 	/// Returns a slot that should be connected to input properties to signal that the output has changed
-	sigc::slot<void, ihint*> make_update_matrix_slot()
+	hint::slot_t make_update_matrix_slot()
 	{
 		return m_output_matrix.make_slot();
 	}

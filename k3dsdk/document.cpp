@@ -43,13 +43,12 @@
 #include <k3dsdk/pipeline_profiler.h>
 #include <k3dsdk/property_collection.h>
 #include <k3dsdk/signal_slots.h>
+#include <k3dsdk/signal_system.h>
 #include <k3dsdk/string_cast.h>
 #include <k3dsdk/string_modifiers.h>
 #include <k3dsdk/utility.h>
 #include <k3dsdk/xml.h>
 using namespace k3d::xml;
-
-#include <sigc++/bind.h>
 
 #include <k3dsdk/fstream.h>
 
@@ -131,11 +130,10 @@ public:
 		}
 		
 		// Let the world know that recording is finished ...
-		m_recording_done_signal.emit();
+		m_recording_done_signal();
 
 		// Now that recording is complete, get rid of leftover connections ...
-		sigc::signal<void>::slot_list_type slots = m_recording_done_signal.slots();
-		slots.erase(slots.begin(), slots.end());
+		m_recording_done_signal.disconnect_all_slots();
 
 		return m_current_recording;
 	}
@@ -171,8 +169,8 @@ public:
 
 		m_current_node = m_newest_node;
 
-		m_node_added_signal.emit(m_newest_node);
-		m_current_node_changed_signal.emit();
+		m_node_added_signal(m_newest_node);
+		m_current_node_changed_signal();
 	}
 
 	const nodes_t& root_nodes()
@@ -198,31 +196,31 @@ public:
 	void mark_saved()
 	{
 		m_last_saved_node = m_current_node;
-		m_last_saved_node_changed_signal.emit();
+		m_last_saved_node_changed_signal();
 	}
 
 	void set_current_node(const node* const Node)
 	{
 		m_current_node = const_cast<node*>(Node);
-		m_current_node_changed_signal.emit();
+		m_current_node_changed_signal();
 	}
 
-	sigc::connection connect_recording_done_signal(const sigc::slot<void>& Slot)
+	boost::signals2::connection connect_recording_done_signal(const k3d::void_signal_t::slot_type& Slot)
 	{
 		return m_recording_done_signal.connect(Slot);
 	}
 	
-	sigc::connection connect_node_added_signal(const sigc::slot<void, const node*>& Slot)
+	boost::signals2::connection connect_node_added_signal(const node_added_signal_t::slot_type& Slot)
 	{
 		return m_node_added_signal.connect(Slot);
 	}
 	
-	sigc::connection connect_current_node_changed_signal(const sigc::slot<void>& Slot)
+	boost::signals2::connection connect_current_node_changed_signal(const k3d::void_signal_t::slot_type& Slot)
 	{
 		return m_current_node_changed_signal.connect(Slot);
 	}
 	
-	sigc::connection connect_last_saved_node_changed_signal(const sigc::slot<void>& Slot)
+	boost::signals2::connection connect_last_saved_node_changed_signal(const k3d::void_signal_t::slot_type& Slot)
 	{
 		return m_last_saved_node_changed_signal.connect(Slot);
 	}
@@ -241,10 +239,11 @@ private:
 	/// Stores a reference to the most-recently-saved node (if any)
 	node* m_last_saved_node;
 
-	sigc::signal<void> m_recording_done_signal;
-	sigc::signal<void, const node*> m_node_added_signal;
-	sigc::signal<void> m_current_node_changed_signal;
-	sigc::signal<void> m_last_saved_node_changed_signal;
+	k3d::void_signal_t m_recording_done_signal;
+	typedef boost::signals2::signal<void(const node*)> node_added_signal_t;
+	node_added_signal_t m_node_added_signal;
+	k3d::void_signal_t m_current_node_changed_signal;
+	k3d::void_signal_t m_last_saved_node_changed_signal;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -273,7 +272,7 @@ public:
 
 		// We want to emit a signal whenever an node's name changes ...
 		for(nodes_t::const_iterator node = nodes.begin(); node != nodes.end(); ++node)
-			(*node)->name_changed_signal().connect(sigc::bind(m_rename_node_signal.make_slot(), *node));
+			(*node)->name_changed_signal().connect(boost::bind(boost::ref(m_rename_node_signal), *node));
 
 		// If we're recording undo/redo data, record the new state ...
 		if(m_state_recorder.current_change_set())
@@ -284,7 +283,7 @@ public:
 
 		// Make the change and notify observers ...
 		m_nodes.insert(m_nodes.end(), nodes.begin(), nodes.end());
-		m_add_nodes_signal.emit(nodes);
+		m_add_nodes_signal(nodes);
 	}
 
 	const inode_collection::nodes_t& collection()
@@ -310,10 +309,10 @@ public:
 		// Make the change and notify observers ...
 		for(nodes_t::const_iterator node = nodes.begin(); node != nodes.end(); ++node)
 		{
-			(*node)->deleted_signal().emit();
+			(*node)->deleted_signal()();
 			m_nodes.erase(std::remove(m_nodes.begin(), m_nodes.end(), *node), m_nodes.end());
 		}
-		m_remove_nodes_signal.emit(nodes);
+		m_remove_nodes_signal(nodes);
 
 	}
 
@@ -337,7 +336,7 @@ public:
 		// Give nodes a chance to shut down ...
 		for(inode_collection::nodes_t::iterator node = m_nodes.begin(); node != m_nodes.end(); ++node)
 		{
-			(*node)->deleted_signal().emit();
+			(*node)->deleted_signal()();
 		}
 
 		// Zap nodes ...
@@ -412,8 +411,7 @@ private:
 /// Encapsulates an open K-3D document
 class public_document_implementation :
 	public idocument,
-	public property_collection,
-	public sigc::trackable
+	public property_collection
 {
 public:
 	public_document_implementation(istate_recorder& StateRecorder, inode_collection& Nodes, ipipeline& Pipeline) :
@@ -424,7 +422,7 @@ public:
 		m_title(init_owner(*this) + init_name("title") + init_label(_("Document Title")) + init_description(_("Document Title")) + init_value(k3d::ustring()))
 	{
  		// Automatically add nodes to the unique node name collection
- 		m_nodes.add_nodes_signal().connect(sigc::mem_fun(m_unique_node_names, &node_name_map::add_nodes));
+		m_nodes.add_nodes_signal().connect(boost::bind(&node_name_map::add_nodes, boost::ref(m_unique_node_names), _1));
 	}
 
 	~public_document_implementation()
@@ -512,7 +510,7 @@ public:
 
 	~document_implementation()
 	{
-		m_document->close_signal().emit();
+		m_document->close_signal()();
 
 		// Completely remove all pipeline connections so we don't waste time updating individual properties
 		m_pipeline->clear();

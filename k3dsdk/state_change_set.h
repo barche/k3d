@@ -48,9 +48,9 @@ public:
 	void record_new_state(k3d::istate_container* const NewState);
 
 	/// Connects a slot that will be called if this change set is undone
-	sigc::connection connect_undo_signal(const sigc::slot<void>& Slot);
+	boost::signals2::connection connect_undo_signal(const k3d::void_signal_t::slot_type& Slot);
 	/// Connects a slot that will be called if this change set is redone
-	sigc::connection connect_redo_signal(const sigc::slot<void>& Slot);
+	boost::signals2::connection connect_redo_signal(const k3d::void_signal_t::slot_type& Slot);
 
 	/// Restores original states and emits the undo_signal
 	void undo();

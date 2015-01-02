@@ -34,8 +34,8 @@ class snap_target :
 	public isnap_target
 {
 public:
-	typedef sigc::slot<bool, const point3&, point3&> position_slot_t;
-	typedef sigc::slot<bool, const point3&, vector3&, vector3&> orientation_slot_t;
+	typedef boost::signals2::signal<bool(const point3&, point3&)>::slot_type position_slot_t;
+	typedef boost::signals2::signal<bool(const point3&, vector3&, vector3&)>::slot_type orientation_slot_t;
 
 	snap_target(const std::string& Label, const position_slot_t& PositionSlot, const orientation_slot_t& OrientationSlot);
 	

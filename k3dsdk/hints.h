@@ -56,10 +56,16 @@ public:
 std::ostream& operator<<(std::ostream& Stream, const print& RHS);
 
 //////////////////////////////////////////////////////////////////////////////
+// signal_t
+
+/// Defines a standard signal for emitting hints
+typedef boost::signals2::signal<void(ihint*)> signal_t;
+
+//////////////////////////////////////////////////////////////////////////////
 // slot_t
 
 /// Defines a standard slot that receives a hint
-typedef sigc::slot<void, ihint*> slot_t;
+typedef signal_t::slot_type slot_t;
 
 //////////////////////////////////////////////////////////////////////////////
 // bitmap_dimensions_changed
@@ -443,7 +449,7 @@ private:
 /// result from converter() to the connect() method of a signal, to establish
 /// a hint-mapping.
 template<typename ListT>
-detail::converter<ListT> converter(const sigc::slot<void, ihint*>& Slot)
+detail::converter<ListT> converter(const hint::slot_t& Slot)
 {
 	return detail::converter<ListT>(Slot);
 }

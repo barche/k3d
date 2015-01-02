@@ -46,7 +46,7 @@ public:
 	void watch(const bool_t Watch)
 	{
 		m_watched = Watch;
-		base::changed_signal().emit(0);
+		base::changed_signal()(0);
 	}
 	
 	const bool_t is_watched() const
@@ -59,7 +59,7 @@ protected:
 	watched_path_property(const init_t& Init) : base(Init), m_watched(true), m_watch_id(0)
 	{
 		base::changed_signal().connect(hint::converter<
-			hint::convert<hint::any, hint::unchanged> >(sigc::mem_fun(*this, &watched_path_property::on_path_changed)));
+			hint::convert<hint::any, hint::unchanged> >(boost::bind(&watched_path_property::on_path_changed, this)));
 	}
 	
 	~watched_path_property()
@@ -84,12 +84,12 @@ private:
 			return;
 		}
 		
-		m_watch_id = k3d::user_interface().watch_path(path, sigc::mem_fun(*this, &watched_path_property::on_file_changed));
+		m_watch_id = k3d::user_interface().watch_path(path, boost::bind(&watched_path_property::on_file_changed, this));
 	}
 	
 	void on_file_changed()
 	{
-		base::changed_signal().emit(hint::file_changed::instance());
+		base::changed_signal()(hint::file_changed::instance());
 	}
 	
 	bool_t m_watched;

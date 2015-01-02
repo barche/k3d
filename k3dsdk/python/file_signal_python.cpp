@@ -38,14 +38,14 @@ namespace python
 //////////////////////////////////////////////////////////////////////////////
 // file_signal
 
-sigc::connection file_signal::connect_output_signal(const sigc::slot<void, const string_t&>& Slot)
+boost::signals2::connection file_signal::connect_output_signal(const signal_t::slot_type& Slot)
 {
 	return signal.connect(Slot);
 }
 
 void write(file_signal& Self, const string_t& Output)
 {
-	Self.signal.emit(Output);
+	Self.signal(Output);
 }
 
 //////////////////////////////////////////////////////////////////////////////

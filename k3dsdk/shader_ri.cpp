@@ -75,7 +75,7 @@ shader::shader(iplugin_factory& Factory, idocument& Document, k3d::sl::shader::t
 	m_user_property_changed_signal(*this)
 {
 	m_shader_path.add_pattern_filter(ipath_property::pattern_filter(_("RenderMan shader (*.sl)"), "*.sl"));
-	m_shader_connection = m_shader_path.connect_explicit_change_signal(sigc::mem_fun(*this, &shader::on_shader_changed));
+	m_shader_connection = m_shader_path.connect_explicit_change_signal(boost::bind(&shader::on_shader_changed, this, _1));
 
 	m_user_property_changed_signal.connect(make_node_change_slot());
 }
@@ -89,7 +89,7 @@ void shader::load(xml::element& Element, const ipersistent::load_context& Contex
 	// Disable argument list updates while loading so we don't create the same arguments twice
 	m_shader_connection.disconnect();
 	base::load(Element, Context);
-	m_shader_connection = m_shader_path.connect_explicit_change_signal(sigc::mem_fun(*this, &shader::on_shader_changed));
+	m_shader_connection = m_shader_path.connect_explicit_change_signal(boost::bind(&shader::on_shader_changed, this, _1));
 
 	load_metafile();
 }

@@ -1,5 +1,5 @@
-#ifndef K3DSDK_SIGNAL_ACCUMULATORS_H
-#define K3DSDK_SIGNAL_ACCUMULATORS_H
+#ifndef K3DSDK_SIGNAL_COMBINERS_H
+#define K3DSDK_SIGNAL_COMBINERS_H
 
 // K-3D
 // Copyright (c) 1995-2004, Timothy M. Shead
@@ -29,7 +29,7 @@ namespace k3d
 namespace signal
 {
 
-/** Defines a signal accumulator for libsigc++ signals that require slots returning bool.
+/** Defines a signal combiner for boost::signals2 signals that require slots returning bool.
 iff any slot returns "false", signal emission is stopped immediately and the signal will
 return "false".  Otherwise, the signal will return "true".  This is handy for signals that
 represent some action that any observer can cancel, e.g. a document object can prevent
@@ -53,7 +53,7 @@ public:
 	}
 };
 
-/** Defines a signal accumulator for libsigc++ signals that require slots returning bool.
+/** Defines a signal combiner for boost::signals2 signals that require slots returning bool.
 iff any slot returns "true", signal emission is stopped immediately and the signal will
 return "true".  Otherwise, the signal will return "false".  This is handy for signals that
 represent some event that is "consumed" by an observer, e.g. a keyboard event that
@@ -83,5 +83,5 @@ public:
 
 } // namespace k3d
 
-#endif // !K3DSDK_SIGNAL_ACCUMULATORS_H
+#endif // !K3DSDK_SIGNAL_COMBINERS_H
 

@@ -69,7 +69,7 @@ private:
 	k3d_data(filesystem::path, immutable_name, explicit_change_signal, with_undo, local_storage, no_constraint, path_property, path_serialization) m_shader_path;
 	k3d_data(sl::shader, no_name, no_signal, with_undo, local_storage, no_constraint, no_property, no_serialization) m_shader;
 
-	sigc::connection m_shader_connection;
+	boost::signals2::connection m_shader_connection;
 
 	user_property_changed_signal m_user_property_changed_signal;
 };

@@ -35,11 +35,11 @@ namespace k3d
 user_property_changed_signal::user_property_changed_signal(iproperty_collection& Collection) :
 	m_collection(Collection)
 {
-	Collection.connect_properties_changed_signal(sigc::mem_fun(*this, &user_property_changed_signal::on_collection_changed));
+	Collection.connect_properties_changed_signal(boost::bind(&user_property_changed_signal::on_collection_changed, this, _1));
 	on_collection_changed(0);
 }
 
-sigc::connection user_property_changed_signal::connect(const sigc::slot<void, ihint*>& Slot)
+boost::signals2::connection user_property_changed_signal::connect(const hint::slot_t& Slot)
 {
 	return m_changed_signal.connect(Slot);
 }
@@ -54,7 +54,7 @@ void user_property_changed_signal::on_collection_changed(ihint*)
 	for(iproperty_collection::properties_t::const_iterator property = properties.begin(); property != properties.end(); ++property)
 	{
 		if(dynamic_cast<iuser_property*>(*property))
-			m_connections.push_back((*property)->property_changed_signal().connect(m_changed_signal.make_slot()));
+			m_connections.push_back((*property)->property_changed_signal().connect(boost::ref(m_changed_signal)));
 	}
 }
 

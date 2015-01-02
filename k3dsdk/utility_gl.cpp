@@ -62,7 +62,7 @@ public:
 	void operator()(inode* const Object)
 	{
 		if(irender_viewport* const render_engine = dynamic_cast<irender_viewport*>(Object))
-			render_engine->redraw_request_signal().emit(m_redraw_type);
+			render_engine->redraw_request_signal()(m_redraw_type);
 	}
 
 protected:

@@ -84,7 +84,7 @@ public:
 	virtual reference_t property_path_reference() = 0;
 	virtual void set_property_path_reference(const reference_t) = 0;
 	/// Defines a signal that will be emitted anytime the path reference is modified
-	typedef sigc::signal<void> path_reference_changed_signal_t;
+  typedef boost::signals2::signal<void()> path_reference_changed_signal_t;
 	virtual path_reference_changed_signal_t& property_path_reference_changed_signal() = 0;
 
 	/// Returns a collection of pattern filters to be (optionally) used by the UI when prompting the user for a file

@@ -73,7 +73,7 @@ public:
 	} redraw_type_t;
 
 	/// Used to signal any connected user interface components that a redraw is requested
-	typedef sigc::signal<void, redraw_type_t> redraw_request_signal_t;
+  typedef boost::signals2::signal<void(redraw_type_t)> redraw_request_signal_t;
 	virtual redraw_request_signal_t& redraw_request_signal() = 0;
 
 protected:

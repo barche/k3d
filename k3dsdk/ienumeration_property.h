@@ -60,7 +60,7 @@ public:
 	/// Returns the set of all valid values for this property
 	virtual enumeration_values_t enumeration_values() = 0;
 	/// Connects a slot to a signal that will be emitted whenever the set of enumeration values changes
-	virtual sigc::connection connect_enumeration_values_changed(const sigc::slot<void>& Slot) = 0;
+	virtual boost::signals2::connection connect_enumeration_values_changed(const k3d::void_signal_t::slot_type& Slot) = 0;
 
 protected:
 	ienumeration_property() {}

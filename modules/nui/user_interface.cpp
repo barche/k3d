@@ -117,12 +117,12 @@ public:
 	{
 	}
 
-	sigc::connection get_timer(const k3d::double_t FrameRate, sigc::slot<void> Slot)
+	boost::signals2::connection get_timer(const k3d::double_t FrameRate, k3d::void_signal_t::slot_type Slot)
 	{
-		return sigc::connection();
+		return boost::signals2::connection();
 	}
 	
-	k3d::uint_t watch_path(const k3d::filesystem::path& Path, const sigc::slot<void>& Slot)
+	k3d::uint_t watch_path(const k3d::filesystem::path& Path, const k3d::void_signal_t::slot_type& Slot)
 	{	
 		return 0;
 	}

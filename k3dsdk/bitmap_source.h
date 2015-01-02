@@ -43,7 +43,7 @@ public:
 	}
 
 	/// Returns a slot that should be connected to input properties to signal that the output has changed.
-	sigc::slot<void, ihint*> make_update_bitmap_slot()
+	hint::slot_t make_update_bitmap_slot()
 	{
 		return m_output_bitmap.make_slot();
 	}
@@ -56,7 +56,7 @@ protected:
 			+ init_label(_("Output Bitmap"))
 			+ init_description(_("Output bitmap")))
 	{
-		m_output_bitmap.set_update_slot(sigc::mem_fun(*this, &bitmap_source<derived_t>::execute));
+		m_output_bitmap.set_update_slot(boost::bind(&bitmap_source<derived_t>::execute, this));
 	}
 
 	/// Stores the output bitmap, which is created on-demand.

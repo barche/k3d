@@ -38,7 +38,7 @@ class inode_change_signal :
 {
 public:
 	/// Connects a slot to a signal that will be emitted whenever the node state is modified, including an optional "hint" that describes the change.
-	virtual sigc::connection connect_node_changed_signal(const sigc::slot<void, ihint*>& Slot) = 0;
+	virtual boost::signals2::connection connect_node_changed_signal(const hint::slot_t& Slot) = 0;
 
 protected:
 	inode_change_signal() {}

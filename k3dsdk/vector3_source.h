@@ -41,7 +41,7 @@ public:
 		return m_output_vector3;
 	}
 
-	sigc::slot<void, ihint*> make_update_vector3_slot()
+	hint::slot_t make_update_vector3_slot()
 	{
 		return m_output_vector3.make_slot();
 	}
@@ -55,7 +55,7 @@ protected:
 			+ init_description("Output vector")
 			+ init_value(vector3(0, 0, 0)))
 	{
-		m_output_vector3.set_update_slot(sigc::mem_fun(*this, &vector3_source<derived_t>::execute));
+		m_output_vector3.set_update_slot(boost::bind(&vector3_source<derived_t>::execute, this));
 	}
 
 

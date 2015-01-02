@@ -43,7 +43,7 @@ public:
 	scripted_plugin() :
 		m_script(init_owner(*this) + init_name("script") + init_label(_("Script")) + init_description(_("Script source code")) + init_value<string_t>(""))
 	{
-		m_script.changed_signal().connect(sigc::mem_fun(*this, &scripted_plugin::on_script_changed));
+		m_script.changed_signal().connect(boost::bind(&scripted_plugin::on_script_changed, this));
 	}
 
 protected:
