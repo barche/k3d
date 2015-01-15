@@ -107,7 +107,7 @@ public:
 		const k3d::uint_t face = edge_faces[Edge];
 		const k3d::uint_t companion_face = edge_faces[companions[Edge]];
 		return ((face <= companion_face && !is_affected(face))
-						|| is_affected(face) && (face <= companion_face || !is_affected(companion_face)));
+						|| (is_affected(face) && (face <= companion_face || !is_affected(companion_face))));
 	}
 	
 	/// True if the edge is part of the boundary of the mesh that is to be subdivided

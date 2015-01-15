@@ -138,14 +138,14 @@ public:
 		return *this;
 	}
 
-	operator bool() const
+	bool is_null() const
 	{
-		return storage;
+		return storage == nullptr;
 	}
 
-	bool operator!() const
+	explicit operator bool() const
 	{
-		return !storage;
+		return !is_null();
 	}
 
 	bool_t operator==(const pipeline_data<T>& Other) const

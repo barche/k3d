@@ -468,7 +468,7 @@ half::half (float f)
 
 	x.f = f;
 
-	register int e = (x.i >> 23) & 0x000001ff;
+	int e = (x.i >> 23) & 0x000001ff;
 
 	e = _eLut[e];
 

@@ -140,7 +140,7 @@ private:
         }
 
         {
-            unsigned int rn[] = { std::rand(), std::rand(), std::rand() };
+						int rn[] = { std::rand(), std::rand(), std::rand() };
             sha.process_bytes( (unsigned char const*)rn, sizeof( rn ) );
         }
 

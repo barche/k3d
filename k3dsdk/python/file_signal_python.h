@@ -38,13 +38,16 @@ namespace python
 class file_signal
 {
 public:
+	typedef boost::signals2::signal<void(const string_t&)> signal_t;
+
+	file_signal();
+
 	/// Connects a slot to a signal that will be called with Python output
 	boost::signals2::connection connect_output_signal(const signal_t::slot_type& Slot);
 
 private:
-	friend void write(file_signal&, const string_t&);
-	typedef boost::signals2::signal<void(const string_t&)> signal_t;
-	signal_t signal;
+	friend void write(file_signal&, const string_t&);	
+	std::shared_ptr<signal_t> signal;
 };
 
 void define_class_file_signal();
