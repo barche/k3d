@@ -29,6 +29,11 @@ K3D_TEST(sdk.circular-signals TARGET test-circular-signals LABELS sdk)
 ADD_EXECUTABLE(test-signals signals.cpp)
 K3D_TEST(sdk.signals TARGET test-signals LABELS sdk)
 
+ADD_EXECUTABLE(spawned-test-command spawned_test_command.cpp)
+ADD_EXECUTABLE(test-spawn spawn.cpp)
+ADD_DEPENDENCIES(test-spawn spawned-test-command)
+K3D_TEST(sdk.spawn TARGET test-spawn LABELS sdk)
+
 ADD_EXECUTABLE(test-hint-mapping hint_mapping.cpp)
 K3D_TEST(sdk.hint-mapping TARGET test-hint-mapping LABELS sdk)
 

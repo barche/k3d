@@ -95,8 +95,12 @@ bool render_job(const k3d::filesystem::path& JobDirectory)
 		if(!k3d::filesystem::is_directory(*frame))
 			continue;
 
-		const std::string commandline("k3d-renderframe \"" + frame->native_filesystem_string() + "\"");
-		k3d::system::spawn_sync(commandline);
+		k3d::string_t std_out, std_err;
+		if(!k3d::system::spawn(k3d::filesystem::generic_path("k3d-renderframe"), std::vector<k3d::string_t>(1, frame->native_filesystem_string()), k3d::system::SPAWN_SYNCHRONOUS, std_out, std_err))
+		{
+			k3d::log() << error << "Renderjob failed with message: " << std_err << std::endl;
+		}
+		k3d::log() << debug << "k3d-renderframe output was:\n" << std_out << std::endl;
 	}
 
 	// Switch the job status to complete ...

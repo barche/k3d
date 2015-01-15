@@ -301,11 +301,14 @@ public:
 		return m_Path.native_utf8_string().raw();
 	}
 
+	string_t std_out, std_err;
+
 private:
 	const filesystem::path m_Path;
 
 	typedef std::list<network_render_frame> frames_t;
 	frames_t m_frames;
+
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -357,14 +360,9 @@ public:
 			return;
 		}
 
-		// Start the local rendering process ...
-		string_t commandline = "k3d-renderjob \"";
-		commandline += job->path();
-		commandline += "\"";
-
-		if(!system::spawn_async(commandline))
+		if(!system::spawn(k3d::filesystem::generic_path("k3d-renderjob"), std::vector<string_t>(1, job->path()), k3d::system::SPAWN_ASYNCHRONOUS, job->std_out, job->std_err))
 		{
-			log() << error << "Error starting render job " << commandline << std::endl;
+			log() << error << "Error starting render job k3d-renderjob " << job->path() << std::endl;
 			return;
 		}
 	}

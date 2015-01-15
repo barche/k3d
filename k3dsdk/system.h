@@ -28,6 +28,7 @@
 #include <k3dsdk/path.h>
 #include <k3dsdk/types.h>
 
+#include <map>
 #include <vector>
 
 namespace k3d
@@ -61,10 +62,22 @@ const k3d::filesystem::path find_executable(const string_t& Executable);
 /// Returns the most recent modification time of a file
 bool file_modification_time(const filesystem::path& File, time_t& ModificationTime);
 
-/// Runs an external process asynchronously.  Note: execs the process directly, do not use shell features!  The child process will have the same environment as its parent, and the PATH environment variable will be used to lookup the binary to be executed.
-bool spawn_async(const string_t& CommandLine);
-/// Runs an external process synchronously, blocking until it returns.  Note: execs the process directly, do not use shell features!  The child process will have the same environment as its parent, and the PATH environment variable will be used to lookup the binary to be executed.
-bool spawn_sync(const string_t& CommandLine);
+/// Indicate how a spawned process should be treated
+enum spawn_type
+{
+	SPAWN_SYNCHRONOUS = 0, // Main program waits
+	SPAWN_ASYNCHRONOUS = 1 // Separate thread waits on command completion
+};
+
+/// Type for the environment passed to spawn
+typedef std::map<string_t, string_t> environment_t;
+
+/// Runs an external process in the same environment as the main program. Note: execs the process directly, do not use shell features!
+/// @param Command is the file to execute, if it does not contain a '/' it is looked up in $PATH
+/// @param Arguments contains the program arguments (Command must NOT be included as the first element here)
+/// Program output is placed in StandardOut and StandardError
+/// @param WorkingDirectory is the directory that is changed to before executing Command
+bool spawn(const filesystem::path& Command, const std::vector<string_t>& Arguments, const spawn_type SpawnType, string_t& StandardOut, string_t& StandardError, const filesystem::path& WorkingDirectory = filesystem::path(), const environment_t& Environment = environment_t());
 
 /// Defines a collection of paths
 typedef std::vector<filesystem::path> paths_t;

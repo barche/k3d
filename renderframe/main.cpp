@@ -103,13 +103,14 @@ bool exec_command(const element& XMLCommand, const k3d::filesystem::path& FrameD
 {
 	k3d::string_t working_directory = FrameDirectory.native_filesystem_string();
 	std::vector<k3d::string_t> arguments;
-	std::vector<k3d::string_t> environment;
+	k3d::system::environment_t environment;
 	k3d::string_t standard_output;
 	k3d::string_t standard_error;
 	int exit_status = 0;
 
+	const std::string binary = attribute_text(XMLCommand, "binary");
+
 	// Setup program arguments ...
-	arguments.push_back(attribute_text(XMLCommand, "binary"));
 	if(const element* const xml_arguments = find_element(XMLCommand, "arguments"))
 	{
 		for(element::elements_t::const_iterator xml_argument = xml_arguments->children.begin(); xml_argument != xml_arguments->children.end(); ++xml_argument)
@@ -121,7 +122,11 @@ bool exec_command(const element& XMLCommand, const k3d::filesystem::path& FrameD
 
 	// Setup the application environment ...
 	for(int i = 0; environ[i]; ++i)
-		environment.push_back(environ[i]);
+	{
+		k3d::string_t env_var_str(environ[i]);
+		const std::size_t equals_pos = env_var_str.find_first_of("=");
+		environment[env_var_str.substr(0, equals_pos)] = env_var_str.substr(equals_pos+1, std::string::npos);
+	}
 
 	if(const element* const xml_environment = find_element(XMLCommand, "environment"))
 	{
@@ -130,17 +135,7 @@ bool exec_command(const element& XMLCommand, const k3d::filesystem::path& FrameD
 			k3d::string_t name = attribute_text(*xml_variable, "name");
 			k3d::string_t value = expand(attribute_text(*xml_variable, "value"));
 
-			// Ensure that duplicates don't creep in ...
-			for(int i = 0; i != environment.size(); ++i)
-			{
-				if(0 == environment[i].find(name + "="))
-				{
-					environment.erase(environment.begin() + i);
-					break;
-				}
-			}
-
-			environment.push_back(name + "=" + value);
+			environment[name] = value;
 		}
 	}
 
@@ -197,11 +192,11 @@ bool exec_command(const element& XMLCommand, const k3d::filesystem::path& FrameD
 	try
 	{
 		k3d::log() << info;
-		std::copy(environment.begin(), environment.end(), std::ostream_iterator<k3d::string_t>(k3d::log(), " "));
+		for(const auto& env_entry : environment) { k3d::log() << " " << env_entry.first << "=" << env_entry.second; }
 		std::copy(arguments.begin(), arguments.end(), std::ostream_iterator<k3d::string_t>(k3d::log(), " "));
 		k3d::log() << std::endl;
 
-		Glib::spawn_sync(working_directory, arguments, environment, Glib::SPAWN_SEARCH_PATH, k3d::void_signal_t::slot_type(), &standard_output, &standard_error, &exit_status);
+		k3d::system::spawn(k3d::filesystem::generic_path(binary), arguments, k3d::system::SPAWN_SYNCHRONOUS, standard_output, standard_error, k3d::filesystem::generic_path(working_directory), environment);
 
 		if(!standard_output.empty())
 			k3d::log() << info << "stdout: " << standard_output << std::endl;

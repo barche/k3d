@@ -57,6 +57,7 @@
 
 	#include <time.h>
 	#include <unistd.h>
+	#include <sys/wait.h>
 
 #endif // !K3D_API_WIN32
 
@@ -71,6 +72,41 @@ namespace k3d
 
 namespace system
 {
+
+namespace detail
+{
+
+/// Construct the argv char array from a command and a vector of strings
+struct argv_from_vector
+{
+	argv_from_vector(const std::string& Command, std::vector<std::string> Arguments) : nb_args(Arguments.size() + 1)
+	{
+		// Integrate the Command into the Arguments
+		Arguments.insert(Arguments.begin(), Command);
+		argv = new char*[nb_args+1];
+		for(k3d::uint_t i = 0; i != nb_args; ++i)
+		{
+			const std::string& argument = Arguments[i];
+			const k3d::uint_t str_size = argument.size();
+			argv[i] = new char[str_size+1];
+			argument.copy(argv[i], str_size);
+			argv[i][str_size] = '\0';
+		}
+		argv[nb_args] = static_cast<char*>(0);
+	}
+
+	~argv_from_vector()
+	{
+		for(k3d::uint_t i = 0; i != nb_args; ++i)
+			delete[] argv[i];
+		delete[] argv;
+	}
+
+	char** argv;
+	const k3d::uint_t nb_args;
+};
+
+} // namespace detail
 
 static filesystem::path g_executable_path;
 
@@ -133,32 +169,46 @@ const string_t getenv(const string_t& Variable)
 
 void setenv(const string_t& Name, const string_t& Value)
 {
+	int retval = 0;
+
 #ifdef K3D_API_WIN32
 
 	// Use putenv on Win32 because it's the only thing available, and it copies its inputs
-	::putenv((Name + "=" + Value).c_str());
+	retval = ::putenv((Name + "=" + Value).c_str());
 
 #else // K3D_API_WIN32
 
 	// Use setenv where possible because it copies its inputs
-	::setenv(Name.c_str(), Value.c_str(), true);
+	retval = ::setenv(Name.c_str(), Value.c_str(), true);
 
 #endif // !K3D_API_WIN32
+
+	if(retval == -1)
+	{
+		k3d::log() << error << "Error  " << errno << " when setting environment variable " << Name << " to value " << Value << ": " << strerror(errno) << std::endl;
+	}
 }
 
 void setenv(const string_t& Variable)
 {
+	int retval = 0;
+
 #ifdef K3D_API_WIN32
 
 	// Use putenv on Win32 because it's the only thing available, and it copies its inputs
-	::putenv(Variable.c_str());
+	retval = ::putenv(Variable.c_str());
 
 #else // K3D_API_WIN32
 
 	// On unix, we have to make a copy of the string to pass to putenv()
-	::putenv(::strdup(Variable.c_str()));
+	retval = ::putenv(::strdup(Variable.c_str()));
 
 #endif // !K3D_API_WIN32
+
+	if(retval == -1)
+	{
+		k3d::log() << error << "Error  " << errno << " when setting environment variable " << Variable << ": " << strerror(errno) << std::endl;
+	}
 }
 
 const filesystem::path get_home_directory()
@@ -343,6 +393,126 @@ bool spawn_sync(const string_t& CommandLine)
 		return false;
 	}
 #endif
+}
+
+bool spawn(const k3d::filesystem::path& Command, const std::vector<string_t>& Arguments, const spawn_type SpawnType, string_t& StandardOut, string_t& StandardError, const k3d::filesystem::path& WorkingDirectory, const environment_t& Environment)
+{
+#ifdef K3D_API_WIN32
+	assert_not_implemented();
+#endif
+
+	// Process the arguments
+	detail::argv_from_vector args(Command.native_filesystem_string(), Arguments);
+
+	// Pipes to capture stdin and stderr
+	int std_out_fd[2];
+	int std_err_fd[2];
+
+	pipe(std_out_fd);
+	pipe(std_err_fd);
+
+	pid_t child_pid = fork();
+
+	if(child_pid == -1)
+	{
+		k3d::log() << error << "fork() failed with error " << errno << " (" << strerror(errno) << ") when executing " << Command.native_filesystem_string() << std::endl;
+		return false;
+	}
+
+	if(child_pid == 0) // child code
+	{
+		// Duplicate to stdout and stderr
+		if(dup2(std_out_fd[1], STDOUT_FILENO) < 0)
+		{
+			k3d::log() << error << "dup2() failed with error " << errno << " (" << strerror(errno) << ") on stdout" << std::endl;
+			exit(254);
+		}
+		if(dup2(std_err_fd[1], STDERR_FILENO) < 0)
+		{
+			k3d::log() << error << "dup2() failed with error " << errno << " (" << strerror(errno) << ") on stderr" << std::endl;
+			exit(254);
+		}
+
+		for(const auto& env_entry : Environment)
+		{
+			setenv(env_entry.first, env_entry.second);
+		}
+
+		// Close pipes
+		close(std_out_fd[0]);
+		close(std_err_fd[0]);
+		close(std_out_fd[1]);
+		close(std_err_fd[1]);
+
+		if(!WorkingDirectory.empty())
+		{
+			if(chdir(WorkingDirectory.native_filesystem_string().c_str()) == -1)
+			{
+				k3d::log() << error << "chdir failed with error " << errno << " (" << strerror(errno) << ") when changing to working dir " << WorkingDirectory.native_filesystem_string() << std::endl;
+				exit(255);
+			}
+		}
+
+		if(execvp(Command.native_filesystem_string().c_str(), args.argv) == -1)
+		{
+			k3d::log() << error << "execvp failed with error " << errno << " (" << strerror(errno) << ") when executing " << Command.native_filesystem_string() << std::endl;
+			exit(255);
+		}
+	}
+	else // parent code
+	{
+		// Close output sides of pipe
+		close(std_out_fd[1]);
+		close(std_err_fd[1]);
+
+		if(SpawnType == SPAWN_SYNCHRONOUS)
+		{
+			const size_t buf_size = 1024;
+			char std_buffer[buf_size];
+			char err_buffer[buf_size];
+
+			ssize_t nb_read_std = 0;
+			ssize_t nb_read_err = 0;
+
+			do
+			{
+				nb_read_std = read(std_out_fd[0], std_buffer, buf_size);
+				nb_read_err = read(std_err_fd[0], err_buffer, buf_size);
+
+				if(nb_read_std < 0)
+				{
+					k3d::log() << error << "Error " << errno << " reading spawned command stdout pipe: " << strerror(errno) << std::endl;
+					return false;
+				}
+				if(nb_read_err < 0)
+				{
+					k3d::log() << error << "Error " << errno << " reading spawned command stderr pipe: " << strerror(errno) << std::endl;
+					return false;
+				}
+
+				StandardOut.append(std_buffer, nb_read_std);
+				StandardError.append(err_buffer, nb_read_err);
+			} while(nb_read_err > 0 && nb_read_std > 0);
+
+			int child_status;
+			if(waitpid(child_pid, &child_status, 0) < 0)
+			{
+				k3d::log() << error << "Error " << errno << " while waiting for child to exit: " << strerror(errno) << std::endl;
+			}
+
+			if(child_status != 0)
+			{
+				k3d::log() << error << "Child process " << Command.native_filesystem_string() << " failed with status " << WEXITSTATUS(child_status) << " and output: " << StandardError << std::endl;
+				return false;
+			}
+		}
+		else
+		{
+			assert_not_implemented();
+		}
+	}
+
+	return true;
 }
 
 const paths_t decompose_path_list(const string_t Input)
