@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
 
 		k3d::selection::storage& components = a.create("components");
 
-		const k3d::filesystem::path root_path;
+		const boost::filesystem::path root_path;
 		k3d::dependencies dependencies;
 		k3d::persistent_lookup lookup;
 		k3d::ipersistent::save_context save_context(root_path, dependencies, lookup);

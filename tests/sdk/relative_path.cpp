@@ -1,4 +1,4 @@
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 
 #include <iostream>
 #include <sstream>
@@ -11,13 +11,13 @@ int main(int argc, char* argv[])
 		if(argc != 4)
 			throw std::runtime_error("Usage: relative_path [ABSOLUTE PATH] [REFERENCE PATH] [EXPECTED RESULT]");
 
-		const k3d::filesystem::path absolute_path = k3d::filesystem::native_path(k3d::ustring::from_utf8(argv[1]));
-		const k3d::filesystem::path reference_path = k3d::filesystem::native_path(k3d::ustring::from_utf8(argv[2]));
-		const k3d::filesystem::path expected_result = k3d::filesystem::generic_path(k3d::ustring::from_utf8(argv[3]));
+		const boost::filesystem::path absolute_path = boost::filesystem::path(k3d::string_t(argv[1]));
+		const boost::filesystem::path reference_path = boost::filesystem::path(k3d::string_t(argv[2]));
+		const boost::filesystem::path expected_result = boost::filesystem::generic_path(k3d::string_t(argv[3]));
 
-		const k3d::filesystem::path result =  k3d::filesystem::make_relative_path(absolute_path, reference_path);
+		const boost::filesystem::path result =  boost::filesystem::make_relative_path(absolute_path, reference_path);
 		if(result != expected_result)
-			throw std::runtime_error("expected [" + expected_result.native_console_string() + "] got [" + result.native_console_string() + "]");
+			throw std::runtime_error("expected [" + expected_result.native() + "] got [" + result.native() + "]");
 	}
 	catch(std::exception& e)
 	{

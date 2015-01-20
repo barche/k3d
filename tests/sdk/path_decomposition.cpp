@@ -1,4 +1,4 @@
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 
 #include <iostream>
 #include <sstream>
@@ -24,19 +24,19 @@ private:
 
 void test_native_to_generic(const std::string& Native, const std::string& Generic)
 {
-	k3d::filesystem::path path = k3d::filesystem::native_path(k3d::ustring::from_utf8(Native));
-	std::cout << "native to generic: " << Native << " -> " << path.generic_utf8_string().raw() << std::endl;
+	boost::filesystem::path path = boost::filesystem::path(k3d::string_t(Native));
+	std::cout << "native to generic: " << Native << " -> " << path.generic_string().raw() << std::endl;
 
-	if(path.generic_utf8_string() != k3d::ustring::from_utf8(Generic))
+	if(path.generic_string() != k3d::string_t(Generic))
 		throw std::runtime_error("results don't match");
 }
 
 void test_iteration(const std::string& Native, const std::string& Generic)
 {
-	k3d::filesystem::path path = k3d::filesystem::native_path(k3d::ustring::from_utf8(Native));
+	boost::filesystem::path path = boost::filesystem::path(k3d::string_t(Native));
 
 	std::ostringstream buffer;
-	for(k3d::filesystem::path::iterator p = path.begin(); p != path.end(); ++p)
+	for(boost::filesystem::path::iterator p = path.begin(); p != path.end(); ++p)
 		buffer << (*p).raw() << ",";
 //	std::copy(path.begin(), path.end(), std::ostream_iterator<Glib::ustring>(buffer, ","));
 
@@ -48,37 +48,37 @@ void test_iteration(const std::string& Native, const std::string& Generic)
 
 void test_root_name(const std::string& Native, const std::string& Generic)
 {
-	k3d::filesystem::path path = k3d::filesystem::native_path(k3d::ustring::from_utf8(Native));
+	boost::filesystem::path path = boost::filesystem::path(k3d::string_t(Native));
 	std::cout << "root name: " << Native << " -> " << path.root_name().raw() << std::endl;
 
-	if(path.root_name() != k3d::ustring::from_utf8(Generic))
+	if(path.root_name() != k3d::string_t(Generic))
 		throw std::runtime_error("results don't match");
 }
 
 void test_root_directory(const std::string& Native, const std::string& Generic)
 {
-	k3d::filesystem::path path = k3d::filesystem::native_path(k3d::ustring::from_utf8(Native));
+	boost::filesystem::path path = boost::filesystem::path(k3d::string_t(Native));
 	std::cout << "root directory: " << Native << " -> " << path.root_directory().raw() << std::endl;
 
-	if(path.root_directory() != k3d::ustring::from_utf8(Generic))
+	if(path.root_directory() != k3d::string_t(Generic))
 		throw std::runtime_error("results don't match");
 }
 
 void test_branch_path(const std::string& Native, const std::string& Generic)
 {
-	k3d::filesystem::path path = k3d::filesystem::native_path(k3d::ustring::from_utf8(Native));
-	std::cout << "branch path: " << Native << " -> " << path.branch_path().generic_utf8_string().raw() << std::endl;
+	boost::filesystem::path path = boost::filesystem::path(k3d::string_t(Native));
+	std::cout << "branch path: " << Native << " -> " << path.branch_path().generic_string().raw() << std::endl;
 
-	if(path.branch_path().generic_utf8_string() != k3d::ustring::from_utf8(Generic))
+	if(path.branch_path().generic_string() != k3d::string_t(Generic))
 		throw std::runtime_error("results don't match");
 }
 
 void test_leaf(const std::string& Native, const std::string& Generic)
 {
-	k3d::filesystem::path path = k3d::filesystem::native_path(k3d::ustring::from_utf8(Native));
+	boost::filesystem::path path = boost::filesystem::path(k3d::string_t(Native));
 	std::cout << "path leaf: " << Native << " -> " << path.leaf().raw() << std::endl;
 
-	if(path.leaf() != k3d::ustring::from_utf8(Generic))
+	if(path.leaf() != k3d::string_t(Generic))
 		throw std::runtime_error("results don't match");
 }
 

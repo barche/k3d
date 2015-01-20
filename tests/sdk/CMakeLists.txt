@@ -26,6 +26,9 @@ K3D_TEST(sdk.bitmap.conversion TARGET test-bitmap-conversion LABELS sdk)
 ADD_EXECUTABLE(test-circular-signals circular_signals.cpp)
 K3D_TEST(sdk.circular-signals TARGET test-circular-signals LABELS sdk)
 
+ADD_EXECUTABLE(test-gzstream gzstream.cpp)
+K3D_TEST(sdk.gzstream TARGET test-gzstream LABELS sdk)
+
 ADD_EXECUTABLE(test-signals signals.cpp)
 K3D_TEST(sdk.signals TARGET test-signals LABELS sdk)
 

@@ -10,7 +10,7 @@ void run_test(const std::string& StdArg, const std::string& ErrArg, const k3d::s
 	const std::vector<std::string> args = boost::assign::list_of(StdArg)(ErrArg);
 	std::string std_out, std_err;
 
-	if(!k3d::system::spawn(k3d::filesystem::generic_path("./spawned-test-command"), args, SpawnType, std_out, std_err, k3d::filesystem::generic_path("../../bin")))
+	if(!k3d::system::spawn(boost::filesystem::generic_path("./spawned-test-command"), args, SpawnType, std_out, std_err, boost::filesystem::generic_path("../../bin")))
 	{
 		throw std::runtime_error("error spawning command");
 	}
@@ -38,7 +38,7 @@ void run_test_env(const std::string& EnvValue)
 	k3d::system::environment_t env;
 	env["spawn_test_env"] = EnvValue;
 
-	if(!k3d::system::spawn(k3d::filesystem::generic_path("./spawned-test-command"), args, k3d::system::SPAWN_SYNCHRONOUS, std_out, std_err, k3d::filesystem::generic_path("../../bin"), env))
+	if(!k3d::system::spawn(boost::filesystem::generic_path("./spawned-test-command"), args, k3d::system::SPAWN_SYNCHRONOUS, std_out, std_err, boost::filesystem::generic_path("../../bin"), env))
 	{
 		throw std::runtime_error("error spawning command");
 	}
