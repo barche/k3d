@@ -260,7 +260,7 @@ void module_close_document(idocument_wrapper& Document)
 	k3d::application().close_document(Document.wrapped());
 }
 
-object module_open_document(const k3d::filesystem::path& Path)
+object module_open_document(const boost::filesystem::path& Path)
 {
 	boost::scoped_ptr<k3d::idocument_importer> importer(k3d::plugin::create<k3d::idocument_importer>(k3d::classes::DocumentImporter()));
 	if(!importer)

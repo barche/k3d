@@ -27,11 +27,12 @@
 #include <k3dsdk/imetadata.h>
 #include <k3dsdk/iunknown.h>
 
+#include <boost/filesystem/path.hpp>
+
 namespace k3d
 {
 
 class idocument;
-namespace filesystem { class path; }
 
 /// Abstract interface for objects that can import data into an existing K-3D document
 class idocument_importer :
@@ -41,9 +42,9 @@ public:
 	virtual ~idocument_importer() {}
 
 	/// Return metadata extracted from the file.
-	virtual imetadata::metadata_t get_file_metadata(const filesystem::path& File) = 0;
+	virtual imetadata::metadata_t get_file_metadata(const boost::filesystem::path& File) = 0;
 	/// Read the file data into a document.
-	virtual bool_t read_file(const filesystem::path& File, idocument& Document) = 0;
+	virtual bool_t read_file(const boost::filesystem::path& File, idocument& Document) = 0;
 
 protected:
 	idocument_importer() {}

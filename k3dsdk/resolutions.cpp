@@ -21,11 +21,12 @@
 		\author Tim Shead (tshead@k-3d.com)
 */
 
-#include <k3dsdk/fstream.h>
 #include <k3dsdk/log.h>
 #include <k3dsdk/resolutions.h>
 #include <k3dsdk/share.h>
 #include <k3dsdk/xml.h>
+
+#include <boost/filesystem/fstream.hpp>
 
 namespace k3d
 {
@@ -37,8 +38,8 @@ const resolutions_t& resolutions()
 	{
 		try
 		{
-			const filesystem::path path = share_path() / filesystem::generic_path("resolutions.k3d");
-			filesystem::ifstream stream(path);
+			const boost::filesystem::path path = share_path() / boost::filesystem::path("resolutions.k3d");
+			boost::filesystem::ifstream stream(path);
 
 			k3d::xml::element xml("k3dml");
 			stream >> xml;

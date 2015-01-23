@@ -21,7 +21,6 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <k3dsdk/types.h>
-#include <k3dsdk/ustring.h>
 #include <vector>
 
 namespace k3d
@@ -30,10 +29,10 @@ namespace k3d
 struct contributor
 {
 	contributor(const string_t& Category);
-	contributor(const ustring& Name, const string_t& Description = "");
+	contributor(const string_t& Name, const string_t& Description);
 
 	string_t category;
-	ustring name;
+	string_t name;
 	string_t description;
 };
 

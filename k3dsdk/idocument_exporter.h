@@ -26,11 +26,12 @@
 
 #include <k3dsdk/iunknown.h>
 
+#include <boost/filesystem/path.hpp>
+
 namespace k3d
 {
 
 class idocument;
-namespace filesystem { class path; }
 	
 /// Abstract interface implemented by objects that can export data from a K-3D document
 class idocument_exporter :
@@ -39,7 +40,7 @@ class idocument_exporter :
 public:
 	virtual ~idocument_exporter() {}
 
-	virtual bool write_file(idocument& Document, const filesystem::path& File) = 0;
+	virtual bool write_file(idocument& Document, const boost::filesystem::path& File) = 0;
 
 protected:
 	idocument_exporter() {}

@@ -24,13 +24,13 @@
 		\author Tim Shead (tshead@k-3d.com)
 */
 
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 
 namespace k3d
 {
 
 /// Returns the absolute path to the shared-data directory
-const filesystem::path share_path();
+const boost::filesystem::path share_path();
 
 } // namespace k3d
 

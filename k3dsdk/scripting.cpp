@@ -96,7 +96,7 @@ const string_t& code::source() const
 ///////////////////////////////////////////////////////////////////////////////
 // language
 
-language::language(const filesystem::path& Script) :
+language::language(const boost::filesystem::path& Script) :
 	m_factory(0)
 {
 	// Get the MIME type of the code ...

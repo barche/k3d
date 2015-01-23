@@ -27,10 +27,10 @@
 #include <k3dsdk/iunknown.h>
 #include <k3dsdk/types.h>
 
+#include <boost/filesystem/path.hpp>
+
 namespace k3d
 {
-
-namespace filesystem { class path; }
 
 /// Abstract interface for objects that can identify the MIME Type of a file
 class imime_type_handler :
@@ -38,7 +38,7 @@ class imime_type_handler :
 {
 public:
 	/// Called to identify the MIME Type of a file.  Returns true iff the MIME Type was successfully identified.
-	virtual bool_t identify_mime_type(const filesystem::path& File, string_t& FileType) = 0;
+	virtual bool_t identify_mime_type(const boost::filesystem::path& File, string_t& FileType) = 0;
 	/// Called to identify the MIME Type of a data stream.  Returns true iff the MIME Type was successfully identified.
 	virtual bool_t identify_mime_type(const string_t& Data, string_t& DataType) = 0;
 

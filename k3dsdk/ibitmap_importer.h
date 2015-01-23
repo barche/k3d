@@ -27,10 +27,10 @@
 #include <k3dsdk/bitmap.h>
 #include <k3dsdk/iunknown.h>
 
+#include <boost/filesystem/path.hpp>
+
 namespace k3d
 {
-
-namespace filesystem { class path; }
 
 /// Abstract interface for objects capable of importing bitmaps from a filesystem
 class ibitmap_importer :
@@ -39,7 +39,7 @@ class ibitmap_importer :
 public:
 	virtual ~ibitmap_importer() {}
 
-	virtual bool read_file(const filesystem::path& File, bitmap& Bitmap) = 0;
+	virtual bool read_file(const boost::filesystem::path& File, bitmap& Bitmap) = 0;
 
 protected:
 	ibitmap_importer() {}

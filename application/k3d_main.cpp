@@ -39,7 +39,6 @@
 #include <k3dsdk/algebra.h>
 #include <k3dsdk/application.h>
 #include <k3dsdk/classes.h>
-#include <k3dsdk/fstream.h>
 #include <k3dsdk/gl.h>
 #include <k3dsdk/gl/extension.h>
 #include <k3dsdk/gzstream.h>
@@ -67,6 +66,7 @@
 #include <k3dsdk/utility.h>
 #include <k3dsdk/xml.h>
 
+#include <boost/filesystem.hpp>
 #include <boost/scoped_ptr.hpp>
 
 #include <iomanip>
@@ -91,22 +91,22 @@ k3d::bool_t g_syslog = false;
 k3d::bool_t g_color_level = false;
 k3d::log_level_t g_minimum_log_level = k3d::K3D_LOG_LEVEL_WARNING;
 
-k3d::filesystem::path g_default_ngui_path;
-k3d::filesystem::path g_default_nui_path;
-k3d::filesystem::path g_default_options_path;
-k3d::filesystem::path g_default_pyui_path;
-k3d::filesystem::path g_default_qtui_path;
-k3d::filesystem::path g_default_shader_cache_path;
-k3d::filesystem::path g_default_share_path;
-k3d::filesystem::path g_default_tutorials_path;
-k3d::filesystem::path g_default_user_interface_path;
+boost::filesystem::path g_default_ngui_path;
+boost::filesystem::path g_default_nui_path;
+boost::filesystem::path g_default_options_path;
+boost::filesystem::path g_default_pyui_path;
+boost::filesystem::path g_default_qtui_path;
+boost::filesystem::path g_default_shader_cache_path;
+boost::filesystem::path g_default_share_path;
+boost::filesystem::path g_default_tutorials_path;
+boost::filesystem::path g_default_user_interface_path;
 k3d::string_t g_default_plugin_paths;
 
-k3d::filesystem::path g_override_locale_path;
-k3d::filesystem::path g_options_path;
-k3d::filesystem::path g_shader_cache_path;
-k3d::filesystem::path g_share_path;
-k3d::filesystem::path g_user_interface_path;
+boost::filesystem::path g_override_locale_path;
+boost::filesystem::path g_options_path;
+boost::filesystem::path g_shader_cache_path;
+boost::filesystem::path g_share_path;
+boost::filesystem::path g_user_interface_path;
 k3d::string_t g_plugin_paths;
 
 k3d::ievent_loop* g_user_interface = 0;
@@ -153,17 +153,17 @@ k3d::bool_t exit_request_handler()
 void set_default_options(k3d::bool_t& Quit, k3d::bool_t& Error)
 {
 	// Setup default paths based on the location of the executable ...
-	const k3d::filesystem::path executable_dir = k3d::system::executable_path().branch_path();
-	const k3d::filesystem::path user_dir = k3d::system::get_home_directory() / k3d::filesystem::generic_path(".k3d");
+	const boost::filesystem::path executable_dir = k3d::system::executable_path().branch_path();
+	const boost::filesystem::path user_dir = k3d::system::get_home_directory() / boost::filesystem::path(".k3d");
 
-	g_default_ngui_path = executable_dir / k3d::filesystem::generic_path("../" K3D_LIBDIR "/k3d/plugins/k3d-ngui.module");
-	g_default_nui_path = executable_dir / k3d::filesystem::generic_path("../" K3D_LIBDIR "/k3d/plugins/k3d-nui.module");
-	g_default_options_path = user_dir / k3d::filesystem::generic_path("options.k3d");
-	g_default_plugin_paths = (executable_dir / k3d::filesystem::generic_path("../" K3D_LIBDIR "/k3d/plugins")).native_filesystem_string();
-	g_default_pyui_path = executable_dir / k3d::filesystem::generic_path("../" K3D_LIBDIR "/k3d/plugins/k3d-pyui.module");
-	g_default_qtui_path = executable_dir / k3d::filesystem::generic_path("../" K3D_LIBDIR "/k3d/plugins/k3d-qtui.module");
-	g_default_shader_cache_path = user_dir / k3d::filesystem::generic_path("shadercache");
-	g_default_share_path = executable_dir / k3d::filesystem::generic_path("../share/k3d");
+	g_default_ngui_path = executable_dir / boost::filesystem::path("../" K3D_LIBDIR "/k3d/plugins/k3d-ngui.module");
+	g_default_nui_path = executable_dir / boost::filesystem::path("../" K3D_LIBDIR "/k3d/plugins/k3d-nui.module");
+	g_default_options_path = user_dir / boost::filesystem::path("options.k3d");
+	g_default_plugin_paths = (executable_dir / boost::filesystem::path("../" K3D_LIBDIR "/k3d/plugins")).native();
+	g_default_pyui_path = executable_dir / boost::filesystem::path("../" K3D_LIBDIR "/k3d/plugins/k3d-pyui.module");
+	g_default_qtui_path = executable_dir / boost::filesystem::path("../" K3D_LIBDIR "/k3d/plugins/k3d-qtui.module");
+	g_default_shader_cache_path = user_dir / boost::filesystem::path("shadercache");
+	g_default_share_path = executable_dir / boost::filesystem::path("../share/k3d");
 
 #ifdef K3D_ENABLE_OSX_BUNDLE
 	g_default_user_interface_path = g_default_qtui_path;
@@ -180,26 +180,26 @@ void set_default_options(k3d::bool_t& Quit, k3d::bool_t& Error)
 
 	// Optionally override paths using environment variables ...
 	if(!k3d::system::getenv("K3D_LOCALE_PATH").empty())
-		g_override_locale_path = k3d::filesystem::native_path(k3d::ustring::from_utf8(k3d::system::getenv("K3D_LOCALE_PATH")));
+		g_override_locale_path = boost::filesystem::path(k3d::string_t(k3d::system::getenv("K3D_LOCALE_PATH")));
 
 	if(!k3d::system::getenv("K3D_OPTIONS_PATH").empty())
-		g_options_path = k3d::filesystem::native_path(k3d::ustring::from_utf8(k3d::system::getenv("K3D_OPTIONS_PATH")));
+		g_options_path = boost::filesystem::path(k3d::string_t(k3d::system::getenv("K3D_OPTIONS_PATH")));
 
 	if(!k3d::system::getenv("K3D_PLUGIN_PATHS").empty())
 		g_plugin_paths = k3d::system::getenv("K3D_PLUGIN_PATHS");
 
 	if(!k3d::system::getenv("K3D_SHADER_CACHE_PATH").empty())
-		g_shader_cache_path = k3d::filesystem::native_path(k3d::ustring::from_utf8(k3d::system::getenv("K3D_SHADER_CACHE_PATH")));
+		g_shader_cache_path = boost::filesystem::path(k3d::string_t(k3d::system::getenv("K3D_SHADER_CACHE_PATH")));
 
 	if(!k3d::system::getenv("K3D_SHARE_PATH").empty())
-		g_share_path = k3d::filesystem::native_path(k3d::ustring::from_utf8(k3d::system::getenv("K3D_SHARE_PATH")));
+		g_share_path = boost::filesystem::path(k3d::string_t(k3d::system::getenv("K3D_SHARE_PATH")));
 
 	if(!k3d::system::getenv("K3D_USER_INTERFACE_PATH").empty())
-		g_user_interface_path = k3d::filesystem::native_path(k3d::ustring::from_utf8(k3d::system::getenv("K3D_USER_INTERFACE_PATH")));
+		g_user_interface_path = boost::filesystem::path(k3d::string_t(k3d::system::getenv("K3D_USER_INTERFACE_PATH")));
 
 #ifdef K3D_API_WIN32
 	// Add the executable directory to PATH
-	k3d::system::setenv("PATH", executable_dir.native_filesystem_string() + ";" + k3d::system::getenv("PATH"));
+	k3d::system::setenv("PATH", executable_dir.native() + ";" + k3d::system::getenv("PATH"));
 #endif // K3D_API_WIN32
 }
 
@@ -291,7 +291,7 @@ const arguments_t parse_startup_arguments(const arguments_t& Arguments, k3d::boo
 			else if(argument->value[0] == "pyui")
 				g_user_interface_path = g_default_pyui_path;
 			else
-				g_user_interface_path = k3d::filesystem::native_path(k3d::ustring::from_utf8(argument->value[0]));
+				g_user_interface_path = boost::filesystem::path(k3d::string_t(argument->value[0]));
 		}
 		else if(argument->string_key == "plugins")
 		{
@@ -300,15 +300,15 @@ const arguments_t parse_startup_arguments(const arguments_t& Arguments, k3d::boo
 		}
 		else if(argument->string_key == "shadercache")
 		{
-			g_shader_cache_path = k3d::filesystem::native_path(k3d::ustring::from_utf8(argument->value[0]));
+			g_shader_cache_path = boost::filesystem::path(k3d::string_t(argument->value[0]));
 		}
 		else if(argument->string_key == "share")
 		{
-			g_share_path = k3d::filesystem::native_path(k3d::ustring::from_utf8(argument->value[0]));
+			g_share_path = boost::filesystem::path(k3d::string_t(argument->value[0]));
 		}
 		else if(argument->string_key == "options")
 		{
-			g_options_path = k3d::filesystem::native_path(k3d::ustring::from_utf8(argument->value[0]));
+			g_options_path = boost::filesystem::path(k3d::string_t(argument->value[0]));
 		}
 		else if(argument->string_key == "add-path")
 		{
@@ -332,7 +332,7 @@ const arguments_t parse_startup_arguments(const arguments_t& Arguments, k3d::boo
 		}
 		else if(argument->string_key == "locale")
 		{
-			g_override_locale_path = k3d::filesystem::native_path(k3d::ustring::from_utf8(argument->value[0]));
+			g_override_locale_path = boost::filesystem::path(k3d::string_t(argument->value[0]));
 		}
 		else
 		{
@@ -363,14 +363,14 @@ void check_dependencies(k3d::bool_t& Quit, k3d::bool_t& Error)
 	k3d::log() << warning "xml parser: unknown" << std::endl;
 #endif
 
-	k3d::log() << info << "executable: " << k3d::system::executable_path().native_console_string() << std::endl;
-	k3d::log() << info << "options file: " << g_options_path.native_console_string() << std::endl;
+	k3d::log() << info << "executable: " << k3d::system::executable_path().native() << std::endl;
+	k3d::log() << info << "options file: " << g_options_path.native() << std::endl;
 	k3d::log() << info << "plugin path(s): " << g_plugin_paths << std::endl;
-	k3d::log() << info << "shader cache path: " << g_shader_cache_path.native_console_string() << std::endl;
-	k3d::log() << info << "share path: " << g_share_path.native_console_string() << std::endl;
-	k3d::log() << info << "user interface: " << g_user_interface_path.native_console_string() << std::endl;
-	k3d::log() << info << "home directory: " << k3d::system::get_home_directory().native_console_string() << std::endl;
-	k3d::log() << info << "temp directory: " << k3d::system::get_temp_directory().native_console_string() << std::endl;
+	k3d::log() << info << "shader cache path: " << g_shader_cache_path.native() << std::endl;
+	k3d::log() << info << "share path: " << g_share_path.native() << std::endl;
+	k3d::log() << info << "user interface: " << g_user_interface_path.native() << std::endl;
+	k3d::log() << info << "home directory: " << k3d::system::get_home_directory().native() << std::endl;
+	k3d::log() << info << "temp directory: " << k3d::system::get_temp_directory().native() << std::endl;
 
 	// The options file must be specified and must exist ...
 	if(g_options_path.empty())
@@ -379,10 +379,10 @@ void check_dependencies(k3d::bool_t& Quit, k3d::bool_t& Error)
 		return;
 	}
 
-	k3d::filesystem::create_directories(g_options_path.branch_path());
-	if(!k3d::filesystem::exists(g_options_path.branch_path()))
+	boost::filesystem::create_directories(g_options_path.branch_path());
+	if(!boost::filesystem::exists(g_options_path.branch_path()))
 	{
-		handle_error("Options directory [" + g_options_path.branch_path().native_console_string() + "] does not exist and could not be created.", Quit, Error);
+		handle_error("Options directory [" + g_options_path.branch_path().native() + "] does not exist and could not be created.", Quit, Error);
 		return;
 	}
 
@@ -390,9 +390,9 @@ void check_dependencies(k3d::bool_t& Quit, k3d::bool_t& Error)
 	const k3d::system::paths_t plugin_paths = k3d::system::decompose_path_list(g_plugin_paths);
 	for(k3d::system::paths_t::const_iterator plugin_path = plugin_paths.begin(); plugin_path != plugin_paths.end(); ++plugin_path)
 	{
-		if(!k3d::filesystem::exists(*plugin_path))
+		if(!boost::filesystem::exists(*plugin_path))
 		{
-			handle_error("Plugin path [" + plugin_path->native_console_string() + "] does not exist.", Quit, Error);
+			handle_error("Plugin path [" + plugin_path->native() + "] does not exist.", Quit, Error);
 			return;
 		}
 	}
@@ -404,17 +404,17 @@ void check_dependencies(k3d::bool_t& Quit, k3d::bool_t& Error)
 		return;
 	}
 
-	k3d::filesystem::create_directories(g_shader_cache_path);
-	if(!k3d::filesystem::exists(g_shader_cache_path))
+	boost::filesystem::create_directories(g_shader_cache_path);
+	if(!boost::filesystem::exists(g_shader_cache_path))
 	{
-		handle_error("Shader cache path [" + g_shader_cache_path.native_console_string() + "] does not exist and could not be created.", Quit, Error);
+		handle_error("Shader cache path [" + g_shader_cache_path.native() + "] does not exist and could not be created.", Quit, Error);
 		return;
 	}
 
 	// The share path must exist ...
-	if(!k3d::filesystem::exists(g_share_path))
+	if(!boost::filesystem::exists(g_share_path))
 	{
-		handle_error("Share path [" + g_share_path.native_console_string() + "] does not exist.", Quit, Error);
+		handle_error("Share path [" + g_share_path.native() + "] does not exist.", Quit, Error);
 		return;
 	}
 }
@@ -425,8 +425,8 @@ void check_dependencies(k3d::bool_t& Quit, k3d::bool_t& Error)
 /// Instantiates the (optional) user interface plugin
 void create_user_interface(k3d::plugin_factory_collection& Plugins, k3d::bool_t& Quit, k3d::bool_t& Error)
 {
-	const k3d::string_t module_name = g_user_interface_path.native_console_string();
-	if(!g_user_interface_path.empty() && !k3d::filesystem::exists(g_user_interface_path))
+	const k3d::string_t module_name = g_user_interface_path.native();
+	if(!g_user_interface_path.empty() && !boost::filesystem::exists(g_user_interface_path))
 	{
 		handle_error("UI plugin module [" + module_name + "] does not exist", Quit, Error);
 		return;
@@ -506,8 +506,8 @@ const arguments_t parse_runtime_arguments(const arguments_t& Arguments, k3d::boo
 				else
 				{
 					script_name = argument->value[0];
-					const k3d::filesystem::path script_path = k3d::filesystem::native_path(k3d::ustring::from_utf8(script_name));
-					if(!k3d::filesystem::exists(script_path))
+					const boost::filesystem::path script_path = boost::filesystem::path(k3d::string_t(script_name));
+					if(!boost::filesystem::exists(script_path))
 					{
 						k3d::log() << error << "Script [" << script_name << "] doesn't exist" << std::endl;
 						Quit = true;
@@ -742,14 +742,14 @@ int k3d_main(std::vector<k3d::string_t> raw_arguments)
 		k3d::set_share_path(g_share_path);
 
 #ifdef K3D_ENABLE_NLS
-		k3d::filesystem::path locale_path = g_share_path / k3d::filesystem::generic_path("locale");
+		boost::filesystem::path locale_path = g_share_path / boost::filesystem::path("locale");
 		if(!g_override_locale_path.empty())
 			locale_path = g_override_locale_path;
 
-		k3d::log() << info << "locale path: " << locale_path.native_console_string() << std::endl;
+		k3d::log() << info << "locale path: " << locale_path.native() << std::endl;
 
 		setlocale(LC_ALL, "");
-		bindtextdomain("k3d", locale_path.native_filesystem_string().c_str());
+		bindtextdomain("k3d", locale_path.native().c_str());
 		bind_textdomain_codeset("k3d", "UTF-8");
 		textdomain("k3d");
 #endif // K3D_ENABLE_NLS

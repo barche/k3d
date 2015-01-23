@@ -58,7 +58,7 @@ class file_storage :
 	public istorage
 {
 public:
-	file_storage(const filesystem::path& File);
+	file_storage(const boost::filesystem::path& File);
 	~file_storage();
 
 	xml::element& tree();

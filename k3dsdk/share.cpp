@@ -33,17 +33,17 @@ namespace detail
 {
 
 /// Stores the global shared-data directory
-filesystem::path g_share_path;
+boost::filesystem::path g_share_path;
 	
 } // namespace detail
 	
-void set_share_path(const filesystem::path& SharePath)
+void set_share_path(const boost::filesystem::path& SharePath)
 {
 	return_if_fail(detail::g_share_path.empty());
 	detail::g_share_path = SharePath;
 }
 
-const filesystem::path share_path()
+const boost::filesystem::path share_path()
 {
 	static bool nag = true;
 	if(detail::g_share_path.empty() && nag)

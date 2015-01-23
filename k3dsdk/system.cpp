@@ -23,15 +23,15 @@
 */
 
 #include <errno.h>
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 #include <k3d-platform-config.h>
 #include <k3dsdk/result.h>
 #include <k3dsdk/string_modifiers.h>
 #include <k3dsdk/system.h>
 
-#include <glibmm/spawn.h>
-
 #include <boost/tokenizer.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
 #include <cmath>
 #include <cstring>
@@ -108,7 +108,7 @@ struct argv_from_vector
 
 } // namespace detail
 
-static filesystem::path g_executable_path;
+static boost::filesystem::path g_executable_path;
 
 void initialize_executable_path(int argc, char* argv[])
 {
@@ -117,7 +117,7 @@ void initialize_executable_path(int argc, char* argv[])
 	string_t buffer(256, '\0');
 	GetModuleFileName(0, const_cast<char*>(buffer.data()), buffer.size());
 	buffer.resize(strlen(buffer.c_str()));
-	g_executable_path = filesystem::native_path(ustring::from_utf8(buffer));
+	g_executable_path = boost::filesystem::path(string_t(buffer));
 	return;
 
 #elif defined K3D_API_DARWIN
@@ -127,31 +127,31 @@ void initialize_executable_path(int argc, char* argv[])
 	_NSGetExecutablePath(const_cast<char*>(buffer.data()), &buffer_size);
 	buffer.resize(buffer_size);
 	_NSGetExecutablePath(const_cast<char*>(buffer.data()), &buffer_size);
-	g_executable_path = filesystem::native_path(ustring::from_utf8(buffer));
+	g_executable_path = boost::filesystem::path(string_t(buffer));
 	return;
 
 #else
 	// Linux ...
-	if(exists(filesystem::native_path(ustring::from_utf8("/proc/self/exe"))))
+	if(boost::filesystem::exists(boost::filesystem::path(string_t("/proc/self/exe"))))
 	{
 		string_t buffer(256, '\0');
 		readlink("/proc/self/exe", const_cast<char*>(buffer.data()), buffer.size());
-		g_executable_path = filesystem::native_path(ustring::from_utf8(buffer));
+		g_executable_path = boost::filesystem::path(string_t(buffer));
 		return;
 	}
 
 	// BSD ...
-	if(exists(filesystem::native_path(ustring::from_utf8("/proc/curproc/file"))))
+	if(boost::filesystem::exists(boost::filesystem::path(string_t("/proc/curproc/file"))))
 	{
 		string_t buffer(256, '\0');
 		readlink("/proc/curproc/file", const_cast<char*>(buffer.data()), buffer.size());
-		g_executable_path = filesystem::native_path(ustring::from_utf8(buffer));
+		g_executable_path = boost::filesystem::path(string_t(buffer));
 		return;
 	}
 #endif
 }
 
-const filesystem::path executable_path()
+const boost::filesystem::path executable_path()
 {
 	if(g_executable_path.empty())
 		log() << warning << "Uninitialized executable path ... did you forget to call initialize_executable_path(...) at startup?" << std::endl;
@@ -211,70 +211,72 @@ void setenv(const string_t& Variable)
 	}
 }
 
-const filesystem::path get_home_directory()
+const boost::filesystem::path get_home_directory()
 {
-	static filesystem::path home;
+	static boost::filesystem::path home;
 
 #ifdef K3D_API_WIN32
 
 	if(home.empty())
-		home = filesystem::native_path(ustring::from_utf8(getenv("APPDATA")));
+		home = boost::filesystem::path(string_t(getenv("APPDATA")));
 
 	if(home.empty())
-		home = filesystem::native_path(ustring::from_utf8(getenv("USERPROFILE")));
+		home = boost::filesystem::path(string_t(getenv("USERPROFILE")));
 
 #endif // K3D_API_WIN32
 
 	if(home.empty())
-		home = filesystem::native_path(ustring::from_utf8(getenv("HOME")));
+		home = boost::filesystem::path(string_t(getenv("HOME")));
 
 	if(home.empty())
 	{
-		home = filesystem::native_path(ustring::from_utf8(DEFAULT_HOME_DIRECTORY));
-		log() << warning << "Using default home directory [" << home.native_console_string() << "]" << std::endl;
+		home = boost::filesystem::path(string_t(DEFAULT_HOME_DIRECTORY));
+		log() << warning << "Using default home directory [" << home.native() << "]" << std::endl;
 	}
 
 	return home;
 }
 
-const filesystem::path get_temp_directory()
+const boost::filesystem::path get_temp_directory()
 {
-	static filesystem::path temp_directory;
+	static boost::filesystem::path temp_directory;
 
 	if(temp_directory.empty())
 	{
 		if(!getenv("TMPDIR").empty())
 		{
-			temp_directory = filesystem::native_path(ustring::from_utf8(getenv("TMPDIR")));
+			temp_directory = boost::filesystem::path(string_t(getenv("TMPDIR")));
 		}
 		else if(!getenv("TMP").empty())
 		{
-			temp_directory = filesystem::native_path(ustring::from_utf8(getenv("TMP")));
+			temp_directory = boost::filesystem::path(string_t(getenv("TMP")));
 		}
 		else if(!getenv("TEMP").empty())
 		{
-			temp_directory = filesystem::native_path(ustring::from_utf8(getenv("TEMP")));
+			temp_directory = boost::filesystem::path(string_t(getenv("TEMP")));
 		}
 		else
 		{
-			temp_directory = filesystem::native_path(ustring::from_utf8(DEFAULT_TEMP_DIRECTORY));
+			temp_directory = boost::filesystem::path(string_t(DEFAULT_TEMP_DIRECTORY));
 		}
 	}
 
 	return temp_directory;
 }
 
-const filesystem::path find_executable(const string_t& Executable)
+const boost::filesystem::path find_executable(const string_t& Executable)
 {
 	const string_t executable_name = k3d::system::executable_name(Executable);
 
-	filesystem::path result;
+	boost::filesystem::path result;
 
-	const filesystem::path_list paths = filesystem::split_native_paths(ustring::from_utf8(system::getenv("PATH")));
-	for(filesystem::path_list::const_iterator path = paths.begin(); path != paths.end(); ++path)
+	std::vector<string_t> paths;
+	boost::algorithm::split(paths, system::getenv("PATH"), boost::algorithm::is_any_of(":"));
+
+	for(const string_t path_str : paths)
 	{
-		const filesystem::path test_path = (*path) / filesystem::generic_path(ustring::from_utf8(executable_name));
-		if(filesystem::exists(test_path))
+		const boost::filesystem::path test_path = boost::filesystem::path(path_str) / boost::filesystem::path(executable_name);
+		if(boost::filesystem::exists(test_path))
 		{
 			result = test_path;
 			break;
@@ -284,32 +286,32 @@ const filesystem::path find_executable(const string_t& Executable)
 	return result;
 }
 
-const filesystem::path generate_temp_file()
+const boost::filesystem::path generate_temp_file()
 {
 #ifdef K3D_API_WIN32
 
 	string_t buffer(MAX_PATH, '\0');
-	return_val_if_fail(GetTempFileName(get_temp_directory().native_filesystem_string().c_str(), "k3d", 0, const_cast<char*>(buffer.c_str())), filesystem::path());
+	return_val_if_fail(GetTempFileName(get_temp_directory().native().c_str(), "k3d", 0, const_cast<char*>(buffer.c_str())), boost::filesystem::path());
 	buffer.resize(strlen(buffer.c_str()));
 
-	return filesystem::native_path(ustring::from_utf8(buffer));
+	return boost::filesystem::path(string_t(buffer));
 
 #else // K3D_API_WIN32
 
-	string_t buffer = (get_temp_directory() / filesystem::generic_path("k3d-XXXXXX")).native_filesystem_string();
+	string_t buffer = (get_temp_directory() / boost::filesystem::path("k3d-XXXXXX")).native();
 	int fd = mkstemp(const_cast<char*>(buffer.c_str()));
-	return_val_if_fail(fd, filesystem::path());
+	return_val_if_fail(fd, boost::filesystem::path());
 	close(fd);
 
-	return filesystem::native_path(ustring::from_utf8(buffer));
+	return boost::filesystem::path(string_t(buffer));
 
 #endif // !K3D_API_WIN32
 }
 
-bool file_modification_time(const filesystem::path& File, time_t& ModificationTime)
+bool file_modification_time(const boost::filesystem::path& File, time_t& ModificationTime)
 {
 	struct stat statistics;
-	if(-1 == stat(File.native_filesystem_string().c_str(), &statistics))
+	if(-1 == stat(File.native().c_str(), &statistics))
 		return false;
 
 	ModificationTime = statistics.st_mtime;
@@ -317,92 +319,14 @@ bool file_modification_time(const filesystem::path& File, time_t& ModificationTi
 	return true;
 }
 
-bool spawn_async(const string_t& CommandLine)
-{
-	return_val_if_fail(!CommandLine.empty(), false);
-
-	log() << info << "spawn_async: " << CommandLine << std::endl;
-	log() << info << "PATH=" << getenv("PATH") << std::endl;
-
-	try
-	{
-		Glib::spawn_command_line_async(CommandLine);
-		return true;
-	}
-	catch(Glib::Exception& e)
-	{
-		log() << error << e.what() << std::endl;
-		return false;
-	}
-}
-
-bool spawn_sync(const string_t& CommandLine)
-{
-	return_val_if_fail(!CommandLine.empty(), false);
-
-	log() << info << "spawn_sync: " << CommandLine << std::endl;
-	log() << info << "PATH=" << getenv("PATH") << std::endl;
-#ifdef K3D_API_WIN32
-	k3d::bool_t status = true;
-	STARTUPINFO si;
-	PROCESS_INFORMATION pi;
-
-	ZeroMemory( &si, sizeof(si) );
-	si.cb = sizeof(si);
-	ZeroMemory( &pi, sizeof(pi) );
-
-	LPTSTR cmd_line = _strdup(CommandLine.c_str());
-	
-	// Start the child process. 
-	if( !CreateProcess( NULL,   // No module name (use command line)
-		cmd_line,        // Command line
-		NULL,           // Process handle not inheritable
-		NULL,           // Thread handle not inheritable
-		FALSE,          // Set handle inheritance to FALSE
-		0,              // No creation flags
-		NULL,           // Use parent's environment block
-		NULL,           // Use parent's starting directory 
-		&si,            // Pointer to STARTUPINFO structure
-		&pi )           // Pointer to PROCESS_INFORMATION structure
-	) 
-	{
-		log() << error << "Failed to CreateProcess with error: " << GetLastError() << std::endl;
-		status = false;
-	}
-	else
-	{
-		// Wait until child process exits.
-		WaitForSingleObject( pi.hProcess, INFINITE );
-
-		// Close process and thread handles. 
-		CloseHandle( pi.hProcess );
-		CloseHandle( pi.hThread );
-	}
-	
-	free(cmd_line);
-	return status;
-#else // non-win32:
-	try
-	{
-		Glib::spawn_command_line_sync(CommandLine);
-		return true;
-	}
-	catch(Glib::Exception& e)
-	{
-		log() << error << e.what() << std::endl;
-		return false;
-	}
-#endif
-}
-
-bool spawn(const k3d::filesystem::path& Command, const std::vector<string_t>& Arguments, const spawn_type SpawnType, string_t& StandardOut, string_t& StandardError, const k3d::filesystem::path& WorkingDirectory, const environment_t& Environment)
+bool spawn(const boost::filesystem::path& Command, const std::vector<string_t>& Arguments, const spawn_type SpawnType, string_t& StandardOut, string_t& StandardError, const boost::filesystem::path& WorkingDirectory, const environment_t& Environment)
 {
 #ifdef K3D_API_WIN32
 	assert_not_implemented();
 #endif
 
 	// Process the arguments
-	detail::argv_from_vector args(Command.native_filesystem_string(), Arguments);
+	detail::argv_from_vector args(Command.native(), Arguments);
 
 	// Pipes to capture stdin and stderr
 	int std_out_fd[2];
@@ -415,7 +339,7 @@ bool spawn(const k3d::filesystem::path& Command, const std::vector<string_t>& Ar
 
 	if(child_pid == -1)
 	{
-		k3d::log() << error << "fork() failed with error " << errno << " (" << strerror(errno) << ") when executing " << Command.native_filesystem_string() << std::endl;
+		k3d::log() << error << "fork() failed with error " << errno << " (" << strerror(errno) << ") when executing " << Command.native() << std::endl;
 		return false;
 	}
 
@@ -446,16 +370,16 @@ bool spawn(const k3d::filesystem::path& Command, const std::vector<string_t>& Ar
 
 		if(!WorkingDirectory.empty())
 		{
-			if(chdir(WorkingDirectory.native_filesystem_string().c_str()) == -1)
+			if(chdir(WorkingDirectory.native().c_str()) == -1)
 			{
-				k3d::log() << error << "chdir failed with error " << errno << " (" << strerror(errno) << ") when changing to working dir " << WorkingDirectory.native_filesystem_string() << std::endl;
+				k3d::log() << error << "chdir failed with error " << errno << " (" << strerror(errno) << ") when changing to working dir " << WorkingDirectory.native() << std::endl;
 				exit(255);
 			}
 		}
 
-		if(execvp(Command.native_filesystem_string().c_str(), args.argv) == -1)
+		if(execvp(Command.native().c_str(), args.argv) == -1)
 		{
-			k3d::log() << error << "execvp failed with error " << errno << " (" << strerror(errno) << ") when executing " << Command.native_filesystem_string() << std::endl;
+			k3d::log() << error << "execvp failed with error " << errno << " (" << strerror(errno) << ") when executing " << Command.native() << std::endl;
 			exit(255);
 		}
 	}
@@ -502,7 +426,7 @@ bool spawn(const k3d::filesystem::path& Command, const std::vector<string_t>& Ar
 
 			if(child_status != 0)
 			{
-				k3d::log() << error << "Child process " << Command.native_filesystem_string() << " failed with status " << WEXITSTATUS(child_status) << " and output: " << StandardError << std::endl;
+				k3d::log() << error << "Child process " << Command.native() << " failed with status " << WEXITSTATUS(child_status) << " and output: " << StandardError << std::endl;
 				return false;
 			}
 		}
@@ -527,7 +451,7 @@ const paths_t decompose_path_list(const string_t Input)
 	{
 		const string_t path_string = k3d::trim(*path);
 		if(!path_string.empty())
-			results.push_back(filesystem::native_path(ustring::from_utf8(path_string)));
+			results.push_back(boost::filesystem::path(string_t(path_string)));
 	}
 
 	return results;

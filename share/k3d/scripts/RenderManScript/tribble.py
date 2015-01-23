@@ -67,5 +67,5 @@ RiCurves(RI_CUBIC, control_point_counts, RI_NONPERIODIC, "P", control_points, "w
 
 ri._ribout.flush()
 
-context.render_state.use_shader(k3d.share_path() / k3d.filesystem.generic_path("shaders/surface/k3d_hair.sl"))
+context.render_state.use_shader(k3d.share_path() / k3d.filesystem.path("shaders/surface/k3d_hair.sl"))
 

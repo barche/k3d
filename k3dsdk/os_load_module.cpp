@@ -23,7 +23,7 @@
 
 #include <k3dsdk/log.h>
 #include <k3dsdk/os_load_module.h>
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 #include <k3dsdk/result.h>
 
 namespace k3d
@@ -36,15 +36,15 @@ namespace k3d
 
 	#include <k3dsdk/win32.h>
 
-	void os_load_module(const filesystem::path& FilePath, register_plugins_entry_point& RegisterPlugins)
+	void os_load_module(const boost::filesystem::path& FilePath, register_plugins_entry_point& RegisterPlugins)
 	{
 		const UINT old_error_mode = SetErrorMode(SetErrorMode(SEM_FAILCRITICALERRORS)); // Disable error dialogs when loading DLLs
-		HINSTANCE module = LoadLibrary(FilePath.native_filesystem_string().c_str());
+		HINSTANCE module = LoadLibrary(FilePath.native().c_str());
 		SetErrorMode(old_error_mode);
 
 		if(!module)
 		{
-			log() << error << "Module [" << FilePath.native_console_string() << "] could not be loaded: error " << GetLastError() << std::endl;
+			log() << error << "Module [" << FilePath.native() << "] could not be loaded: error " << GetLastError() << std::endl;
 			return;
 		}
 
@@ -53,7 +53,7 @@ namespace k3d
 			RegisterPlugins = register_plugins_entry_point(GetProcAddress(module, "_register_k3d_plugins"));
 		if(!RegisterPlugins)
 		{
-			log() << error << "Module " << FilePath.leaf().raw() << " does not contain required register_k3d_plugins() entry point" << std::endl;
+			log() << error << "Module " << FilePath.leaf() << " does not contain required register_k3d_plugins() entry point" << std::endl;
 			return;
 		}
 	}
@@ -62,19 +62,19 @@ namespace k3d
 
 	#include <dlfcn.h>
 
-	void os_load_module(const filesystem::path& FilePath, register_plugins_entry_point& RegisterPlugins)
+	void os_load_module(const boost::filesystem::path& FilePath, register_plugins_entry_point& RegisterPlugins)
 	{
-		void* module = dlopen(FilePath.native_filesystem_string().c_str(), RTLD_GLOBAL | RTLD_LAZY);
+		void* module = dlopen(FilePath.native().c_str(), RTLD_GLOBAL | RTLD_LAZY);
 		if(!module)
 		{
-			log() << error << "Module " << FilePath.leaf().raw() << ": " << dlerror() << std::endl;
+			log() << error << "Module " << FilePath.leaf() << ": " << dlerror() << std::endl;
 			return;
 		}
 
 		RegisterPlugins = register_plugins_entry_point(dlsym(module, "register_k3d_plugins"));
 		if(!RegisterPlugins)
 		{
-			log() << error << "Module " << FilePath.leaf().raw() << " does not contain required register_k3d_plugins() entry point" << std::endl;
+			log() << error << "Module " << FilePath.leaf() << " does not contain required register_k3d_plugins() entry point" << std::endl;
 			return;
 		}
 	}

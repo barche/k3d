@@ -21,7 +21,6 @@
 	\author Tim Shead (tshead@k-3d.com)
 */
 
-#include <k3dsdk/fstream.h>
 #include <k3dsdk/iapplication_plugin_factory.h>
 #include <k3dsdk/idocument_plugin_factory.h>
 #include <k3dsdk/iplugin_factory.h>
@@ -39,6 +38,10 @@
 #include <k3dsdk/xml.h>
 
 #include <iostream>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 namespace k3d
 {
@@ -130,7 +133,7 @@ private:
 /// Stores a mapping of plugin class id to plugin factory, so we can lookup recently-loaded factories quickly
 std::map<uuid, iplugin_factory*> proxied_factories;
 /// Stores a mapping of plugin class id to plugin module path, so we can load modules that were proxied
-std::map<uuid, filesystem::path> proxied_modules;
+std::map<uuid, boost::filesystem::path> proxied_modules;
 
 iplugin_factory* load_proxied_factory(const uuid& FactoryID)
 {
@@ -146,7 +149,7 @@ iplugin_factory* load_proxied_factory(const uuid& FactoryID)
 		return 0;
 
 	// It's a K-3D module, all-right - give it a chance to register its plugins
-	log() << info << "Loading plugin module " << proxied_modules[FactoryID].native_console_string() << std::endl;
+	log() << info << "Loading plugin module " << proxied_modules[FactoryID].native() << std::endl;
 
 	plugin_factory_collection::message_signal_t message_signal;
 	iplugin_factory_collection::factories_t factories;
@@ -377,13 +380,13 @@ private:
 
 struct plugin_factory_collection::implementation
 {
-	bool proxy_module(const filesystem::path& Path, const filesystem::path& ProxyPath)
+	bool proxy_module(const boost::filesystem::path& Path, const boost::filesystem::path& ProxyPath)
 	{
-		m_message_signal(string_cast(boost::format(_("Proxying plugin module %1%")) % Path.native_utf8_string().raw()));
+		m_message_signal(string_cast(boost::format(_("Proxying plugin module %1%")) % Path.native()));
 
 		try
 		{
-			filesystem::ifstream proxy_stream(ProxyPath);
+			boost::filesystem::ifstream proxy_stream(ProxyPath);
 			xml::element xml_document;
 			proxy_stream >> xml_document;
 
@@ -490,7 +493,7 @@ struct plugin_factory_collection::implementation
 		}
 		catch(std::exception& e)
 		{
-			log() << error << "Error proxying plugin module " << ProxyPath.native_console_string() << std::endl;
+			log() << error << "Error proxying plugin module " << ProxyPath.native() << std::endl;
 			return false;
 		}
 
@@ -531,22 +534,24 @@ void plugin_factory_collection::bind_module(const std::string& ModuleName, regis
 	RegisterPlugins(registry);
 }
 
-void plugin_factory_collection::load_module(const filesystem::path& Path, const load_proxy_t LoadProxies)
+void plugin_factory_collection::load_module(const boost::filesystem::path& Path, const load_proxy_t LoadProxies)
 {
 	// K-3D modules now have the same extension on all platforms ...
-	if(filesystem::extension(Path).lowercase().raw() != ".module")
+	if(boost::algorithm::to_lower_copy(Path.extension().string()) != ".module")
 		return;
 
 	// If the module can be proxied for fast startup, do that and return ...
 	if(LoadProxies == LOAD_PROXIES)
 	{
-		filesystem::path proxy_path = Path + ".proxy";
-		if(filesystem::exists(proxy_path) && m_implementation->proxy_module(Path, proxy_path))
+
+		boost::filesystem::path proxy_path = Path;
+		proxy_path += ".proxy";
+		if(boost::filesystem::exists(proxy_path) && m_implementation->proxy_module(Path, proxy_path))
 			return;
 	}
 
 	// OK, just load the module ...
-	m_implementation->m_message_signal(string_cast(boost::format(_("Loading plugin module %1%")) % Path.native_utf8_string().raw()));
+	m_implementation->m_message_signal(string_cast(boost::format(_("Loading plugin module %1%")) % Path.native()));
 
 	register_plugins_entry_point register_plugins = 0;
 	os_load_module(Path, register_plugins);
@@ -558,29 +563,29 @@ void plugin_factory_collection::load_module(const filesystem::path& Path, const 
 	register_plugins(registry);
 }
 
-void plugin_factory_collection::load_modules(const filesystem::path& Path, const bool Recursive, const load_proxy_t LoadProxies)
+void plugin_factory_collection::load_modules(const boost::filesystem::path& Path, const bool Recursive, const load_proxy_t LoadProxies)
 {
-	m_implementation->m_message_signal(string_cast(boost::format(_("Searching for plugins in %1%")) % Path.native_utf8_string().raw()));
+	m_implementation->m_message_signal(string_cast(boost::format(_("Searching for plugins in %1%")) % Path.native()));
 
 	// Create a sorted list of files in this directory ...
-	std::vector<filesystem::path> files;
-	for(k3d::filesystem::directory_iterator path(Path); path != k3d::filesystem::directory_iterator(); ++path)
+	std::vector<boost::filesystem::path> files;
+	for(boost::filesystem::directory_iterator path(Path); path != boost::filesystem::directory_iterator(); ++path)
 		files.push_back(*path);
 	std::sort(files.begin(), files.end());
 
 	// Load modules
-	for(std::vector<filesystem::path>::const_iterator file = files.begin(); file != files.end(); ++file)
+	for(std::vector<boost::filesystem::path>::const_iterator file = files.begin(); file != files.end(); ++file)
 	{
-		if(!filesystem::is_directory(*file))
+		if(!boost::filesystem::is_directory(*file))
 			load_module(*file, LoadProxies);
 	}
 
 	// Optionally descend recursively into subdirectories ...
 	if(Recursive)
 	{
-		for(std::vector<filesystem::path>::const_iterator file = files.begin(); file != files.end(); ++file)
+		for(std::vector<boost::filesystem::path>::const_iterator file = files.begin(); file != files.end(); ++file)
 		{
-			if(filesystem::is_directory(*file))
+			if(boost::filesystem::is_directory(*file))
 				load_modules(*file, Recursive, LoadProxies);
 		}
 	}

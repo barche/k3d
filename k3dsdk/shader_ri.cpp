@@ -21,7 +21,6 @@
 		\author Tim Shead (tshead@k-3d.com)
 */
 
-#include <k3dsdk/fstream.h>
 #include <k3d-i18n-config.h>
 #include <k3dsdk/istate_container.h>
 #include <k3dsdk/itexture_ri.h>
@@ -30,6 +29,8 @@
 #include <k3dsdk/property.h>
 #include <k3dsdk/shader_ri.h>
 #include <k3dsdk/user_property.h>
+
+#include <boost/filesystem/fstream.hpp>
 
 namespace k3d
 {
@@ -70,7 +71,7 @@ const std::string shader_type_path(const k3d::sl::shader::type_t ShaderType)
 shader::shader(iplugin_factory& Factory, idocument& Document, k3d::sl::shader::type_t ShaderType) :
 	base(Factory, Document),
 	m_shader_type(ShaderType),
-	m_shader_path(init_owner(*this) + init_name("shader_path") + init_label(_("Shader Path")) + init_description(_("Shader Path")) + init_value(filesystem::path()) + init_path_mode(k3d::ipath_property::READ) + init_path_type(detail::shader_type_path(ShaderType))),
+	m_shader_path(init_owner(*this) + init_name("shader_path") + init_label(_("Shader Path")) + init_description(_("Shader Path")) + init_value(boost::filesystem::path()) + init_path_mode(k3d::ipath_property::READ) + init_path_type(detail::shader_type_path(ShaderType))),
 	m_shader(init_owner(*this) + init_value(sl::shader(ShaderType))),
 	m_user_property_changed_signal(*this)
 {
@@ -127,7 +128,7 @@ parameter_list shader::shader_arguments(const render_state& State)
 			else if(property_type == typeid(k3d::inode*)) // Node properties always are of type "inode*", so we have to query for the interface type we really want
 			{
 				if(k3d::ri::itexture* const texture = dynamic_cast<k3d::ri::itexture*>(property::pipeline_value<inode*>(property)))
-					results.push_back(parameter(property.property_name(), CONSTANT, 1, static_cast<k3d::ri::string>(texture->renderman_texture_path(State).native_filesystem_string())));
+					results.push_back(parameter(property.property_name(), CONSTANT, 1, static_cast<k3d::ri::string>(texture->renderman_texture_path(State).native())));
 			}
 			else if(property_type == typeid(ri::point))
 			{
@@ -198,21 +199,22 @@ void shader::load_metafile()
 {
     try
     {
-        const filesystem::path shader_path = m_shader_path.pipeline_value();
-        const filesystem::path metafile_path = shader_path + ".slmeta";
-        filesystem::ifstream metafile_stream(metafile_path);
+        const boost::filesystem::path shader_path = m_shader_path.pipeline_value();
+				boost::filesystem::path metafile_path = shader_path;
+				metafile_path += ".slmeta";
+        boost::filesystem::ifstream metafile_stream(metafile_path);
 
         const sl::shaders_t shaders = sl::parse_metafile(metafile_stream, shader_path, metafile_path);
         if(shaders.size() != 1)
         {
-            log() << error << "Can't load metafile describing shader [" << shader_path.native_console_string() << "]" << std::endl;
+						log() << error << "Can't load metafile describing shader [" << shader_path.native() << "]" << std::endl;
             return;
         }
 
         const sl::shaders_t::const_iterator shader = shaders.begin();
         if(shader->type != m_shader_type)
         {
-            log() << error << "Shader [" << shader_path.native_console_string() << "] is not the correct shader type" << std::endl;
+						log() << error << "Shader [" << shader_path.native() << "] is not the correct shader type" << std::endl;
             return;
         }
 

@@ -21,7 +21,6 @@
 	\author Tim Shead (tshead@k-3d.com)
 */
 
-#include <k3dsdk/fstream.h>
 #include <k3d-platform-config.h>
 #include <k3dsdk/log.h>
 #include <k3dsdk/options.h>
@@ -31,6 +30,7 @@
 #include <k3dsdk/system.h>
 #include <k3dsdk/xml.h>
 
+#include <boost/filesystem/fstream.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <iostream>
@@ -91,13 +91,13 @@ xml::element& command_element(const string_t CommandType)
 class file_storage::implementation
 {
 public:
-	implementation(const filesystem::path& File) :
+	implementation(const boost::filesystem::path& File) :
 		m_file(File)
 	{
 		try
 		{
-			log() << info << "Loading options from " << m_file.native_console_string() << std::endl;
-			filesystem::ifstream stream(m_file);
+			log() << info << "Loading options from " << m_file.native() << std::endl;
+			boost::filesystem::ifstream stream(m_file);
 			stream >> m_tree;
 			return;
 		}
@@ -128,8 +128,8 @@ public:
 	{
 		try
 		{
-			log() << info << "Saving options to " << m_file.native_console_string() << std::endl;
-			filesystem::ofstream stream(m_file);
+			log() << info << "Saving options to " << m_file.native() << std::endl;
+			boost::filesystem::ofstream stream(m_file);
 			stream << xml::declaration() << m_tree;
 		}
 		catch(std::exception& e)
@@ -143,14 +143,14 @@ public:
 	}
 
 private:
-	filesystem::path m_file;
+	boost::filesystem::path m_file;
 	xml::element m_tree;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // file_storage
 
-file_storage::file_storage(const filesystem::path& File) :
+file_storage::file_storage(const boost::filesystem::path& File) :
 	m_implementation(new implementation(File))
 {
 }
@@ -192,45 +192,45 @@ void set_storage(istorage& Storage)
 
 	// Default external paths
 	if(detail::path_element(path::render_farm()).text.empty())
-		detail::path_element(path::render_farm()).text = system::get_temp_directory().native_utf8_string().raw();
+		detail::path_element(path::render_farm()).text = system::get_temp_directory().native();
 	if(detail::path_element(path::scripts()).text.empty())
-		detail::path_element(path::scripts()).text = (share_path() / filesystem::generic_path("scripts")).native_utf8_string().raw();
+		detail::path_element(path::scripts()).text = (share_path() / boost::filesystem::path("scripts")).native();
 	if(detail::path_element(path::documents()).text.empty())
-		detail::path_element(path::documents()).text = system::get_home_directory().native_utf8_string().raw();
+		detail::path_element(path::documents()).text = system::get_home_directory().native();
 	if(detail::path_element(path::bitmaps()).text.empty())
-		detail::path_element(path::bitmaps()).text = system::get_home_directory().native_utf8_string().raw();
+		detail::path_element(path::bitmaps()).text = system::get_home_directory().native();
 	if(detail::path_element(path::tutorials()).text.empty())
-		detail::path_element(path::tutorials()).text = system::get_home_directory().native_utf8_string().raw();
+		detail::path_element(path::tutorials()).text = system::get_home_directory().native();
 	if(detail::path_element(path::render_frame()).text.empty())
-		detail::path_element(path::render_frame()).text = system::get_home_directory().native_utf8_string().raw();
+		detail::path_element(path::render_frame()).text = system::get_home_directory().native();
 	if(detail::path_element(path::render_animation()).text.empty())
-		detail::path_element(path::render_animation()).text = system::get_home_directory().native_utf8_string().raw();
+		detail::path_element(path::render_animation()).text = system::get_home_directory().native();
 	if(detail::path_element(path::displacement_shaders()).text.empty())
-		detail::path_element(path::displacement_shaders()).text = (share_path() / filesystem::generic_path("shaders/displacement")).native_utf8_string().raw();
+		detail::path_element(path::displacement_shaders()).text = (share_path() / boost::filesystem::path("shaders/displacement")).native();
 	if(detail::path_element(path::imager_shaders()).text.empty())
-		detail::path_element(path::imager_shaders()).text = (share_path() / filesystem::generic_path("shaders/imager")).native_utf8_string().raw();
+		detail::path_element(path::imager_shaders()).text = (share_path() / boost::filesystem::path("shaders/imager")).native();
 	if(detail::path_element(path::light_shaders()).text.empty())
-		detail::path_element(path::light_shaders()).text = (share_path() / filesystem::generic_path("shaders/light")).native_utf8_string().raw();
+		detail::path_element(path::light_shaders()).text = (share_path() / boost::filesystem::path("shaders/light")).native();
 	if(detail::path_element(path::surface_shaders()).text.empty())
-		detail::path_element(path::surface_shaders()).text = (share_path() / filesystem::generic_path("shaders/surface")).native_utf8_string().raw();
+		detail::path_element(path::surface_shaders()).text = (share_path() / boost::filesystem::path("shaders/surface")).native();
 	if(detail::path_element(path::transformation_shaders()).text.empty())
-		detail::path_element(path::transformation_shaders()).text = (share_path() / filesystem::generic_path("shaders/transformation")).native_utf8_string().raw();
+		detail::path_element(path::transformation_shaders()).text = (share_path() / boost::filesystem::path("shaders/transformation")).native();
 	if(detail::path_element(path::volume_shaders()).text.empty())
-		detail::path_element(path::volume_shaders()).text = (share_path() / filesystem::generic_path("shaders/volume")).native_utf8_string().raw();
+		detail::path_element(path::volume_shaders()).text = (share_path() / boost::filesystem::path("shaders/volume")).native();
 
 	// Default external commands
 	if(get_command(command::bitmap_viewer()).empty())
 		set_command(command::bitmap_viewer(), DEFAULT_BITMAP_VIEWER);
 }
 
-const filesystem::path get_path(const string_t& PathType)
+const boost::filesystem::path get_path(const string_t& PathType)
 {
-	return filesystem::native_path(ustring::from_utf8(detail::path_element(PathType).text));
+	return boost::filesystem::path(detail::path_element(PathType).text);
 }
 
-void set_path(const string_t& PathType, const filesystem::path& Path)
+void set_path(const string_t& PathType, const boost::filesystem::path& Path)
 {
-	detail::path_element(PathType).text = Path.native_utf8_string().raw();
+	detail::path_element(PathType).text = Path.native();
 }
 
 const string_t get_command(const string_t& CommandType)

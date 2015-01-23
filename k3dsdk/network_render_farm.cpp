@@ -21,7 +21,6 @@
 	\author Tim Shead (tshead@k-3d.com)
 */
 
-#include <k3dsdk/fstream.h>
 #include <k3dsdk/inetwork_render_frame.h>
 #include <k3dsdk/inetwork_render_job.h>
 #include <k3dsdk/network_render_farm.h>
@@ -34,6 +33,9 @@
 #include <k3dsdk/system.h>
 #include <k3dsdk/xml.h>
 using namespace k3d::xml;
+
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 #include <list>
 #include <iostream>
@@ -59,11 +61,11 @@ class network_render_frame :
 	public inetwork_render_frame
 {
 public:
-	network_render_frame(const filesystem::path& JobPath, const string_t& Name) :
-		m_Path(JobPath / filesystem::native_path(ustring::from_utf8(Name)))
+	network_render_frame(const boost::filesystem::path& JobPath, const string_t& Name) :
+		m_Path(JobPath / boost::filesystem::path(Name))
 	{
-		if(!filesystem::create_directory(m_Path))
-			log() << error << "Error creating frame directory [" << m_Path.native_console_string() << "]" << std::endl;
+		if(!boost::filesystem::create_directory(m_Path))
+			log() << error << "Error creating frame directory [" << m_Path.native() << "]" << std::endl;
 	}
 
 	~network_render_frame()
@@ -72,7 +74,7 @@ public:
 			delete *command;
 	}
 
-	const filesystem::path add_file(const string_t& Name)
+	const boost::filesystem::path add_file(const string_t& Name)
 	{
 		// Sanity checks ...
 		assert_warning(Name.size());
@@ -85,7 +87,7 @@ public:
 
 		m_files.push_back(name);
 
-		return m_Path / filesystem::generic_path(name);
+		return m_Path / boost::filesystem::path(name);
 	}
 
 	void add_exec_command(const string_t& Binary, const environment& Environment, const arguments& Arguments)
@@ -96,7 +98,7 @@ public:
 		m_commands.push_back(new exec_command(Binary, Environment, Arguments));
 	}
 
-	void add_copy_command(const filesystem::path& Source, const filesystem::path& Target)
+	void add_copy_command(const boost::filesystem::path& Source, const boost::filesystem::path& Target)
 	{
 		// Sanity checks ...
 		assert_warning(!Source.empty());
@@ -105,7 +107,7 @@ public:
 		m_commands.push_back(new copy_command(Source, Target));
 	}
 
-	void add_view_command(const filesystem::path& File)
+	void add_view_command(const boost::filesystem::path& File)
 	{
 		m_commands.push_back(new view_command(File));
 	}
@@ -113,7 +115,7 @@ public:
 	void write_control_file()
 	{
 		// Create the empty control file ...
-		filesystem::ofstream file(m_Path / filesystem::generic_path("control.k3d"));
+		boost::filesystem::ofstream file(m_Path / boost::filesystem::path("control.k3d"));
 
 		// Create the XML document ...
 		element xml_document("k3dml");
@@ -146,14 +148,14 @@ public:
 			{
 				xml_frame.append(element("command",
 					element("copy",
-						attribute("source", copy->m_source.native_utf8_string().raw()),
-						attribute("target", copy->m_target.native_utf8_string().raw()))));
+						attribute("source", copy->m_source.native()),
+						attribute("target", copy->m_target.native()))));
 			}
 			else if(view_command* const view = dynamic_cast<view_command*>(*command))
 			{
 				xml_frame.append(element("command",
 					element("view",
-						attribute("file", view->m_file.native_utf8_string().raw()))));
+						attribute("file", view->m_file.native()))));
 			}
 			else
 			{
@@ -168,7 +170,7 @@ public:
 	void mark_ready()
 	{
 		// Create the empty "ready" status file ...
-		filesystem::ofstream file(m_Path / filesystem::generic_path("ready"));
+		boost::filesystem::ofstream file(m_Path / boost::filesystem::path("ready"));
 
 		// Boost::filesystem does not rename empty files
 		file << "K-3D renderfarm status file";
@@ -176,7 +178,7 @@ public:
 
 private:
 	/// Stores the filesystem path for this job
-	const filesystem::path m_Path;
+	const boost::filesystem::path m_Path;
 	/// Stores the set of input files used during rendering
 	typedef std::vector<string_t> files_t;
 	files_t m_files;
@@ -213,26 +215,26 @@ private:
 		public command
 	{
 	public:
-		copy_command(const filesystem::path& Source, const filesystem::path& Target) :
+		copy_command(const boost::filesystem::path& Source, const boost::filesystem::path& Target) :
 			m_source(Source),
 			m_target(Target)
 		{
 		}
 
-		const filesystem::path m_source;
-		const filesystem::path m_target;
+		const boost::filesystem::path m_source;
+		const boost::filesystem::path m_target;
 	};
 
 	class view_command :
 		public command
 	{
 	public:
-		view_command(const filesystem::path& File) :
+		view_command(const boost::filesystem::path& File) :
 			m_file(File)
 		{
 		}
 
-		const filesystem::path m_file;
+		const boost::filesystem::path m_file;
 	};
 
 	typedef std::vector<command*> commands_t;
@@ -246,8 +248,8 @@ class network_render_job :
 	public inetwork_render_job
 {
 public:
-	network_render_job(const filesystem::path Path, const string_t JobName) :
-		m_Path(Path / filesystem::generic_path(JobName))
+	network_render_job(const boost::filesystem::path Path, const string_t JobName) :
+		m_Path(Path / boost::filesystem::path(JobName))
 	{
 		try
 		{
@@ -255,7 +257,7 @@ public:
 		}
 		catch(const std::exception& ex)
 		{
-			log() << error << k3d_file_reference << ": Error creating job directory [" << m_Path.native_console_string() << "]" << std::endl;
+			log() << error << k3d_file_reference << ": Error creating job directory [" << m_Path.native() << "]" << std::endl;
 		}
 	}
 
@@ -271,7 +273,7 @@ public:
 		std::for_each(m_frames.begin(), m_frames.end(), std::mem_fun_ref(&network_render_frame::write_control_file));
 
 		// Create the control file ...
-		filesystem::ofstream file(m_Path / filesystem::generic_path("control.k3d"));
+		boost::filesystem::ofstream file(m_Path / boost::filesystem::path("control.k3d"));
 
 		// Create the XML document ...
 		element document("k3dml");
@@ -288,7 +290,7 @@ public:
 		std::for_each(m_frames.begin(), m_frames.end(), std::mem_fun_ref(&network_render_frame::mark_ready));
 
 		// Create the "ready" status file ...
-		filesystem::ofstream file(m_Path / filesystem::generic_path("ready"));
+		boost::filesystem::ofstream file(m_Path / boost::filesystem::path("ready"));
 
 		// Boost::filesystem does not rename empty files
 		file << "Status file." << std::ends;
@@ -298,13 +300,13 @@ public:
 
 	const string_t path()
 	{
-		return m_Path.native_utf8_string().raw();
+		return m_Path.native();
 	}
 
 	string_t std_out, std_err;
 
 private:
-	const filesystem::path m_Path;
+	const boost::filesystem::path m_Path;
 
 	typedef std::list<network_render_frame> frames_t;
 	frames_t m_frames;
@@ -317,7 +319,7 @@ private:
 class network_render_farm::implementation
 {
 public:
-	implementation(const filesystem::path& OptionsPath) :
+	implementation(const boost::filesystem::path& OptionsPath) :
 		m_options_path(OptionsPath)
 	{
 	}
@@ -328,12 +330,12 @@ public:
 		assert_warning(JobName.size());
 
 		// Render farm path ...
-		const filesystem::path job_path = options::get_path(options::path::render_farm());
+		const boost::filesystem::path job_path = options::get_path(options::path::render_farm());
 
 		// Ensure that the job gets a unique name ...
 		unsigned long index = 0;
 		string_t job_name(JobName);
-		while(filesystem::exists(job_path / filesystem::generic_path(job_name)))
+		while(boost::filesystem::exists(job_path / boost::filesystem::path(job_name)))
 			job_name = JobName + '-' + string_cast(index++);
 
 		m_jobs.push_back(network_render_job(job_path, job_name));
@@ -360,7 +362,7 @@ public:
 			return;
 		}
 
-		if(!system::spawn(k3d::filesystem::generic_path("k3d-renderjob"), std::vector<string_t>(1, job->path()), k3d::system::SPAWN_ASYNCHRONOUS, job->std_out, job->std_err))
+		if(!system::spawn(boost::filesystem::path("k3d-renderjob"), std::vector<string_t>(1, job->path()), k3d::system::SPAWN_ASYNCHRONOUS, job->std_out, job->std_err))
 		{
 			log() << error << "Error starting render job k3d-renderjob " << job->path() << std::endl;
 			return;
@@ -368,7 +370,7 @@ public:
 	}
 
 private:
-	const filesystem::path m_options_path;
+	const boost::filesystem::path m_options_path;
 	typedef std::list<network_render_job> jobs_t;
 	jobs_t m_jobs;
 };
@@ -377,7 +379,7 @@ private:
 /////////////////////////////////////////////////////////////////////////////
 // network_render_farm
 
-network_render_farm::network_render_farm(const filesystem::path& OptionsPath) :
+network_render_farm::network_render_farm(const boost::filesystem::path& OptionsPath) :
 	m_implementation(new implementation(OptionsPath))
 {
 }

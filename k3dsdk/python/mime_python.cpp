@@ -21,7 +21,7 @@
 
 #include <k3dsdk/python/mime_python.h>
 
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 #include <k3dsdk/mime_types.h>
 
 #include <boost/python/detail/api_placeholder.hpp>
@@ -40,7 +40,7 @@ public:
 	class type
 	{
 	public:
-		static const k3d::mime::type lookup_file(const filesystem::path& File)
+		static const k3d::mime::type lookup_file(const boost::filesystem::path& File)
 		{
 			return k3d::mime::type::lookup(File);
 		}

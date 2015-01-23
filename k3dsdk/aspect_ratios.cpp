@@ -22,10 +22,12 @@
 */
 
 #include <k3dsdk/aspect_ratios.h>
-#include <k3dsdk/fstream.h>
 #include <k3dsdk/log.h>
 #include <k3dsdk/share.h>
 #include <k3dsdk/xml.h>
+
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 namespace k3d
 {
@@ -37,8 +39,8 @@ const aspect_ratios_t& aspect_ratios()
 	{
 		try
 		{
-			const filesystem::path path = share_path() / filesystem::generic_path("aspect_ratios.k3d");
-			k3d::filesystem::ifstream stream(path);
+			const boost::filesystem::path path = share_path() / boost::filesystem::path("aspect_ratios.k3d");
+			boost::filesystem::ifstream stream(path);
 
 			xml::element xml("k3dml");
 			stream >> xml;

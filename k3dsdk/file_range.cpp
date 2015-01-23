@@ -45,12 +45,12 @@ size_t file_range::max_file_count() const
 	return static_cast<size_t>(std::pow(10.0, static_cast<double>(digits)));
 }
 
-const filesystem::path file_range::file(const size_t N) const
+const boost::filesystem::path file_range::file(const size_t N) const
 {
 	std::ostringstream buffer;
 	buffer << std::setfill('0') << std::setw(digits) << N;
 
-	return directory / filesystem::generic_path(before + ustring::from_utf8(buffer.str()) + after);
+	return directory / boost::filesystem::path(before + string_t(buffer.str()) + after);
 }
 
 } // namespace k3d

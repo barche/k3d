@@ -31,10 +31,10 @@
 
 #include <string>
 
+#include <boost/filesystem/path.hpp>
+
 namespace k3d
 {
-
-namespace filesystem { class path; }
 
 /////////////////////////////////////////////////////////////////////////////
 // plugin_factory_collection
@@ -61,9 +61,9 @@ public:
 	/// Binds a statically-linked plugin module
 	void bind_module(const std::string& ModuleName, register_plugins_entry_point RegisterPlugins);
 	/// Loads a single plugin module
-	void load_module(const filesystem::path& Path, const load_proxy_t LoadProxies);
+	void load_module(const boost::filesystem::path& Path, const load_proxy_t LoadProxies);
 	/// Loads plugin modules from a directory, optionally descending recursively into subdirectories
-	void load_modules(const filesystem::path& Path, const bool Recursive, const load_proxy_t LoadProxies);
+	void load_modules(const boost::filesystem::path& Path, const bool Recursive, const load_proxy_t LoadProxies);
 	/// Loads plugin modules from zero-to-many directories, optionally descending recursively into each directory
 	void load_modules(const std::string& Paths, const bool Recursive, const load_proxy_t LoadProxies);
 

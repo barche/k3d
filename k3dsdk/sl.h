@@ -25,7 +25,7 @@
 		\author Tim Shead (tshead@k-3d.com)
 */
 
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 
 #include <iosfwd>
 #include <string>
@@ -125,7 +125,7 @@ public:
 	} type_t;
 
 	/// Stores the shader file
-	filesystem::path file_path;
+	boost::filesystem::path file_path;
 	/// Stores the shader type
 	type_t type;
 	/// Stores the shader name
@@ -141,7 +141,7 @@ public:
 	arguments_t arguments;
 
 	shader(const type_t Type);
-	shader(const filesystem::path& FilePath, const type_t Type, const std::string& Name, const std::string& Authors, const std::string& Copyright, const std::string& Description, const arguments_t Arguments);
+	shader(const boost::filesystem::path& FilePath, const type_t Type, const std::string& Name, const std::string& Authors, const std::string& Copyright, const std::string& Description, const arguments_t Arguments);
 };
 
 /// A collection of shaders
@@ -162,9 +162,9 @@ std::ostream& operator<<(std::ostream& Stream, const shader::type_t& Value);
 std::istream& operator>>(std::istream& Stream, shader::type_t& Value);
 
 /// Parses preprocessed RenderMan shading language source-code, returning shader data (note: could return an empty collection, SourcePath is for informational messages only)
-shaders_t parse_source(std::istream& Stream, const filesystem::path& SourcePath);
+shaders_t parse_source(std::istream& Stream, const boost::filesystem::path& SourcePath);
 /// Parses a shader metafile, returning shader data (note: could return an empty collection, SourcePath and MetafilePath are for informational messages only)
-shaders_t parse_metafile(std::istream& Stream, const filesystem::path& SourcePath, const filesystem::path& MetafilePath);
+shaders_t parse_metafile(std::istream& Stream, const boost::filesystem::path& SourcePath, const boost::filesystem::path& MetafilePath);
 /// Generates a shader metafile from a collection of shaders
 void generate_metafile(std::ostream& Stream, const shaders_t Shaders);
 

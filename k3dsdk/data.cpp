@@ -19,10 +19,11 @@
 
 #include <k3dsdk/base64.h>
 #include <k3dsdk/data.h>
-#include <k3dsdk/fstream.h>
 #include <k3dsdk/path.h>
 #include <k3dsdk/share.h>
 #include <k3dsdk/system.h>
+
+#include <boost/filesystem/fstream.hpp>
 
 namespace k3d
 {
@@ -90,14 +91,14 @@ iproperty* property_lookup(iproperty* const Source)
 	return result;
 }
 
-xml::element& save_external_resource(xml::element& Element, const ipersistent::save_context& Context, const std::string& Name, const ipath_property::reference_t Reference, const filesystem::path& Value)
+xml::element& save_external_resource(xml::element& Element, const ipersistent::save_context& Context, const std::string& Name, const ipath_property::reference_t Reference, const boost::filesystem::path& Value)
 {
 	xml::element& xml_storage = Element.append(
 	xml::element("property",
 	xml::attribute("name", Name)));
 
 	// Construct absolute and relative paths for later reference
-	const filesystem::path absolute_path = filesystem::path(Value.is_complete() ? Value : Context.root_path / Value);
+	const boost::filesystem::path absolute_path = boost::filesystem::path(Value.is_complete() ? Value : Context.root_path / Value);
 
 	// Under certain circumstances, we override the user's choice of reference ...
 
@@ -114,7 +115,7 @@ xml::element& save_external_resource(xml::element& Element, const ipersistent::s
 	// becomes a relative path ...
 	if(reference == ipath_property::ABSOLUTE_REFERENCE)
 	{
-		if(0 == absolute_path.generic_utf8_string().find(share_path().generic_utf8_string()))
+		if(0 == absolute_path.generic_string().find(share_path().generic_string()))
 			reference = ipath_property::RELATIVE_REFERENCE;
 	}
 
@@ -124,35 +125,35 @@ xml::element& save_external_resource(xml::element& Element, const ipersistent::s
 		case ipath_property::ABSOLUTE_REFERENCE:
 		{
 			xml_storage.append(xml::attribute("reference", string_cast(ipath_property::ABSOLUTE_REFERENCE)));
-			xml_storage.append(xml::attribute("absolute_path", absolute_path.generic_utf8_string().raw()));
+			xml_storage.append(xml::attribute("absolute_path", absolute_path.generic_string()));
 			break;
 		}
 		case ipath_property::RELATIVE_REFERENCE:
 		{
 			// As a special-case, a path that points into the share directory
 			// will be stored relative to share, instead of relative to the document
-			if(0 == absolute_path.generic_utf8_string().find(share_path().generic_utf8_string()))
+			if(0 == absolute_path.generic_string().find(share_path().generic_string()))
 			{
-				const filesystem::path relative_path = filesystem::make_relative_path(absolute_path, share_path());
+				const boost::filesystem::path relative_path = k3d::filesystem::make_relative_path(absolute_path, share_path());
 				xml_storage.append(xml::attribute("reference", string_cast(ipath_property::RELATIVE_REFERENCE)));
-				xml_storage.append(xml::attribute("relative_path", relative_path.generic_utf8_string().raw()));
+				xml_storage.append(xml::attribute("relative_path", relative_path.generic_string()));
 				xml_storage.append(xml::element("root", "$K3D_SHARE_PATH"));
 			}
 			else
 			{
-				const filesystem::path relative_path = filesystem::make_relative_path(absolute_path, Context.root_path);
+				const boost::filesystem::path relative_path = k3d::filesystem::make_relative_path(absolute_path, Context.root_path);
 				xml_storage.append(xml::attribute("reference", string_cast(ipath_property::RELATIVE_REFERENCE)));
-				xml_storage.append(xml::attribute("relative_path", relative_path.generic_utf8_string().raw()));
+				xml_storage.append(xml::attribute("relative_path", relative_path.generic_string()));
 			}
 			break;
 		}
 		case ipath_property::INLINE_REFERENCE:
 		{
 			xml_storage.append(xml::attribute("reference", string_cast(ipath_property::INLINE_REFERENCE)));
-			xml_storage.append(xml::attribute("filename", absolute_path.leaf().raw()));
+			xml_storage.append(xml::attribute("filename", absolute_path.leaf()));
 			xml_storage.append(xml::attribute("encoding", "base64"));
 
-			filesystem::ifstream file(absolute_path);
+			boost::filesystem::ifstream file(absolute_path);
 			std::stringstream buffer;
 			base64::encode(file, buffer);
 			xml_storage.text = "\n" + buffer.str();
@@ -164,7 +165,7 @@ xml::element& save_external_resource(xml::element& Element, const ipersistent::s
 	return xml_storage;
 }
 
-void load_external_resource(xml::element& Element, const ipersistent::load_context& Context, ipath_property::reference_t& Reference, filesystem::path& Value)
+void load_external_resource(xml::element& Element, const ipersistent::load_context& Context, ipath_property::reference_t& Reference, boost::filesystem::path& Value)
 {
 	Reference = xml::attribute_value<ipath_property::reference_t>(Element, "reference", ipath_property::RELATIVE_REFERENCE);
 	switch(Reference)
@@ -173,9 +174,9 @@ void load_external_resource(xml::element& Element, const ipersistent::load_conte
 		{
 			try
 			{
-				/** \todo Change this to use generic_path after version 0.8 */
-				Value = filesystem::native_path(ustring::from_utf8(xml::attribute_text(Element, "absolute_path")));
-				log() << info << "Resolved absolute path " << Value.native_console_string() << std::endl;
+				/** \todo Change this to use path after version 0.8 */
+				Value = boost::filesystem::path(xml::attribute_text(Element, "absolute_path"));
+				log() << info << "Resolved absolute path " << Value.native() << std::endl;
 			}
 			catch(std::exception& e)
 			{
@@ -187,17 +188,17 @@ void load_external_resource(xml::element& Element, const ipersistent::load_conte
 		{
 			try
 			{
-				filesystem::path root_path = Context.root_path;
+				boost::filesystem::path root_path = Context.root_path;
 				if(xml::element* const xml_root = xml::find_element(Element, "root"))
 				{
 					if(xml_root->text == "$K3D_SHARE_PATH")
 						root_path = share_path();
 					else
-						root_path = filesystem::generic_path(xml_root->text);
+						root_path = boost::filesystem::path(xml_root->text);
 				}
 
-				Value = root_path / filesystem::generic_path(xml::attribute_text(Element, "relative_path"));
-				log() << info << "Resolved relative path as " << Value.native_console_string() << std::endl;
+				Value = root_path / boost::filesystem::path(xml::attribute_text(Element, "relative_path"));
+				log() << info << "Resolved relative path as " << Value.native() << std::endl;
 			}
 			catch(std::exception& e)
 			{
@@ -209,12 +210,12 @@ void load_external_resource(xml::element& Element, const ipersistent::load_conte
 		{
 			try
 			{
-				Value = system::get_temp_directory() / filesystem::generic_path(xml::attribute_text(Element, "filename"));
-				filesystem::ofstream file(Value);
+				Value = system::get_temp_directory() / boost::filesystem::path(xml::attribute_text(Element, "filename"));
+				boost::filesystem::ofstream file(Value);
 				std::stringstream buffer(Element.text);
 				base64::decode(buffer, file);
 
-				log() << info << "Extracted inline document to " << Value.native_console_string() << std::endl;
+				log() << info << "Extracted inline document to " << Value.native() << std::endl;
 			}
 			catch(std::exception& e)
 			{

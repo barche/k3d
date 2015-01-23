@@ -1,7 +1,9 @@
 #ifndef K3DSDK_STRING_CAST_H
 #define K3DSDK_STRING_CAST_H
 
-#include <k3dsdk/path.h>
+#include <k3dsdk/types.h>
+
+#include <boost/filesystem/path.hpp>
 
 #include <boost/format.hpp>
 
@@ -41,12 +43,11 @@ inline const string_t string_cast<string_t>(const string_t& RHS)
 	return RHS;
 }
 
-/// Specialization of string_cast() for filesystem::path
-/** \todo Is this really the correct behavior?  */
+/// Specialization of string_cast() for boost::filesystem::path
 template<>
-inline const string_t string_cast<filesystem::path>(const filesystem::path& RHS)
+inline const string_t string_cast<boost::filesystem::path>(const boost::filesystem::path& RHS)
 {
-	return RHS.native_utf8_string().raw();
+	return RHS.string();
 }
 
 /// Specialization of string_cast() for boost::format
@@ -91,11 +92,11 @@ inline string_t from_string(const string_t& Value, const string_t&)
 	return Value;
 }
 
-/// Specialization of from_string for filesystem::path
+/// Specialization of from_string for boost::filesystem::path
 template<>
-inline filesystem::path from_string(const string_t& Value, const filesystem::path&)
+inline boost::filesystem::path from_string(const string_t& Value, const boost::filesystem::path&)
 {
-	return filesystem::native_path(ustring::from_utf8(Value));
+	return boost::filesystem::path(Value);
 }
 
 } // namespace k3d

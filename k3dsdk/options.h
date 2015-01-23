@@ -26,19 +26,20 @@
 
 #include <k3dsdk/types.h>
 
+#include <boost/filesystem/path.hpp>
+
 namespace k3d
 {
 
-namespace filesystem { class path; }
 namespace xml { class element; }
 
 namespace options
 {
 
 /// Returns the default file path for the given data type (e.g. bitmap, document, script, etc)
-const filesystem::path get_path(const string_t& PathType);
+const boost::filesystem::path get_path(const string_t& PathType);
 /// Sets the default file path for the given data type (e.g. bitmap, document, script, etc)
-void set_path(const string_t& PathType, const filesystem::path& Path);
+void set_path(const string_t& PathType, const boost::filesystem::path& Path);
 
 /// Predefined path types for use with get_path() and set_path()
 namespace path

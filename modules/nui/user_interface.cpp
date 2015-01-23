@@ -98,12 +98,12 @@ public:
 		return 0;
 	}
 
-	void nag_message(const k3d::string_t& Type, const k3d::ustring& Message, const k3d::ustring& SecondaryMessage)
+	void nag_message(const k3d::string_t& Type, const k3d::string_t& Message, const k3d::string_t& SecondaryMessage)
 	{
-		std::cout << "MESSAGE: " << Message.raw() << " " << SecondaryMessage.raw() << std::endl;
+		std::cout << "MESSAGE: " << Message << " " << SecondaryMessage << std::endl;
 	}
 
-	k3d::bool_t get_file_path(const k3d::ipath_property::mode_t Mode, const k3d::string_t& Type, const k3d::string_t& Prompt, const k3d::filesystem::path& OldPath, k3d::filesystem::path& Result)
+	k3d::bool_t get_file_path(const k3d::ipath_property::mode_t Mode, const k3d::string_t& Type, const k3d::string_t& Prompt, const boost::filesystem::path& OldPath, boost::filesystem::path& Result)
 	{
 		return false;
 	}
@@ -122,7 +122,7 @@ public:
 		return boost::signals2::connection();
 	}
 	
-	k3d::uint_t watch_path(const k3d::filesystem::path& Path, const k3d::void_signal_t::slot_type& Slot)
+	k3d::uint_t watch_path(const boost::filesystem::path& Path, const k3d::void_signal_t::slot_type& Slot)
 	{	
 		return 0;
 	}

@@ -44,7 +44,7 @@ frame::frame(const double_t BeginTime, const double_t EndTime) :
 {
 }
 
-frame::frame(const double_t BeginTime, const double_t EndTime, const filesystem::path& Destination) :
+frame::frame(const double_t BeginTime, const double_t EndTime, const boost::filesystem::path& Destination) :
 	begin_time(BeginTime),
 	end_time(EndTime),
 	destination(Destination)
@@ -53,7 +53,7 @@ frame::frame(const double_t BeginTime, const double_t EndTime, const filesystem:
 
 std::ostream& operator<<(std::ostream& Stream, const frame& RHS)
 {
-	Stream << "frame: " << RHS.begin_time << " " << RHS.end_time << " " << RHS.destination.native_console_string();
+	Stream << "frame: " << RHS.begin_time << " " << RHS.end_time << " " << RHS.destination.native();
 	return Stream;
 }
 

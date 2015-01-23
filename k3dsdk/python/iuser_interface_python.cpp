@@ -29,7 +29,7 @@
 #include <k3dsdk/python/utility_python.h>
 
 #include <k3dsdk/iuser_interface.h>
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 
 #include <boost/python/detail/api_placeholder.hpp>
 using namespace boost::python;
@@ -70,13 +70,13 @@ static unsigned long query_message(iunknown_wrapper& Self, const string_t& Messa
 
 static void nag_message(iunknown_wrapper& Self, const string_t& Type, const boost::python::object& Message, const boost::python::object& SecondaryMessage)
 {
-	Self.wrapped<k3d::iuser_interface>().nag_message(Type, python_to_ustring(Message), python_to_ustring(SecondaryMessage));
+	Self.wrapped<k3d::iuser_interface>().nag_message(Type, boost::python::extract<string_t>(Message), boost::python::extract<string_t>(SecondaryMessage));
 }
 
-static const filesystem::path get_file_path(iunknown_wrapper& Self, const string_t& Direction, const string_t& Type, const string_t& Message, const string_t& StartPath)
+static const boost::filesystem::path get_file_path(iunknown_wrapper& Self, const string_t& Direction, const string_t& Type, const string_t& Message, const string_t& StartPath)
 {
-	const filesystem::path old_path = filesystem::native_path(ustring::from_utf8(StartPath));
-	filesystem::path new_path;
+	const boost::filesystem::path old_path = boost::filesystem::path(string_t(StartPath));
+	boost::filesystem::path new_path;
 	if(Direction == "r" || Direction == "read")
 		Self.wrapped<k3d::iuser_interface>().get_file_path(k3d::ipath_property::READ, Type, Message, old_path, new_path);
 	else if(Direction == "w" || Direction == "write")

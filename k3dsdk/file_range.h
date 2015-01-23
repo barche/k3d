@@ -24,7 +24,9 @@
 	\author Timothy M. Shead (tshead@k-3d.com)
 */
 
-#include <k3dsdk/path.h>
+#include <k3dsdk/types.h>
+
+#include <boost/filesystem/path.hpp>
 
 namespace k3d
 {
@@ -42,16 +44,16 @@ public:
 	/// Returns the maximum number of files that can be represented by this range
 	size_t max_file_count() const;
 	/// Returns the full path to the Nth file (N does *not* have to be within the valid range)
-	const filesystem::path file(const size_t N) const;
+	const boost::filesystem::path file(const size_t N) const;
 
 	/// Stores the directory that contains the range of files
-	filesystem::path directory;
+	boost::filesystem::path directory;
 	/// Stores an optional string that precedes the filename number
-	ustring before;
+	string_t before;
 	/// Stores the number of digits used to number the filename
 	size_t digits;
 	/// Stores an optional string that follows the filename number (including file extension, etc)
-	ustring after;
+	string_t after;
 	/// Stores the first filename number in the range
 	size_t begin;
 	/// Stores the one-past-last filename number in the range

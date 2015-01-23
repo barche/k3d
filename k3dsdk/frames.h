@@ -24,7 +24,9 @@
 	\author Timothy M. Shead (tshead@k-3d.com)
 */
 
-#include <k3dsdk/path.h>
+#include <k3dsdk/types.h>
+
+#include <boost/filesystem/path.hpp>
 
 namespace k3d
 {
@@ -38,14 +40,14 @@ class frame
 public:
 	frame();
 	frame(const double_t BeginTime, const double_t EndTime);
-	frame(const double_t BeginTime, const double_t EndTime, const filesystem::path& Destination);
+	frame(const double_t BeginTime, const double_t EndTime, const boost::filesystem::path& Destination);
 
 	/// Stores the beginning of the frame
 	double_t begin_time;
 	/// Stores the end of the frame
 	double_t end_time;
 	/// Stores the filesystem location where the rendered frame should be stored
-	filesystem::path destination;
+	boost::filesystem::path destination;
 };
 
 std::ostream& operator<<(std::ostream& Stream, const frame& RHS);

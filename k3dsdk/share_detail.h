@@ -24,13 +24,13 @@
 		\author Tim Shead (tshead@k-3d.com)
 */
 
+#include <boost/filesystem/path.hpp>
+
 namespace k3d
 {
 
-namespace filesystem { class path; }
-
 /// Sets the absolute path to the shared-data directory (call this once at application startup)
-void set_share_path(const filesystem::path& SharePath);
+void set_share_path(const boost::filesystem::path& SharePath);
 
 } // namespace k3d
 

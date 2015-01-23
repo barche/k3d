@@ -26,10 +26,10 @@
 
 #include <k3dsdk/types.h>
 
+#include <boost/filesystem/path.hpp>
+
 namespace k3d
 {
-
-namespace filesystem { class path; }
 
 namespace mime
 {
@@ -41,7 +41,7 @@ public:
 	type();
 
 	/// Returns the MIME type of a file (could return an empty value if the file cannot be identified)
-	static const type lookup(const filesystem::path& File);
+	static const type lookup(const boost::filesystem::path& File);
 	/// Returns the MIME type of a data stream (could return an empty value if the data cannot be identified)
 	static const type lookup(const string_t& Data);
 

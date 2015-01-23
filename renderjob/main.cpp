@@ -27,9 +27,10 @@
 
 #include <k3dsdk/log.h>
 #include <k3dsdk/log_control.h>
-#include <k3dsdk/path.h>
 #include <k3dsdk/system.h>
 #include <k3dsdk/utility.h>
+
+#include <boost/filesystem.hpp>
 
 #include <algorithm>
 #include <iostream>
@@ -49,54 +50,54 @@ k3d::log_level_t g_minimum_log_level = k3d::K3D_LOG_LEVEL_DEBUG;
 /////////////////////////////////////////////////////////////////////////////
 // render_job
 
-bool render_job(const k3d::filesystem::path& JobDirectory)
+bool render_job(const boost::filesystem::path& JobDirectory)
 {
 	// Sanity checks ...
-	if(!k3d::filesystem::exists(JobDirectory))
+	if(!boost::filesystem::exists(JobDirectory))
 	{
-		k3d::log() << error << "Job directory " << JobDirectory.native_console_string() << " does not exist" << std::endl;
+		k3d::log() << error << "Job directory " << JobDirectory.native() << " does not exist" << std::endl;
 		return false;
 	}
 
-	if(!k3d::filesystem::is_directory(JobDirectory))
+	if(!boost::filesystem::is_directory(JobDirectory))
 	{
-		k3d::log() << error << "Job directory " << JobDirectory.native_console_string() << " is not a directory" << std::endl;
+		k3d::log() << error << "Job directory " << JobDirectory.native() << " is not a directory" << std::endl;
 		return false;
 	}
 
 	// Skip the job if it's complete ...
-	if(k3d::filesystem::exists(JobDirectory / k3d::filesystem::generic_path("complete")))
+	if(boost::filesystem::exists(JobDirectory / boost::filesystem::path("complete")))
 		return true;
 
 	// Skip the job if it errored out ...
-	if(k3d::filesystem::exists(JobDirectory / k3d::filesystem::generic_path("error")))
+	if(boost::filesystem::exists(JobDirectory / boost::filesystem::path("error")))
 		return true;
 
 	// Skip the job if it's running ...
-	if(k3d::filesystem::exists(JobDirectory / k3d::filesystem::generic_path("running")))
+	if(boost::filesystem::exists(JobDirectory / boost::filesystem::path("running")))
 		return true;
 
 	// Make sure the job is ready ...
-	if(!k3d::filesystem::exists(JobDirectory / k3d::filesystem::generic_path("ready")))
+	if(!boost::filesystem::exists(JobDirectory / boost::filesystem::path("ready")))
 	{
-		k3d::log() << error << "Job " << JobDirectory.native_console_string() << " is not ready" << std::endl;
+		k3d::log() << error << "Job " << JobDirectory.native() << " is not ready" << std::endl;
 		return false;
 	}
 
 	// Standard logging ...
-	k3d::log() << info << "Starting Job " << JobDirectory.native_console_string() << std::endl;
+	k3d::log() << info << "Starting Job " << JobDirectory.native() << std::endl;
 
 	// Switch the job status to running ...
-	k3d::filesystem::rename(JobDirectory / k3d::filesystem::generic_path("ready"), JobDirectory / k3d::filesystem::generic_path("running"));
+	boost::filesystem::rename(JobDirectory / boost::filesystem::path("ready"), JobDirectory / boost::filesystem::path("running"));
 
 	// For each directory in the job directory (non-recursive) ...
-	for(k3d::filesystem::directory_iterator frame(JobDirectory); frame != k3d::filesystem::directory_iterator(); ++frame)
+	for(boost::filesystem::directory_iterator frame(JobDirectory); frame != boost::filesystem::directory_iterator(); ++frame)
 	{
-		if(!k3d::filesystem::is_directory(*frame))
+		if(!boost::filesystem::is_directory(*frame))
 			continue;
 
 		k3d::string_t std_out, std_err;
-		if(!k3d::system::spawn(k3d::filesystem::generic_path("k3d-renderframe"), std::vector<k3d::string_t>(1, frame->native_filesystem_string()), k3d::system::SPAWN_SYNCHRONOUS, std_out, std_err))
+		if(!k3d::system::spawn(boost::filesystem::path("k3d-renderframe"), std::vector<k3d::string_t>(1, frame->path().native()), k3d::system::SPAWN_SYNCHRONOUS, std_out, std_err))
 		{
 			k3d::log() << error << "Renderjob failed with message: " << std_err << std::endl;
 		}
@@ -104,10 +105,10 @@ bool render_job(const k3d::filesystem::path& JobDirectory)
 	}
 
 	// Switch the job status to complete ...
-	k3d::filesystem::rename(JobDirectory / k3d::filesystem::generic_path("running"), JobDirectory / k3d::filesystem::generic_path("complete"));
+	boost::filesystem::rename(JobDirectory / boost::filesystem::path("running"), JobDirectory / boost::filesystem::path("complete"));
 
 	// Standard logging ...
-	k3d::log() << info << "Completed Job " << JobDirectory.native_console_string() << std::endl;
+	k3d::log() << info << "Completed Job " << JobDirectory.native() << std::endl;
 
 	return true;
 }
@@ -167,7 +168,7 @@ int main(int argc, char* argv[])
 		return 0;
 #endif // !K3D_API_WIN32
 
-	const std::string program_name = k3d::filesystem::native_path(k3d::ustring::from_utf8(std::string(argv[0]))).leaf().raw();
+	const std::string program_name = boost::filesystem::path(k3d::string_t(std::string(argv[0]))).leaf().native();
 
 	// Put our command-line arguments in a more useable form ...
 	detail::string_array options(&argv[1], &argv[argc]);
@@ -200,7 +201,7 @@ int main(int argc, char* argv[])
 	int result = 0;
 	for(unsigned long j = 0; j < options.size(); j++)
 	{
-		if(!detail::render_job(k3d::filesystem::native_path(k3d::ustring::from_utf8(options[j]))))
+		if(!detail::render_job(boost::filesystem::path(k3d::string_t(options[j]))))
 			result = 1;
 	}
 

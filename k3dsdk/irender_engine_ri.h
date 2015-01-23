@@ -27,10 +27,11 @@
 #include <k3dsdk/iunknown.h>
 #include <k3dsdk/types.h>
 
+#include <boost/filesystem/path.hpp>
+
 namespace k3d
 {
 
-namespace filesystem { class path; }
 class inetwork_render_frame;
 
 namespace ri
@@ -46,9 +47,9 @@ public:
 	/// Returns true iff the underlying RenderMan engine is installed and usable
 	virtual bool_t installed() = 0;
 	/// Compiles the given shader source code, placing the results into the global shader cache
-	virtual bool_t compile_shader(const filesystem::path& Shader) = 0;
+	virtual bool_t compile_shader(const boost::filesystem::path& Shader) = 0;
 	/// Renders the given RIB file
-	virtual bool_t render(inetwork_render_frame& Frame, const filesystem::path& RIB) = 0;
+	virtual bool_t render(inetwork_render_frame& Frame, const boost::filesystem::path& RIB) = 0;
 
 protected:
 	irender_engine() {}

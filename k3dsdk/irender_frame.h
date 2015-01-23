@@ -26,17 +26,17 @@
 
 #include <k3dsdk/iunknown.h>
 
+#include <boost/filesystem/path.hpp>
+
 namespace k3d
 {
-
-namespace filesystem { class path; }
 
 /// Abstract interface implemented by objects that can render a still image
 class irender_frame :
 	public virtual k3d::iunknown
 {
 public:
-	virtual bool render_frame(const filesystem::path& OutputImage, const bool ViewCompletedImage) = 0;
+	virtual bool render_frame(const boost::filesystem::path& OutputImage, const bool ViewCompletedImage) = 0;
 
 protected:
 	irender_frame() {}

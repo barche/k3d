@@ -138,7 +138,7 @@ type::type()
 {
 }
 
-const type type::lookup(const filesystem::path& File)
+const type type::lookup(const boost::filesystem::path& File)
 {
 	type return_type;
 

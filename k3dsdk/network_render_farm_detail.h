@@ -36,7 +36,7 @@ class network_render_farm :
 	public inetwork_render_farm
 {
 public:
-	network_render_farm(const filesystem::path& OptionsPath);
+	network_render_farm(const boost::filesystem::path& OptionsPath);
 	~network_render_farm();
 
 	inetwork_render_job& create_job(const string_t& JobName);

@@ -26,7 +26,7 @@
 */
 
 #include <k3dsdk/iunknown.h>
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 
 /**
 
@@ -65,14 +65,14 @@ public:
 	class save_context
 	{
 	public:
-		save_context(const filesystem::path& RootPath, idependencies& Dependencies, ipersistent_lookup& Lookup) :
+		save_context(const boost::filesystem::path& RootPath, idependencies& Dependencies, ipersistent_lookup& Lookup) :
 			root_path(RootPath),
 			dependencies(Dependencies),
 			lookup(Lookup)
 		{
 		}
 
-		const filesystem::path& root_path;
+		const boost::filesystem::path& root_path;
 		idependencies& dependencies;
 		ipersistent_lookup& lookup;
 	};
@@ -83,13 +83,13 @@ public:
 	class load_context
 	{
 	public:
-		load_context(const filesystem::path& RootPath, ipersistent_lookup& Lookup) :
+		load_context(const boost::filesystem::path& RootPath, ipersistent_lookup& Lookup) :
 			root_path(RootPath),
 			lookup(Lookup)
 		{
 		}
 
-		const filesystem::path& root_path;
+		const boost::filesystem::path& root_path;
 		ipersistent_lookup& lookup;
 	};
 	/// Called once during document loading

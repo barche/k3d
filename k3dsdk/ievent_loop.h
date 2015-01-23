@@ -26,12 +26,12 @@
 
 #include <k3dsdk/iunknown.h>
 
+#include <boost/filesystem/path.hpp>
 #include <boost/program_options/parsers.hpp>
 
 #include <string>
 #include <vector>
 
-namespace boost { namespace filesystem { class path; } }
 namespace boost { namespace program_options { class options_description; } }
 
 namespace k3d

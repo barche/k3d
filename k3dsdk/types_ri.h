@@ -27,7 +27,7 @@
 #include <k3dsdk/algebra.h>
 #include <k3dsdk/bounding_box3.h>
 #include <k3dsdk/color.h>
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 #include <k3dsdk/typed_array.h>
 #include <k3dsdk/types.h>
 
@@ -64,7 +64,7 @@ typedef k3d::point4 hpoint;
 /// RenderMan matrix datatype
 typedef k3d::matrix4 matrix;
 /// Filesystem path datatype
-typedef k3d::filesystem::path path;
+typedef boost::filesystem::path path;
 /// 3D bounding-box datatype
 typedef k3d::bounding_box3 bound;
 /// RenderMan light handle datatype

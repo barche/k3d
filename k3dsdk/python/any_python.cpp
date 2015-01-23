@@ -92,11 +92,8 @@ const object any_to_python(const boost::any& Value)
 	if(type == typeid(k3d::string_t))
 		return object(boost::any_cast<k3d::string_t>(Value));
 
-	if(type == typeid(k3d::ustring))
-		return object(boost::any_cast<k3d::ustring>(Value).raw());
-
-	if(type == typeid(filesystem::path))
-		return object(boost::any_cast<filesystem::path>(Value));
+	if(type == typeid(boost::filesystem::path))
+		return object(boost::any_cast<boost::filesystem::path>(Value));
 
 	if(type == typeid(k3d::angle_axis))
 		return object(boost::any_cast<k3d::angle_axis>(Value));
@@ -235,7 +232,7 @@ const boost::any python_to_any(const object& Value)
 	if(PyString_Check(value))
 		return extract<string_t>(Value)();
 
-	safe_extract(k3d::filesystem::path, Value);
+	safe_extract(boost::filesystem::path, Value);
 	safe_extract(k3d::angle_axis, Value);
 	safe_extract(k3d::color, Value);
 	safe_extract(k3d::point2, Value);
@@ -336,8 +333,8 @@ const boost::any python_to_any(const object& Value, const std::type_info& Target
 		return boost::any(std::string(PyString_AsString(value)));
 	}
 
-	if(TargetType == typeid(filesystem::path))
-		return boost::any(extract<k3d::filesystem::path>(Value)());
+	if(TargetType == typeid(boost::filesystem::path))
+		return boost::any(extract<boost::filesystem::path>(Value)());
 
 	if(TargetType == typeid(k3d::angle_axis))
 		return boost::any(extract<k3d::angle_axis>(Value)());
@@ -416,20 +413,6 @@ const boost::any python_to_any(const object& Value, const std::type_info& Target
 	}
 
 	throw std::invalid_argument("Can't convert Python value to unrecognized type [" + demangle(TargetType) + "]");
-}
-
-const ustring python_to_ustring(const boost::python::object& Value)
-{
-	if(PyString_Check(Value.ptr()))
-	{
-		return ustring::from_utf8(PyString_AsString(Value.ptr()));
-	}
-	else if(PyUnicode_Check(Value.ptr()))
-	{
-		return ustring::from_utf8(PyString_AsString(Value.attr("encode")("UTF-8").ptr()));
-	}
-
-	throw std::invalid_argument("Can't convert Python value to a Unicode string.");
 }
 
 } // namespace python

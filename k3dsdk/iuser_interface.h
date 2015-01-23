@@ -29,14 +29,13 @@
 #include <k3dsdk/keyboard.h>
 #include <k3dsdk/signal_system.h>
 #include <k3dsdk/types.h>
-#include <k3dsdk/ustring.h>
 
 #include <vector>
 
+#include <boost/filesystem/path.hpp>
+
 namespace k3d
 {
-
-namespace filesystem { class path; }
 
 /// Abstract interface to common graphical-user-interface operations for use by objects
 class iuser_interface :
@@ -60,7 +59,7 @@ public:
 	virtual uint_t query_message(const string_t& Message, const uint_t DefaultOption, const std::vector<string_t>& Options) = 0;
 
 	/// Displays an informational "nag" message that users can choose to suppress.
-	virtual void nag_message(const string_t& Type, const ustring& Message, const ustring& SecondaryMessage = ustring()) = 0;
+	virtual void nag_message(const string_t& Type, const string_t& Message, const string_t& SecondaryMessage = string_t()) = 0;
 
 	/**
 		\brief Prompts the user for a filepath, checking for old choices, and storing the current choice for reuse
@@ -69,7 +68,7 @@ public:
 		\param Result returns the chosen file path
 		\return true iff the user confirms the file path choice, false if they wish to cancel the pending operation
 	*/
-	virtual bool_t get_file_path(const ipath_property::mode_t Mode, const string_t& Type, const string_t& Prompt, const filesystem::path& OldPath, filesystem::path& Result) = 0;
+	virtual bool_t get_file_path(const ipath_property::mode_t Mode, const string_t& Type, const string_t& Prompt, const boost::filesystem::path& OldPath, boost::filesystem::path& Result) = 0;
 
 	/// Displays the given object using a graphical user interface
 	virtual bool_t show(iunknown& Object) = 0;
@@ -85,7 +84,7 @@ public:
 	/// The slot will be called when a file is created / modified / renamed / deleted at that
 	/// location.  Returns a nonzero watch identifier that is used to cancel the watch later-on,
 	/// or 0 if there is an error or the implementation does not support path-watching.
-	virtual uint_t watch_path(const filesystem::path& Path, const k3d::void_signal_t::slot_type& Slot) = 0;
+	virtual uint_t watch_path(const boost::filesystem::path& Path, const k3d::void_signal_t::slot_type& Slot) = 0;
 
 	/// Stop watching the given path.
 	virtual void unwatch_path(const uint_t WatchID) = 0;

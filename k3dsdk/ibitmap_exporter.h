@@ -27,10 +27,10 @@
 #include <k3dsdk/bitmap.h>
 #include <k3dsdk/iunknown.h>
 
+#include <boost/filesystem/path.hpp>
+
 namespace k3d
 {
-
-namespace filesystem { class path; }
 
 /// Abstract interface for objects capable of exporting bitmap images
 class ibitmap_exporter :
@@ -39,7 +39,7 @@ class ibitmap_exporter :
 public:
 	virtual ~ibitmap_exporter() {}
 
-	virtual bool write_file(const filesystem::path& File, const bitmap& Bitmap) = 0;
+	virtual bool write_file(const boost::filesystem::path& File, const bitmap& Bitmap) = 0;
 
 protected:
 	ibitmap_exporter() {}

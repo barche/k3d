@@ -683,12 +683,12 @@ void stream::RiNewline()
 
 void stream::RiReadArchive(const path& Archive)
 {
-	m_implementation->m_stream << detail::indentation << "ReadArchive " << format_string(Archive.native_filesystem_string()) << "\n";
+	m_implementation->m_stream << detail::indentation << "ReadArchive " << format_string(Archive.native()) << "\n";
 }
 
 void stream::RiProcDelayedReadArchive(const path& Archive, const bound& Bound)
 {
-	m_implementation->m_stream << detail::indentation << "Procedural " << format_string("DelayedReadArchive") << " [ " <<  format_string(Archive.native_filesystem_string()) << " ] [ " << Bound.nx << " " << Bound.px << " " << Bound.ny << " " << Bound.py << " " << Bound.nz << " " << Bound.pz << " ]\n";
+	m_implementation->m_stream << detail::indentation << "Procedural " << format_string("DelayedReadArchive") << " [ " <<  format_string(Archive.native()) << " ] [ " << Bound.nx << " " << Bound.px << " " << Bound.ny << " " << Bound.py << " " << Bound.nz << " " << Bound.pz << " ]\n";
 }
 
 void stream::RiStructure(const string& Structure)

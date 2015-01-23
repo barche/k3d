@@ -22,7 +22,7 @@
 		\author Tim Shead (tshead@k-3d.com)
 */
 
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 #include <k3dsdk/result.h>
 #include <k3dsdk/sl.h>
 #include <k3dsdk/xml.h>
@@ -253,7 +253,7 @@ public:
 };
 
 /// Parses tokens to pick out all of the shader arguments ...
-k3d::sl::shader::arguments_t parse_arguments(token_collection_t& Arguments, const k3d::filesystem::path& SourcePath)
+k3d::sl::shader::arguments_t parse_arguments(token_collection_t& Arguments, const boost::filesystem::path& SourcePath)
 {
 	k3d::sl::shader::arguments_t results;
 
@@ -429,11 +429,11 @@ k3d::sl::shader::arguments_t parse_arguments(token_collection_t& Arguments, cons
 	}
 	catch(std::exception& e)
 	{
-		k3d::log() << error << "Exception parsing arguments for [ " << SourcePath.native_console_string() << " ]: " << e.what() << std::endl;
+		k3d::log() << error << "Exception parsing arguments for [ " << SourcePath.native() << " ]: " << e.what() << std::endl;
 	}
 	catch(...)
 	{
-		k3d::log() << error << "Unknown exception parsing arguments for [ " << SourcePath.native_console_string() << " ]" << std::endl;
+		k3d::log() << error << "Unknown exception parsing arguments for [ " << SourcePath.native() << " ]" << std::endl;
 	}
 
 	return results;
@@ -443,7 +443,7 @@ k3d::sl::shader::arguments_t parse_arguments(token_collection_t& Arguments, cons
 // parse_shader
 
 /// Parses tokens looking for shaders, and returns the results ...
-k3d::sl::shaders_t parse_shaders(token_collection_t& InputTokens, const k3d::filesystem::path& SourcePath)
+k3d::sl::shaders_t parse_shaders(token_collection_t& InputTokens, const boost::filesystem::path& SourcePath)
 {
 	k3d::sl::shaders_t results;
 
@@ -497,11 +497,11 @@ k3d::sl::shaders_t parse_shaders(token_collection_t& InputTokens, const k3d::fil
 	}
 	catch(std::exception& e)
 	{
-		k3d::log() << error << "Exception parsing shaders for [ " << SourcePath.native_console_string() << " ]: " << e.what() << std::endl;
+		k3d::log() << error << "Exception parsing shaders for [ " << SourcePath.native() << " ]: " << e.what() << std::endl;
 	}
 	catch(...)
 	{
-		k3d::log() << error << "Unknown exception parsing shaders for [ " << SourcePath.native_console_string() << " ]" << std::endl;
+		k3d::log() << error << "Unknown exception parsing shaders for [ " << SourcePath.native() << " ]" << std::endl;
 	}
 
 	return results;
@@ -537,7 +537,7 @@ shader::shader(const type_t Type) :
 {
 };
 
-shader::shader(const filesystem::path& FilePath, const type_t Type, const std::string& Name, const std::string& Authors, const std::string& Copyright, const std::string& Description, const arguments_t Arguments) :
+shader::shader(const boost::filesystem::path& FilePath, const type_t Type, const std::string& Name, const std::string& Authors, const std::string& Copyright, const std::string& Description, const arguments_t Arguments) :
 	file_path(FilePath),
 	type(Type),
 	name(Name),
@@ -825,7 +825,7 @@ std::istream& operator>>(std::istream& Stream, shader::type_t& Value)
 	return Stream;
 }
 
-shaders_t parse_source(std::istream& Stream, const filesystem::path& SourcePath)
+shaders_t parse_source(std::istream& Stream, const boost::filesystem::path& SourcePath)
 {
 	detail::token_collection_t tokens;
 	detail::parse_stream(Stream, tokens);
@@ -833,7 +833,7 @@ shaders_t parse_source(std::istream& Stream, const filesystem::path& SourcePath)
 	return detail::parse_shaders(tokens, SourcePath);
 }
 
-shaders_t parse_metafile(std::istream& Stream, const filesystem::path& SourcePath, const filesystem::path& MetafilePath)
+shaders_t parse_metafile(std::istream& Stream, const boost::filesystem::path& SourcePath, const boost::filesystem::path& MetafilePath)
 {
 	shaders_t results;
 
@@ -841,11 +841,11 @@ shaders_t parse_metafile(std::istream& Stream, const filesystem::path& SourcePat
 	try
 	{
 		hide_progress progress;
-		parse(xml_metafile, Stream, MetafilePath.native_utf8_string().raw(), progress);
+		parse(xml_metafile, Stream, MetafilePath.native(), progress);
 	}
 	catch(std::exception& e)
 	{
-		log() << error << "Exception parsing metafile [" << MetafilePath.native_console_string() << "]: " << e.what() << std::endl;
+		log() << error << "Exception parsing metafile [" << MetafilePath.native() << "]: " << e.what() << std::endl;
 		return results;
 	}
 
@@ -905,7 +905,7 @@ shaders_t parse_metafile(std::istream& Stream, const filesystem::path& SourcePat
 		}
 		catch(std::exception& e)
 		{
-			log() << error << "Exception loading metafile [ " << MetafilePath.native_console_string() << " ]: " << e.what() << std::endl;
+			log() << error << "Exception loading metafile [ " << MetafilePath.native() << " ]: " << e.what() << std::endl;
 		}
 	}
 

@@ -22,7 +22,7 @@
 
 /** \file ifile_change_notifier.h
 	\author Tim Shead (tshead@k-3d.com)
-	\author Bart Janssens (bart.janssens@lid.kviv.be)
+	\author Bart Janssens (bart@bartjanssens.org)
 	\created Dec 17, 2008
 */
 
@@ -30,15 +30,10 @@
 #include <k3dsdk/signal_system.h>
 #include <k3dsdk/types.h>
 
+#include <boost/filesystem.hpp>
+
 namespace k3d
 {
-
-namespace filesystem
-{
-
-class path;
-
-}
 
 /// Interface implemented by objects that can signal changes to files.
 class ifile_change_notifier :
@@ -55,7 +50,7 @@ public:
 	* location.  Returns a nonzero watch identifier that can be used to cancel the watch later-on,
 	* or 0 if there is an error.
 	*/
-	virtual uint_t watch_file(const filesystem::path& Path, const k3d::void_signal_t::slot_type& Slot) = 0;
+	virtual uint_t watch_file(const boost::filesystem::path& Path, const k3d::void_signal_t::slot_type& Slot) = 0;
 
 	/// Stop watching the given path.
 	virtual void unwatch_file(const uint_t WatchID) = 0;

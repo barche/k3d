@@ -19,13 +19,14 @@
 
 #include <k3d-version-config.h>
 
-#include <k3dsdk/fstream.h>
 #include <k3dsdk/iapplication_plugin_factory.h>
 #include <k3dsdk/idocument_plugin_factory.h>
 #include <k3dsdk/iplugin_factory.h>
 #include <k3dsdk/plugin_factory_collection.h>
 #include <k3dsdk/type_registry.h>
 #include <k3dsdk/xml.h>
+
+#include <boost/filesystem/fstream.hpp>
 
 #include <iostream>
 
@@ -58,8 +59,8 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	const k3d::filesystem::path module_path = k3d::filesystem::native_path(k3d::ustring::from_utf8(argv[1]));
-	const k3d::filesystem::path output_path = k3d::filesystem::native_path(k3d::ustring::from_utf8(argv[2]));
+	const boost::filesystem::path module_path = boost::filesystem::path(k3d::string_t(argv[1]));
+	const boost::filesystem::path output_path = boost::filesystem::path(k3d::string_t(argv[2]));
 
 	k3d::plugin_factory_collection plugins;
 	plugins.connect_message_signal(plugin_message_handler);
@@ -76,7 +77,7 @@ int main(int argc, char* argv[])
 
 	k3d::xml::element& xml_module = xml_proxy.append(
 		k3d::xml::element("module",
-			k3d::xml::attribute("name", module_path.leaf().raw())));
+			k3d::xml::attribute("name", module_path.leaf())));
 
 	k3d::xml::element& xml_plugins = xml_module.append(k3d::xml::element("plugins"));
 
@@ -131,7 +132,7 @@ int main(int argc, char* argv[])
 			xml_metadata.append(k3d::xml::element("pair", k3d::xml::attribute("name", pair->first), k3d::xml::attribute("value", pair->second)));
 	}
 
-	k3d::filesystem::ofstream output(output_path);
+	boost::filesystem::ofstream output(output_path);
 	output << k3d::xml::declaration() << xml_proxy;
 
 	return 0;

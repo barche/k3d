@@ -29,13 +29,14 @@
 
 #include <iosfwd>
 
+#include <boost/filesystem/path.hpp>
+
 namespace k3d
 {
 
 class iplugin_factory;
 class uuid;
 
-namespace filesystem { class path; }
 namespace mime { class type; }
 
 namespace script
@@ -66,7 +67,7 @@ class language
 {
 public:
 	/// Determine scripting language from a filesystem path
-	language(const filesystem::path& Script);
+	language(const boost::filesystem::path& Script);
 	/// Determine the scripting language from the script sources
 	language(const code& Script);
 	/// Determine the scripting language from a MIME type

@@ -21,14 +21,14 @@ import k3d
 import os
 
 # Load our "template" document.  We assume that the document already contains  materials / lighting / render options to suit.
-document = k3d.open_document(k3d.share_path() / k3d.filesystem.generic_path("scripts/shell/batch_render.k3d"))
+document = k3d.open_document(k3d.share_path() / k3d.filesystem.path("scripts/shell/batch_render.k3d"))
 
 # Load an external OBJ file into the document.
 obj_reader = k3d.node.lookup_one(document, "OBJMeshReader")
-obj_reader.filepath = k3d.share_path() / k3d.filesystem.generic_path("geometry/knot.obj")
+obj_reader.filepath = k3d.share_path() / k3d.filesystem.path("geometry/knot.obj")
 
 # Figure-out where to put the rendered results.
-output = k3d.filesystem.native_path(os.getcwd()) / k3d.filesystem.generic_path("batch_render.tiff")
+output = k3d.filesystem.path(os.getcwd()) / k3d.filesystem.path("batch_render.tiff")
 print output
 
 # Render the document to the current directory.

@@ -69,7 +69,7 @@ public:
 protected:
 	mesh_reader(iplugin_factory& Factory, idocument& Document) :
 		base_t(Factory, Document),
-		m_file(init_owner(*this) + init_name("file") + init_label(_("File")) + init_description(_("Input file path.")) + init_value(filesystem::path()) + init_path_mode(ipath_property::READ) + init_path_type("")),
+		m_file(init_owner(*this) + init_name("file") + init_label(_("File")) + init_description(_("Input file path.")) + init_value(boost::filesystem::path()) + init_path_mode(ipath_property::READ) + init_path_type("")),
 		m_center(init_owner(*this) + init_name("center") + init_label(_("Center on Origin")) + init_description(_("Center the output mesh around the origin.")) + init_value(true)),
 		m_scale_to_size(init_owner(*this) + init_name("scale_to_size") + init_label(_("Scale to Size")) + init_description(_("Scale the output mesh to fit within a fixed-size bounding-box.")) + init_value(true)),
 		m_size(init_owner(*this) + init_name("size") + init_label(_("Size")) + init_description(_("Output mesh size when \"Scale to Size\" is enabled.")) + init_value(10.0) + init_step_increment(0.1) + init_units(typeid(measurement::distance))),
@@ -88,7 +88,7 @@ protected:
 	}
 
 	/// Stores the input file path.
-	k3d_data(filesystem::path, immutable_name, change_signal, with_undo, local_storage, no_constraint, watched_path_property, watched_path_serialization) m_file;
+	k3d_data(boost::filesystem::path, immutable_name, change_signal, with_undo, local_storage, no_constraint, watched_path_property, watched_path_serialization) m_file;
 	/// Center the output mesh on the origin.
 	k3d_data(bool_t, immutable_name, change_signal, with_undo, local_storage, no_constraint, writable_property, with_serialization) m_center;
 	/// Scale the output mesh to fit within a fixed-size bounding-box.
@@ -106,15 +106,15 @@ private:
 		// Start with an empty mesh ...
 		Mesh = mesh();
 
-		const filesystem::path path = m_file.pipeline_value();
+		const boost::filesystem::path path = m_file.pipeline_value();
 		if(path.empty())
 			return;
 	
-		log() << info << "Loading " << path.native_console_string() << " using " << base_t::factory().name() << std::endl;
+		log() << info << "Loading " << path.native() << " using " << base_t::factory().name() << std::endl;
 
-		if(!filesystem::exists(path))
+		if(!boost::filesystem::exists(path))
 		{
-			log() << error << "filesystem path " << path.native_console_string() << " doesn't exist" << std::endl;
+			log() << error << "filesystem path " << path.native() << " doesn't exist" << std::endl;
 			return;
 		}
 
@@ -163,7 +163,7 @@ private:
 
 	/// Implement this in derived classes to read the input file and produce an output mesh.  Note that the
 	/// output mesh will be empty every time this method is called.
-	virtual void on_load_mesh(const filesystem::path& Path, mesh& Output) = 0;
+	virtual void on_load_mesh(const boost::filesystem::path& Path, mesh& Output) = 0;
 };
 
 } // namespace k3d

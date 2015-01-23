@@ -29,7 +29,7 @@
 #include <k3dsdk/python/utility_python.h>
 
 #include <k3dsdk/idocument_importer.h>
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 
 using namespace boost::python;
 
@@ -42,12 +42,12 @@ namespace python
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // idocument_importer
 
-static void get_file_metadata(iunknown_wrapper& Self, const filesystem::path& Path)
+static void get_file_metadata(iunknown_wrapper& Self, const boost::filesystem::path& Path)
 {
 	Self.wrapped<k3d::idocument_importer>().get_file_metadata(Path);
 }
 
-static bool_t read_file(iunknown_wrapper& Self, const filesystem::path& Path, idocument_wrapper& Document)
+static bool_t read_file(iunknown_wrapper& Self, const boost::filesystem::path& Path, idocument_wrapper& Document)
 {
 	return Self.wrapped<k3d::idocument_importer>().read_file(Path, Document.wrapped());
 }

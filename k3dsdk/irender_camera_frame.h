@@ -26,18 +26,19 @@
 
 #include <k3dsdk/iunknown.h>
 
+#include <boost/filesystem/path.hpp>
+
 namespace k3d
 {
 
 class icamera;
-namespace filesystem { class path; }
 	
 /// Abstract interface implemented by objects that can render a still image using a camera
 class irender_camera_frame :
 	public virtual k3d::iunknown
 {
 public:
-	virtual bool_t render_camera_frame(icamera& Camera, const filesystem::path& OutputImage, const bool_t ViewCompletedImage) = 0;
+	virtual bool_t render_camera_frame(icamera& Camera, const boost::filesystem::path& OutputImage, const bool_t ViewCompletedImage) = 0;
 
 protected:
 	irender_camera_frame() {}

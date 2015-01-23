@@ -24,10 +24,8 @@
 #include <k3d-platform-config.h>
 #include <k3d-version-config.h>
 
-#include <k3dsdk/fstream.h>
 #include <k3dsdk/log.h>
 #include <k3dsdk/log_control.h>
-#include <k3dsdk/path.h>
 #include <k3dsdk/system.h>
 #include <k3dsdk/types.h>
 #include <k3dsdk/utility.h>
@@ -46,6 +44,8 @@ using namespace k3d::xml;
 #include <glibmm/spawn.h>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/format.hpp>
 #include <boost/regex.hpp>
 
@@ -99,9 +99,9 @@ const k3d::string_t expand(const k3d::string_t& Value)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // exec_command
 
-bool exec_command(const element& XMLCommand, const k3d::filesystem::path& FrameDirectory)
+bool exec_command(const element& XMLCommand, const boost::filesystem::path& FrameDirectory)
 {
-	k3d::string_t working_directory = FrameDirectory.native_filesystem_string();
+	k3d::string_t working_directory = FrameDirectory.native();
 	std::vector<k3d::string_t> arguments;
 	k3d::system::environment_t environment;
 	k3d::string_t standard_output;
@@ -196,7 +196,7 @@ bool exec_command(const element& XMLCommand, const k3d::filesystem::path& FrameD
 		std::copy(arguments.begin(), arguments.end(), std::ostream_iterator<k3d::string_t>(k3d::log(), " "));
 		k3d::log() << std::endl;
 
-		k3d::system::spawn(k3d::filesystem::generic_path(binary), arguments, k3d::system::SPAWN_SYNCHRONOUS, standard_output, standard_error, k3d::filesystem::generic_path(working_directory), environment);
+		k3d::system::spawn(boost::filesystem::path(binary), arguments, k3d::system::SPAWN_SYNCHRONOUS, standard_output, standard_error, boost::filesystem::path(working_directory), environment);
 
 		if(!standard_output.empty())
 			k3d::log() << info << "stdout: " << standard_output << std::endl;
@@ -208,7 +208,7 @@ bool exec_command(const element& XMLCommand, const k3d::filesystem::path& FrameD
 	}
 	catch(Glib::SpawnError& e)
 	{
-		k3d::log() << error << e.what().raw() << std::endl;
+		k3d::log() << error << e.what() << std::endl;
 	}
 	catch(...)
 	{
@@ -222,15 +222,15 @@ bool exec_command(const element& XMLCommand, const k3d::filesystem::path& FrameD
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // copy_command
 
-bool copy_command(const element& XMLCommand, const k3d::filesystem::path& FrameDirectory)
+bool copy_command(const element& XMLCommand, const boost::filesystem::path& FrameDirectory)
 {
 	try
 	{
-		const k3d::filesystem::path source = k3d::filesystem::native_path(k3d::ustring::from_utf8(attribute_text(XMLCommand, "source")));
-		const k3d::filesystem::path target = k3d::filesystem::native_path(k3d::ustring::from_utf8(attribute_text(XMLCommand, "target")));
+		const boost::filesystem::path source = boost::filesystem::path(k3d::string_t(attribute_text(XMLCommand, "source")));
+		const boost::filesystem::path target = boost::filesystem::path(k3d::string_t(attribute_text(XMLCommand, "target")));
 
-		k3d::filesystem::remove(target);
-		k3d::filesystem::copy_file(source, target);
+		boost::filesystem::remove(target);
+		boost::filesystem::copy_file(source, target);
 
 		return true;
 	}
@@ -245,7 +245,7 @@ bool copy_command(const element& XMLCommand, const k3d::filesystem::path& FrameD
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // view_command
 
-bool view_command(const element& XMLCommand, const k3d::filesystem::path& FrameDirectory)
+bool view_command(const element& XMLCommand, const boost::filesystem::path& FrameDirectory)
 {
 	const k3d::string_t path = attribute_text(XMLCommand, "file");
 
@@ -273,7 +273,7 @@ bool view_command(const element& XMLCommand, const k3d::filesystem::path& FrameD
 // execute_command
 
 /// Handles a single command during processing for the frame ...
-bool execute_command(const element& XMLCommand, const k3d::filesystem::path& FrameDirectory)
+bool execute_command(const element& XMLCommand, const boost::filesystem::path& FrameDirectory)
 {
 	for(element::elements_t::const_iterator xml_command = XMLCommand.children.begin(); xml_command != XMLCommand.children.end(); ++xml_command)
 	{
@@ -292,57 +292,57 @@ bool execute_command(const element& XMLCommand, const k3d::filesystem::path& Fra
 // render_frame
 
 /// Handles all processing for the given frame
-bool render_frame(const k3d::filesystem::path& FrameDirectory)
+bool render_frame(const boost::filesystem::path& FrameDirectory)
 {
-	if(!k3d::filesystem::exists(FrameDirectory))
+	if(!boost::filesystem::exists(FrameDirectory))
 	{
-		k3d::log() << error << "Frame directory " << FrameDirectory.native_console_string() << " does not exist" << std::endl;
+		k3d::log() << error << "Frame directory " << FrameDirectory.native() << " does not exist" << std::endl;
 		return false;
 	}
 
-	if(!k3d::filesystem::is_directory(FrameDirectory))
+	if(!boost::filesystem::is_directory(FrameDirectory))
 	{
-		k3d::log() << error << "Frame directory " << FrameDirectory.native_console_string() << " is not a directory" << std::endl;
+		k3d::log() << error << "Frame directory " << FrameDirectory.native() << " is not a directory" << std::endl;
 		return false;
 	}
 
 	// Skip the frame if it's complete ...
-	if(k3d::filesystem::exists(FrameDirectory / k3d::filesystem::generic_path("complete")))
+	if(boost::filesystem::exists(FrameDirectory / boost::filesystem::path("complete")))
 		return true;
 
 	// Skip the frame if it errored out ...
-	if(k3d::filesystem::exists(FrameDirectory / k3d::filesystem::generic_path("error")))
+	if(boost::filesystem::exists(FrameDirectory / boost::filesystem::path("error")))
 		return true;
 
 	// Skip the frame if it's running ...
-	if(k3d::filesystem::exists(FrameDirectory / k3d::filesystem::generic_path("running")))
+	if(boost::filesystem::exists(FrameDirectory / boost::filesystem::path("running")))
 		return true;
 
 	// Make sure the frame is ready ...
-	if(!k3d::filesystem::exists(FrameDirectory / k3d::filesystem::generic_path("ready")))
+	if(!boost::filesystem::exists(FrameDirectory / boost::filesystem::path("ready")))
 	{
-		k3d::log() << error << "Frame " << FrameDirectory.native_console_string() << " is not ready" << std::endl;
+		k3d::log() << error << "Frame " << FrameDirectory.native() << " is not ready" << std::endl;
 		return false;
 	}
 
 	// Standard logging ...
-	k3d::log() << info << "Starting Frame " << FrameDirectory.native_console_string() << std::endl;
+	k3d::log() << info << "Starting Frame " << FrameDirectory.native() << std::endl;
 
 	// Switch the frame status to running ...
-	k3d::filesystem::rename(FrameDirectory / k3d::filesystem::generic_path("ready"), FrameDirectory / k3d::filesystem::generic_path("running"));
+	boost::filesystem::rename(FrameDirectory / boost::filesystem::path("ready"), FrameDirectory / boost::filesystem::path("running"));
 
 	// Load the frame options file ...
 	element xml_frame_options("empty");
-	const k3d::filesystem::path control_file_path = FrameDirectory / k3d::filesystem::generic_path("control.k3d");
+	const boost::filesystem::path control_file_path = FrameDirectory / boost::filesystem::path("control.k3d");
 	try
 	{
-		k3d::filesystem::ifstream stream(control_file_path);
+		boost::filesystem::ifstream stream(control_file_path);
 		hide_progress progress;
-		parse(xml_frame_options, stream, control_file_path.native_console_string(), progress);
+		parse(xml_frame_options, stream, control_file_path.native(), progress);
 	}
 	catch(std::exception& e)
 	{
-		k3d::log() << error << "Frame " << FrameDirectory.native_console_string() << " error parsing control file " << control_file_path.native_console_string() << " " << e.what() << std::endl;
+		k3d::log() << error << "Frame " << FrameDirectory.native() << " error parsing control file " << control_file_path.native() << " " << e.what() << std::endl;
 		return false;
 	}
 
@@ -350,21 +350,21 @@ bool render_frame(const k3d::filesystem::path& FrameDirectory)
 	element* const xml_frame = find_element(xml_frame_options, "frame");
 	if(!xml_frame)
 	{
-		k3d::log() << error << "Missing <frame> data in control file " << control_file_path.native_console_string() << std::endl;
+		k3d::log() << error << "Missing <frame> data in control file " << control_file_path.native() << std::endl;
 		return false;
 	}
 
 	// Setup our execution environment ...
-	chdir(FrameDirectory.native_filesystem_string().c_str());
+	chdir(FrameDirectory.native().c_str());
 
 	for(element::elements_t::iterator xml_command = xml_frame->children.begin(); xml_command != xml_frame->children.end(); ++xml_command)
 		execute_command(*xml_command, FrameDirectory);
 
 	// Switch the frame status to complete ...
-	k3d::filesystem::rename(FrameDirectory / k3d::filesystem::generic_path("running"), FrameDirectory / k3d::filesystem::generic_path("complete"));
+	boost::filesystem::rename(FrameDirectory / boost::filesystem::path("running"), FrameDirectory / boost::filesystem::path("complete"));
 
 	// Standard logging ...
-	k3d::log() << info << "Completed Frame " << FrameDirectory.native_console_string() << std::endl;
+	k3d::log() << info << "Completed Frame " << FrameDirectory.native() << std::endl;
 
 	return true;
 }
@@ -418,7 +418,7 @@ void setup_logging(const k3d::string_t& ProcessName)
 /// Program main
 int main(int argc, char* argv[])
 {
-	const k3d::string_t program_name = k3d::filesystem::native_path(k3d::ustring::from_utf8(k3d::string_t(argv[0]))).leaf().raw();
+	const k3d::string_t program_name = boost::filesystem::path(k3d::string_t(k3d::string_t(argv[0]))).leaf().native();
 
 	// Put our arguments in a more useable form ...
 	detail::string_array options(&argv[1], &argv[argc]);
@@ -451,7 +451,7 @@ int main(int argc, char* argv[])
 	int result = 0;
 	for(unsigned long j = 0; j < options.size(); j++)
 	{
-		if(!detail::render_frame(k3d::filesystem::native_path(k3d::ustring::from_utf8(options[j]))))
+		if(!detail::render_frame(boost::filesystem::path(k3d::string_t(options[j]))))
 		    result = 1;
 	}
 

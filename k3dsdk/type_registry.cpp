@@ -169,7 +169,7 @@ void initialize_types()
 	register_type(typeid(k3d::bounding_box3), "k3d::bounding_box3");
 	register_type(typeid(k3d::color), "k3d::color");
 	register_type(typeid(k3d::double_t), "k3d::double_t");
-	register_type(typeid(k3d::filesystem::path), "k3d::filesystem::path");
+	register_type(typeid(boost::filesystem::path), "boost::filesystem::path");
 	register_type(typeid(k3d::float_t), "k3d::float_t");
 	register_type(typeid(k3d::gl::context), "k3d::gl::context");
 	register_type(typeid(k3d::gl::context_factory), "k3d::gl::context_factory");

@@ -130,8 +130,8 @@ protected:
 /////////////////////////////////////////////////////////////////////////////
 // path_serialization
 
-xml::element& save_external_resource(xml::element& Element, const ipersistent::save_context& Context, const std::string& Name, const ipath_property::reference_t Reference, const filesystem::path& Value);
-void load_external_resource(xml::element& Element, const ipersistent::load_context& Context, ipath_property::reference_t& Reference, filesystem::path& Value);
+xml::element& save_external_resource(xml::element& Element, const ipersistent::save_context& Context, const std::string& Name, const ipath_property::reference_t Reference, const boost::filesystem::path& Value);
+void load_external_resource(xml::element& Element, const ipersistent::load_context& Context, ipath_property::reference_t& Reference, boost::filesystem::path& Value);
 
 /// Serialization policy for filesystem path data that handles external filesystem resources
 template<typename value_t, class property_policy_t>
@@ -151,7 +151,7 @@ public:
 	void load(xml::element& Element, const ipersistent::load_context& Context)
 	{
 		ipath_property::reference_t reference;
-		filesystem::path value;
+		boost::filesystem::path value;
 
 		load_external_resource(Element, Context, reference, value);
 

@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	const k3d::sl::shaders_t shaders = k3d::sl::parse_source(std::cin, k3d::filesystem::generic_path("stdin"));
+	const k3d::sl::shaders_t shaders = k3d::sl::parse_source(std::cin, boost::filesystem::path("stdin"));
 	k3d::sl::generate_metafile(std::cout, shaders);
 
 	return 0;

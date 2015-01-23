@@ -53,7 +53,7 @@ static const bool save(idocument_wrapper& Self, const string_t& Path)
 	if(!exporter)
 		throw std::runtime_error("no exporter plugin available");
 
-	return exporter->write_file(Self.wrapped(), filesystem::native_path(ustring::from_utf8(Path)));
+	return exporter->write_file(Self.wrapped(), boost::filesystem::path(string_t(Path)));
 }
 
 static void start_change_set(idocument_wrapper& Self)

@@ -27,10 +27,12 @@
 #include <k3dsdk/iunknown.h>
 #include <k3dsdk/types.h>
 
+#include <boost/filesystem/path.hpp>
+
+#include <vector>
+
 namespace k3d
 {
-
-namespace filesystem { class path; }
 
 /// Abstract interface that encapsulates all of the work required to render a "frame".
 /// All of the steps ("commands") required to render the frame will be executed in the
@@ -80,13 +82,13 @@ public:
 	typedef std::vector<argument> arguments;
 
 	/// Returns a unique filepath that can be used as an input/output file for this frame
-	virtual const filesystem::path add_file(const string_t& Name) = 0;
+	virtual const boost::filesystem::path add_file(const string_t& Name) = 0;
 	/// Sets-up an arbitrary command to be executed.  Supplied environment variables will supplement the application environment.
 	virtual void add_exec_command(const string_t& Binary, const environment& Environment, const arguments& Arguments) = 0;
 	/// Sets-up a copy operation from one filesystem location to another
-	virtual void add_copy_command(const filesystem::path& Source, const filesystem::path& Target) = 0;
+	virtual void add_copy_command(const boost::filesystem::path& Source, const boost::filesystem::path& Target) = 0;
 	/// Sets-up an view operation that will display a file to the user
-	virtual void add_view_command(const filesystem::path& File) = 0;
+	virtual void add_view_command(const boost::filesystem::path& File) = 0;
 
 protected:
 	inetwork_render_frame() {}

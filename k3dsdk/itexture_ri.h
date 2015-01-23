@@ -26,11 +26,12 @@
 
 #include <k3dsdk/iunknown.h>
 
+#include <boost/filesystem/path.hpp>
+
 namespace k3d
 {
 
 class inetwork_render_frame;
-namespace filesystem { class path; }
 	
 namespace ri
 {
@@ -45,7 +46,7 @@ class itexture :
 {
 public:
 	virtual void setup_renderman_texture(inetwork_render_frame& Frame, istream& Stream, ishader_collection& Shaders) = 0;
-	virtual const filesystem::path renderman_texture_path(const render_state& State) = 0;
+	virtual const boost::filesystem::path renderman_texture_path(const render_state& State) = 0;
 
 protected:
 	itexture() {}

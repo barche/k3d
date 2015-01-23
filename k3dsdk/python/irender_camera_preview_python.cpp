@@ -28,7 +28,7 @@
 #include <k3dsdk/python/iunknown_python.h>
 #include <k3dsdk/python/utility_python.h>
 
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 #include <k3dsdk/icamera.h>
 #include <k3dsdk/irender_camera_preview.h>
 #include <k3dsdk/iplugin_factory.h>

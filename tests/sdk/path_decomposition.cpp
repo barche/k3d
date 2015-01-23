@@ -1,31 +1,15 @@
+#include <k3dsdk/types.h>
+
 #include <boost/filesystem/path.hpp>
 
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
 
-class quoted_string
-{
-public:
-	quoted_string(const Glib::ustring& String) :
-		string(String)
-	{
-	}
-
-	friend std::ostream& operator<<(std::ostream& Stream, const quoted_string& String)
-	{
-		Stream << "[" << String.string.raw() << "]";
-		return Stream;
-	}
-
-private:
-	const Glib::ustring string;
-};
-
 void test_native_to_generic(const std::string& Native, const std::string& Generic)
 {
 	boost::filesystem::path path = boost::filesystem::path(k3d::string_t(Native));
-	std::cout << "native to generic: " << Native << " -> " << path.generic_string().raw() << std::endl;
+	std::cout << "native to generic: " << Native << " -> " << path.generic_string() << std::endl;
 
 	if(path.generic_string() != k3d::string_t(Generic))
 		throw std::runtime_error("results don't match");
@@ -36,9 +20,10 @@ void test_iteration(const std::string& Native, const std::string& Generic)
 	boost::filesystem::path path = boost::filesystem::path(k3d::string_t(Native));
 
 	std::ostringstream buffer;
-	for(boost::filesystem::path::iterator p = path.begin(); p != path.end(); ++p)
-		buffer << (*p).raw() << ",";
-//	std::copy(path.begin(), path.end(), std::ostream_iterator<Glib::ustring>(buffer, ","));
+	for(const boost::filesystem::path& path_elem : path)
+	{
+		buffer << path_elem.generic_string() << ",";
+	}
 
 	std::cout << "path iteration: " << Native << " -> " << buffer.str() << std::endl;
 
@@ -49,7 +34,7 @@ void test_iteration(const std::string& Native, const std::string& Generic)
 void test_root_name(const std::string& Native, const std::string& Generic)
 {
 	boost::filesystem::path path = boost::filesystem::path(k3d::string_t(Native));
-	std::cout << "root name: " << Native << " -> " << path.root_name().raw() << std::endl;
+	std::cout << "root name: " << Native << " -> " << path.root_name() << std::endl;
 
 	if(path.root_name() != k3d::string_t(Generic))
 		throw std::runtime_error("results don't match");
@@ -58,7 +43,7 @@ void test_root_name(const std::string& Native, const std::string& Generic)
 void test_root_directory(const std::string& Native, const std::string& Generic)
 {
 	boost::filesystem::path path = boost::filesystem::path(k3d::string_t(Native));
-	std::cout << "root directory: " << Native << " -> " << path.root_directory().raw() << std::endl;
+	std::cout << "root directory: " << Native << " -> " << path.root_directory() << std::endl;
 
 	if(path.root_directory() != k3d::string_t(Generic))
 		throw std::runtime_error("results don't match");
@@ -67,7 +52,7 @@ void test_root_directory(const std::string& Native, const std::string& Generic)
 void test_branch_path(const std::string& Native, const std::string& Generic)
 {
 	boost::filesystem::path path = boost::filesystem::path(k3d::string_t(Native));
-	std::cout << "branch path: " << Native << " -> " << path.branch_path().generic_string().raw() << std::endl;
+	std::cout << "branch path: " << Native << " -> " << path.branch_path().generic_string() << std::endl;
 
 	if(path.branch_path().generic_string() != k3d::string_t(Generic))
 		throw std::runtime_error("results don't match");
@@ -76,7 +61,7 @@ void test_branch_path(const std::string& Native, const std::string& Generic)
 void test_leaf(const std::string& Native, const std::string& Generic)
 {
 	boost::filesystem::path path = boost::filesystem::path(k3d::string_t(Native));
-	std::cout << "path leaf: " << Native << " -> " << path.leaf().raw() << std::endl;
+	std::cout << "path leaf: " << Native << " -> " << path.leaf() << std::endl;
 
 	if(path.leaf() != k3d::string_t(Generic))
 		throw std::runtime_error("results don't match");
@@ -94,6 +79,7 @@ int main(int argc, char* argv[])
 		test_native_to_generic(".", ".");
 		test_native_to_generic("..", "..");
 		test_native_to_generic("../foo", "../foo");
+#ifdef K3D_API_WIN32
 		test_native_to_generic("c:", "c:");
 		test_native_to_generic("c:\\", "c:/");
 		test_native_to_generic("c:..", "c:..");
@@ -103,7 +89,7 @@ int main(int argc, char* argv[])
 		test_native_to_generic("\\\\shr\\", "//shr/");
 		test_native_to_generic("\\\\shr\\foo", "//shr/foo");
 		test_native_to_generic("prn:", "prn:");
-
+#endif
 		test_iteration("/", "/,");
 		test_iteration("foo", "foo,");
 		test_iteration("/foo", "/,foo,");
@@ -113,6 +99,7 @@ int main(int argc, char* argv[])
 		test_iteration(".", ".,");
 		test_iteration("..", "..,");
 		test_iteration("../foo", "..,foo,");
+#ifdef K3D_API_WIN32
 		test_iteration("c:", "c:,");
 		test_iteration("c:\\", "c:,/,");
 		test_iteration("c:..", "c:,..,");
@@ -124,6 +111,7 @@ int main(int argc, char* argv[])
 		test_iteration("\\\\shr\\foo", "//shr,/,foo,");
 		test_iteration("\\\\shr\\foo\\bar", "//shr,/,foo,bar,");
 		test_iteration("prn:", "prn:,");
+#endif
 
 		test_root_name("/", "");
 		test_root_name("foo", "");
@@ -133,6 +121,7 @@ int main(int argc, char* argv[])
 		test_root_name(".", "");
 		test_root_name("..", "");
 		test_root_name("../foo", "");
+#ifdef K3D_API_WIN32
 		test_root_name("c:", "c:");
 		test_root_name("c:\\", "c:");
 		test_root_name("c:..", "c:");
@@ -142,6 +131,7 @@ int main(int argc, char* argv[])
 		test_root_name("\\\\shr\\", "//shr");
 		test_root_name("\\\\shr\\foo", "//shr");
 		test_root_name("prn:", "prn:");
+#endif
 
 		test_root_directory("/", "/");
 		test_root_directory("foo", "");
@@ -151,6 +141,7 @@ int main(int argc, char* argv[])
 		test_root_directory(".", "");
 		test_root_directory("..", "");
 		test_root_directory("../foo", "");
+#ifdef K3D_API_WIN32
 		test_root_directory("c:", "");
 		test_root_directory("c:\\", "/");
 		test_root_directory("c:..", "");
@@ -160,6 +151,7 @@ int main(int argc, char* argv[])
 		test_root_directory("\\\\shr\\", "/");
 		test_root_directory("\\\\shr\\foo", "/");
 		test_root_directory("prn:", "");
+#endif
 
 		test_branch_path("/", "");
 		test_branch_path("foo", "");
@@ -169,6 +161,7 @@ int main(int argc, char* argv[])
 		test_branch_path(".", "");
 		test_branch_path("..", "");
 		test_branch_path("../foo", "..");
+#ifdef K3D_API_WIN32
 		test_branch_path("c:", "");
 		test_branch_path("c:\\", "c:");
 		test_branch_path("c:..", "c:");
@@ -178,6 +171,7 @@ int main(int argc, char* argv[])
 		test_branch_path("\\\\shr\\", "//shr");
 		test_branch_path("\\\\shr\\foo", "//shr/");
 		test_branch_path("prn:", "");
+#endif
 
 		test_leaf("/", "/");
 		test_leaf("foo", "foo");
@@ -187,6 +181,7 @@ int main(int argc, char* argv[])
 		test_leaf(".", ".");
 		test_leaf("..", "..");
 		test_leaf("../foo", "foo");
+#ifdef K3D_API_WIN32
 		test_leaf("c:", "c:");
 		test_leaf("c:\\", "/");
 		test_leaf("c:..", "..");
@@ -196,6 +191,7 @@ int main(int argc, char* argv[])
 		test_leaf("\\\\shr\\", "/");
 		test_leaf("\\\\shr\\foo", "foo");
 		test_leaf("prn:", "prn:");
+#endif
 
 		return 0;
 	}

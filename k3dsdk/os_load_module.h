@@ -26,16 +26,16 @@
 
 #include <k3dsdk/module.h>
 
+#include <boost/filesystem/path.hpp>
+
 namespace k3d
 {
-
-namespace filesystem { class path; }
 
 //////////////////////////////////////////////////////////////////////////////
 // os_load_module
 
 /// Handles the platform-specific details of loading a module
-void os_load_module(const filesystem::path& FilePath, register_plugins_entry_point& RegisterPlugins);
+void os_load_module(const boost::filesystem::path& FilePath, register_plugins_entry_point& RegisterPlugins);
 
 } // namespace k3d
 

@@ -346,9 +346,9 @@ public:
 		create_property<T, user_property<k3d_data(T, immutable_name, change_signal, with_undo, local_storage, no_constraint, writable_property, user_serialization)> >(DefaultValue);
 	}
 
-	void operator()(filesystem::path DefaultValue) const
+	void operator()(boost::filesystem::path DefaultValue) const
 	{
-		create_path_property<filesystem::path, user_property<k3d_data(filesystem::path, immutable_name, change_signal, with_undo, local_storage, no_constraint, path_property, path_serialization)> >(DefaultValue);
+		create_path_property<boost::filesystem::path, user_property<k3d_data(boost::filesystem::path, immutable_name, change_signal, with_undo, local_storage, no_constraint, path_property, path_serialization)> >(DefaultValue);
 	}
 
 	void operator()(mesh* DefaultValue) const

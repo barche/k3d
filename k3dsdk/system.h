@@ -25,7 +25,7 @@
 	\author Timothy M. Shead (tshead@k-3d.com)
 */
 
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 #include <k3dsdk/types.h>
 
 #include <map>
@@ -40,7 +40,7 @@ namespace system
 /// Used to initialize the current executable path.  Should be called once as soon as possible at startup, before the cwd can be altered.
 void initialize_executable_path(int argc, char* argv[]);
 /// Returns the absolute path of the current executable, or an empty path
-const filesystem::path executable_path();
+const boost::filesystem::path executable_path();
 
 /// Safely returns an environment variable (returns empty string if the variable doesn't exist)
 const string_t getenv(const string_t& Variable);
@@ -50,17 +50,17 @@ void setenv(const string_t& Name, const string_t& Value);
 void setenv(const string_t& Variable);
 
 /// Safely returns the user's home directory
-const filesystem::path get_home_directory();
+const boost::filesystem::path get_home_directory();
 /// Safely returns the user's temp directory
-const filesystem::path get_temp_directory();
+const boost::filesystem::path get_temp_directory();
 /// Returns a unique temporary file path
-const filesystem::path generate_temp_file();
+const boost::filesystem::path generate_temp_file();
 
 /// Returns the path to a binary executable by searching the contents of the PATH environment variable, or an empty path
-const k3d::filesystem::path find_executable(const string_t& Executable);
+const boost::filesystem::path find_executable(const string_t& Executable);
 
 /// Returns the most recent modification time of a file
-bool file_modification_time(const filesystem::path& File, time_t& ModificationTime);
+bool file_modification_time(const boost::filesystem::path& File, time_t& ModificationTime);
 
 /// Indicate how a spawned process should be treated
 enum spawn_type
@@ -77,10 +77,10 @@ typedef std::map<string_t, string_t> environment_t;
 /// @param Arguments contains the program arguments (Command must NOT be included as the first element here)
 /// Program output is placed in StandardOut and StandardError
 /// @param WorkingDirectory is the directory that is changed to before executing Command
-bool spawn(const filesystem::path& Command, const std::vector<string_t>& Arguments, const spawn_type SpawnType, string_t& StandardOut, string_t& StandardError, const filesystem::path& WorkingDirectory = filesystem::path(), const environment_t& Environment = environment_t());
+bool spawn(const boost::filesystem::path& Command, const std::vector<string_t>& Arguments, const spawn_type SpawnType, string_t& StandardOut, string_t& StandardError, const boost::filesystem::path& WorkingDirectory = boost::filesystem::path(), const environment_t& Environment = environment_t());
 
 /// Defines a collection of paths
-typedef std::vector<filesystem::path> paths_t;
+typedef std::vector<boost::filesystem::path> paths_t;
 /// Split a string containing zero-or-more paths separated by delimiters into a collection of paths ...
 const paths_t decompose_path_list(const string_t Input);
 

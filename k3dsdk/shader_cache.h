@@ -28,7 +28,7 @@ namespace k3d
 {
 
 /// Returns the absolute path to the shader cached directory
-const filesystem::path shader_cache_path();
+const boost::filesystem::path shader_cache_path();
 
 } // namespace k3d
 

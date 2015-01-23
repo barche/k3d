@@ -28,7 +28,7 @@
 #include <k3dsdk/python/iunknown_python.h>
 #include <k3dsdk/python/utility_python.h>
 
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 #include <k3dsdk/icamera.h>
 #include <k3dsdk/irender_camera_frame.h>
 #include <k3dsdk/iplugin_factory.h>
@@ -41,7 +41,7 @@ namespace k3d
 namespace python
 {
 
-static bool_t render_camera_frame(iunknown_wrapper& Self, iunknown_wrapper& Camera, const filesystem::path& OutputImage, const bool_t ViewCompletedImage)
+static bool_t render_camera_frame(iunknown_wrapper& Self, iunknown_wrapper& Camera, const boost::filesystem::path& OutputImage, const bool_t ViewCompletedImage)
 {
 	return Self.wrapped<k3d::irender_camera_frame>().render_camera_frame(Camera.wrapped<k3d::icamera>(), OutputImage, ViewCompletedImage);
 }

@@ -52,7 +52,7 @@ protected:
 	mesh_writer(iplugin_factory& Factory, idocument& Document) :
 		base_t(Factory, Document),
 		m_input_mesh(init_owner(*this) + init_name("input_mesh") + init_label(_("Input Mesh")) + init_description(_("Input mesh")) + init_value<mesh*>(0)),
-		m_file(init_owner(*this) + init_name("file") + init_label(_("File")) + init_description(_("Output file path.")) + init_value(filesystem::path()) + init_path_mode(ipath_property::WRITE) + init_path_type(""))
+		m_file(init_owner(*this) + init_name("file") + init_label(_("File")) + init_description(_("Output file path.")) + init_value(boost::filesystem::path()) + init_path_mode(ipath_property::WRITE) + init_path_type(""))
 	{
 		m_input_mesh.changed_signal().connect(hint::converter<
 			hint::convert<hint::any, hint::none> >(make_write_file_slot()));
@@ -69,25 +69,25 @@ protected:
 	/// Stores the input mesh.
 	k3d_data(mesh*, data::immutable_name, data::change_signal, data::no_undo, data::local_storage, data::no_constraint, data::read_only_property, data::no_serialization) m_input_mesh;
 	/// Stores the output file path.
-	k3d_data(filesystem::path, immutable_name, change_signal, with_undo, local_storage, no_constraint, path_property, path_serialization) m_file;
+	k3d_data(boost::filesystem::path, immutable_name, change_signal, with_undo, local_storage, no_constraint, path_property, path_serialization) m_file;
 
 private:
 	/// Called whenever our inputs have changed and it's time to write to disk.
 	/// Note that execution is unaffected by the types of hints we've received.
 	void write_file(ihint*)
 	{
-		const k3d::filesystem::path path = m_file.pipeline_value();
+		const boost::filesystem::path path = m_file.pipeline_value();
 		const k3d::mesh* const mesh = m_input_mesh.pipeline_value();
 
 		if(!mesh || path.empty())
 			return;
 	
-		log() << info << "Writing " << path.native_console_string() << " using " << base_t::factory().name() << std::endl;
+		log() << info << "Writing " << path.native() << " using " << base_t::factory().name() << std::endl;
 
-		k3d::filesystem::ofstream stream(path);
+		boost::filesystem::ofstream stream(path);
 		if(!stream)
 		{
-			k3d::log() << error << k3d_file_reference << ": error opening [" << path.native_console_string() << "] for writing." << std::endl;
+			k3d::log() << error << k3d_file_reference << ": error opening [" << path.native() << "] for writing." << std::endl;
 			return;
 		}
 
@@ -99,7 +99,7 @@ private:
 
 	/// Implement this in derived classes to write the given mesh to an output stream.  Note that the output
 	/// path is provided for reference only, all data must be written to the provided stream.
-	virtual void on_write_mesh(const mesh& Input, const filesystem::path& OutputPath, std::ostream& Output) = 0;
+	virtual void on_write_mesh(const mesh& Input, const boost::filesystem::path& OutputPath, std::ostream& Output) = 0;
 };
 
 } // namespace k3d

@@ -30,7 +30,7 @@
 #include <k3dsdk/ihint.h>
 #include <k3dsdk/iuser_interface.h>
 #include <k3dsdk/iwatched_path_property.h>
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 #include <k3dsdk/types.h>
 
 namespace k3d
@@ -78,7 +78,7 @@ private:
 		user_interface().unwatch_path(m_watch_id);
 		m_watch_id = 0;
 		
-		const filesystem::path path = base::pipeline_value();
+		const boost::filesystem::path path = base::pipeline_value();
 		if(path.empty() || !m_watched)
 		{
 			return;

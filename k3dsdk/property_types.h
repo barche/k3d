@@ -31,7 +31,7 @@
 #include <k3dsdk/inode.h>
 #include <k3dsdk/itexture_ri.h>
 #include <k3dsdk/mesh.h>
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 #include <k3dsdk/types.h>
 
 #include <boost/mpl/vector/vector20.hpp>
@@ -47,7 +47,7 @@ typedef boost::mpl::vector17<
 	k3d::bool_t,
 	k3d::color,
 	k3d::double_t,
-	k3d::filesystem::path,
+	boost::filesystem::path,
 	k3d::gl::imesh_painter*,
 	k3d::imaterial*,
 	k3d::inode*,

@@ -28,7 +28,7 @@
 #include <k3dsdk/python/utility_python.h>
 
 #include <k3dsdk/ifile_change_notifier.h>
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 
 using namespace boost::python;
 
@@ -44,7 +44,7 @@ namespace python
 class file_change_receiver
 {
 public:
-	void file_changed(const filesystem::path& Path)
+	void file_changed(const boost::filesystem::path& Path)
 	{
 		changed_files.push_back(Path);
 	}
@@ -63,13 +63,13 @@ public:
 	}
 
 private:
-	std::vector<filesystem::path> changed_files;
+	std::vector<boost::filesystem::path> changed_files;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // ifile_change_notifier
 
-static uint_t watch_file(iunknown_wrapper& Self, const filesystem::path& Path, file_change_receiver& Receiver)
+static uint_t watch_file(iunknown_wrapper& Self, const boost::filesystem::path& Path, file_change_receiver& Receiver)
 {
 	return Self.wrapped<k3d::ifile_change_notifier>().watch_file(Path, boost::bind(&file_change_receiver::file_changed, Receiver, Path));
 }

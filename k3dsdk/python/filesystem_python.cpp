@@ -21,7 +21,7 @@
 
 #include <k3dsdk/python/filesystem_python.h>
 
-#include <k3dsdk/path.h>
+#include <boost/filesystem/path.hpp>
 #include <k3dsdk/types.h>
 
 #include <boost/python/detail/api_placeholder.hpp>
@@ -33,61 +33,54 @@ namespace k3d
 namespace python
 {
 
-const k3d::string_t root_name(const k3d::filesystem::path& Self)
+const k3d::string_t root_name(const boost::filesystem::path& Self)
 {
-	return Self.root_name().raw();
+	return Self.root_name().native();
 }
 
-const k3d::string_t root_directory(const k3d::filesystem::path& Self)
+const k3d::string_t root_directory(const boost::filesystem::path& Self)
 {
-	return Self.root_directory().raw();
+	return Self.root_directory().native();
 }
 
-const k3d::string_t leaf(const k3d::filesystem::path& Self)
+const k3d::string_t leaf(const boost::filesystem::path& Self)
 {
-	return Self.leaf().raw();
+	return Self.leaf().native();
 }
 
-const k3d::string_t path_string(const k3d::filesystem::path& Self)
+const k3d::string_t path_string(const boost::filesystem::path& Self)
 {
-	return Self.native_filesystem_string();
+	return Self.native();
 }
 
 class filesystem
 {
 public:
-	static const k3d::filesystem::path generic_path(const k3d::string_t& GenericPath)
+	static const boost::filesystem::path path(const k3d::string_t& GenericPath)
 	{
-		return k3d::filesystem::generic_path(GenericPath);
-	}
-
-	static const k3d::filesystem::path native_path(const k3d::string_t& NativePath)
-	{
-		return k3d::filesystem::native_path(k3d::ustring::from_utf8(NativePath));
+		return boost::filesystem::path(GenericPath);
 	}
 };
 
 void define_namespace_filesystem()
 {
 	scope outer = class_<filesystem>("filesystem", no_init)
-		.def("generic_path", filesystem::generic_path)
-		.staticmethod("generic_path")
-		.def("native_path", filesystem::native_path)
-		.staticmethod("native_path")
+		.def("path", filesystem::path)
+		.staticmethod("path")
 		;
 
-	class_<k3d::filesystem::path>("path",
+	class_<boost::filesystem::path>("path",
 		"Stores a filesystem path")
 		.def(self == self)
 		.def(self != self)
 		.def(self / self)
-		.def("root_path", &k3d::filesystem::path::root_path)
+		.def("root_path", &boost::filesystem::path::root_path)
 		.def("root_name", root_name)
 		.def("root_directory", root_directory)
 		.def("leaf", leaf)
-		.def("branch_path", &k3d::filesystem::path::branch_path)
-		.def("empty", &k3d::filesystem::path::empty)
-		.def("is_complete", &k3d::filesystem::path::is_complete)
+		.def("branch_path", &boost::filesystem::path::branch_path)
+		.def("empty", &boost::filesystem::path::empty)
+		.def("is_complete", &boost::filesystem::path::is_complete)
 		.def("__str__", path_string)
 		;
 

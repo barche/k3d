@@ -50,8 +50,6 @@
 #include <k3dsdk/xml.h>
 using namespace k3d::xml;
 
-#include <k3dsdk/fstream.h>
-
 #include <fstream>
 #include <iterator>
 #include <memory>
@@ -418,8 +416,8 @@ public:
 		m_state_recorder(StateRecorder),
 		m_nodes(Nodes),
 		m_pipeline(Pipeline),
-		m_path(init_owner(*this) + init_name("path") + init_label(_("Document Path")) + init_description(_("Document Path")) + init_value(filesystem::path())),
-		m_title(init_owner(*this) + init_name("title") + init_label(_("Document Title")) + init_description(_("Document Title")) + init_value(k3d::ustring()))
+		m_path(init_owner(*this) + init_name("path") + init_label(_("Document Path")) + init_description(_("Document Path")) + init_value(boost::filesystem::path())),
+		m_title(init_owner(*this) + init_name("title") + init_label(_("Document Title")) + init_description(_("Document Title")) + init_value(k3d::string_t()))
 	{
  		// Automatically add nodes to the unique node name collection
 		m_nodes.add_nodes_signal().connect(boost::bind(&node_name_map::add_nodes, boost::ref(m_unique_node_names), _1));
@@ -491,9 +489,9 @@ private:
  	node_name_map m_unique_node_names;
 
 	/// Stores the full document filepath (if any)
-	k3d_data(filesystem::path, immutable_name, change_signal, no_undo, local_storage, no_constraint, writable_property, no_serialization) m_path;
+	k3d_data(boost::filesystem::path, immutable_name, change_signal, no_undo, local_storage, no_constraint, writable_property, no_serialization) m_path;
 	/// Stores the document title (if any)
-	k3d_data(ustring, immutable_name, change_signal, no_undo, local_storage, no_constraint, writable_property, no_serialization) m_title;
+	k3d_data(string_t, immutable_name, change_signal, no_undo, local_storage, no_constraint, writable_property, no_serialization) m_title;
 };
 
 /// This is a real abortion, but it solves our interdependency problems among state recorder, pipeline, and property collection implementations
