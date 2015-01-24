@@ -18,9 +18,6 @@ namespace boost
 /// Namespace reserved for the gdkmm C++ wrappers for GTK, see http://gtkmm.sourceforge.net
 namespace Gdk {}
 
-/// Namespace reserved for the glibmm C++ wrappers for glib, see http://gtkmm.sourceforge.net
-namespace Glib {}
-
 /// Namespace reserved for the gtkmm C++ wrappers for GTK, see http://gtkmm.sourceforge.net
 namespace Gtk {}
 
@@ -53,7 +50,7 @@ namespace gl
 /// Contains private implementation details for the k3d API (deprecated, use k3d::detail for new code instead)
 namespace implementation_private {}
 
-/// Contains objects for use with libsigc++ signals
+/// Contains objects for use with boost::signal2 signals
 namespace signal {}
 
 /// Contains objects for storing and converting real-world units-of-measure
@@ -90,12 +87,6 @@ namespace xml
 }
 
 } // namespace k3d
-
-/// Namespace reserved for the libsigc++ signal library, see http://libsigc.sourceforge.net
-namespace sigc {}
-
-/// Namespace reserved for the libsigc++ signal library (compatibility layer), see http://libsigc.sourceforge.net
-namespace SigC {}
 
 /// Namespace reserved for the C++ Standard Library
 namespace std {}

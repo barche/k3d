@@ -65,7 +65,6 @@ class  consumable
 public:
 	typedef bool result_type;
 
-	/// New implementation for use with libsigc++ 2.0
 	template<typename IteratorT>
 	result_type operator()(IteratorT First, IteratorT Last)
 	{

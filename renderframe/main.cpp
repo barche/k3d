@@ -41,8 +41,6 @@ using namespace k3d::xml;
 
 #endif // K3D_API_WIN32
 
-#include <glibmm/spawn.h>
-
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -205,10 +203,6 @@ bool exec_command(const element& XMLCommand, const boost::filesystem::path& Fram
 			k3d::log() << error << "stderr: " << standard_error << std::endl;
 
 		return true;
-	}
-	catch(Glib::SpawnError& e)
-	{
-		k3d::log() << error << e.what() << std::endl;
 	}
 	catch(...)
 	{
