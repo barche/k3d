@@ -24,10 +24,12 @@
 	\author Tim Shead (tshead@k-3d.com)
 */
 
-#include <QObject>
+#include <QApplication>
 
 namespace k3d
 {
+
+class idocument;
 
 namespace qtui
 {
@@ -37,21 +39,17 @@ namespace qtui
 
 /// Provides a singleton for managing the running K-3D application.
 class application :
-	public QObject
+	public QApplication
 {
-	Q_OBJECT;
+	Q_OBJECT
 public:
-	static application& instance();
+	application(int &argc, char **argv);
 
-public Q_SLOTS:
-	void close();
+public slots:
+	void on_new_document();
 
-Q_SIGNALS:
-	void closing();
-
-private:
-	application();
-	~application();
+private slots:
+	void on_about_to_quit();
 };
 
 } // namespace qtui

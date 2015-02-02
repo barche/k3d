@@ -23,7 +23,13 @@
 
 #include <k3dsdk/application.h>
 #include <k3dsdk/iapplication.h>
+#include <k3dsdk/idocument.h>
+#include <k3dsdk/log.h>
+#include <k3dsdk/result.h>
+
 #include <k3dsdk/qtui/application.h>
+
+#include <QtQml>
 
 namespace k3d
 {
@@ -34,23 +40,20 @@ namespace qtui
 /////////////////////////////////////////////////////////////////////////////
 // application
 
-application& application::instance()
+application::application(int &argc, char **argv) : QApplication(argc, argv)
 {
-	static application g_application;
-	return g_application;
+	QObject::connect(this, &QApplication::aboutToQuit, this, &application::on_about_to_quit);
 }
 
-application::application()
+void application::on_new_document()
 {
+	idocument* document = k3d::application().create_document();
+	return_if_fail(document);
 }
 
-application::~application()
+void application::on_about_to_quit()
 {
-}
-
-void application::close()
-{
-	Q_EMIT closing();
+	k3d::log() << info << "K-3D is quitting" << std::endl;
 	k3d::application().exit();
 }
 

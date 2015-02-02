@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/QTUI">
+        <file>document_window.qml</file>
+        <file>window_icon.png</file>
+    </qresource>
+</RCC>

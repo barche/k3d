@@ -1,6 +1,3 @@
-#ifndef K3DSDK_QTUI_SCRIPT_LOG_H
-#define K3DSDK_QTUI_SCRIPT_LOG_H
-
 // K-3D
 // Copyright (c) 1995-2010, Timothy M. Shead
 //
@@ -20,12 +17,13 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-/** \file
-	\author Tim Shead (tshead@k-3d.com)
+/** \file Register QML types
+	\author Bart Janssens (bart@bartjanssens.org)
 */
 
-class QScriptEngine;
-class QScriptValue;
+#include <k3dsdk/qtui/property_wrapper.h>
+
+#include <QtQml>
 
 namespace k3d
 {
@@ -33,21 +31,19 @@ namespace k3d
 namespace qtui
 {
 
-namespace script
+struct qml_type_registry
 {
+	qml_type_registry()
+	{
+		// Register QML types
+		qRegisterMetaType<property_wrapper*>("property_wrapper*");
+	}
+};
 
-namespace log
-{
+qml_type_registry registry;
 
-void setup(QScriptEngine* Engine, QScriptValue Namespace);
-
-} // namespace log
-
-} // namespace script
 
 } // namespace qtui
 
 } // namespace k3d
-
-#endif // !K3DSDK_QTUI_SCRIPT_LOG_H
 

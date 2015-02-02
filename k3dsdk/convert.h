@@ -20,8 +20,6 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include <boost/static_assert.hpp>
-
 namespace k3d
 {
 
@@ -31,7 +29,7 @@ template<typename Target, typename Source>
 Target convert(const Source& From)
 {
 	// This will be triggered if this template is ever instantiated
-	BOOST_STATIC_ASSERT(sizeof(Target) == 0);
+	static_assert(sizeof(Source) == 0 && sizeof(Target) == 0, "Unknown conversion passed to k3d::convert");
 };
 
 } // namespace k3d

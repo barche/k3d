@@ -41,7 +41,7 @@ class iapplication :
 {
 public:
 	/// Document closed signal type
-	typedef boost::signals2::signal<void(idocument&)> close_document_signal_t;
+	typedef boost::signals2::signal<void(idocument&)> document_signal_t;
 
 	/// Exit K-3D if safe to do so
 	virtual bool exit() = 0;
@@ -65,8 +65,11 @@ public:
 	/// Connects a slot to a signal emitted when the application is closing
 	virtual boost::signals2::connection connect_close_signal(const k3d::void_signal_t::slot_type& Slot) = 0;
 
+	/// Connects a slot to a signal emitted when a new document is created
+	virtual boost::signals2::connection connect_document_created_signal(const document_signal_t::slot_type& Slot) = 0;
+
 	/// Connects a slot to a signal emitted when an existing document is closed
-	virtual boost::signals2::connection connect_close_document_signal(const close_document_signal_t::slot_type& Slot) = 0;
+	virtual boost::signals2::connection connect_close_document_signal(const document_signal_t::slot_type& Slot) = 0;
 
 protected:
 	iapplication() {}

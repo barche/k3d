@@ -19,12 +19,19 @@
 
 /** \file
 	\author Tim Shead (tshead@k-3d.com)
+	\author Romain Behar (romainbehar@yahoo.com)
 */
 
-#include <k3dsdk/batch_mode.h>
+#include <k3d-i18n-config.h>
+#include <k3dsdk/classes.h>
+#include <k3dsdk/idocument.h>
+#include <k3dsdk/imesh_painter_gl.h>
+#include <k3dsdk/plugin.h>
+#include <k3dsdk/property.h>
+#include <k3dsdk/transform.h>
+
 #include <k3dsdk/qtui/convert.h>
-#include <k3dsdk/qtui/nag_message_dialog.h>
-#include <k3dsdk/qtui/options.h>
+#include <k3dsdk/qtui/property_wrapper.h>
 
 namespace k3d
 {
@@ -32,34 +39,30 @@ namespace k3d
 namespace qtui
 {
 
-/////////////////////////////////////////////////////////////////////////////
-// nag_message_dialog
-
-nag_message_dialog::nag_message_dialog(const QString& Message, const QString& SecondaryMessage)
+property_wrapper::property_wrapper(iproperty& Property, QObject* Parent) :
+	QObject(Parent),
+	m_property(Property)
 {
-	ui.setupUi(this);
-	ui.icon->setPixmap(QIcon::fromTheme("dialog-information").pixmap(48));
-	ui.message->setText(Message);
-	ui.secondaryMessage->setText(SecondaryMessage);
+	m_property.property_changed_signal().connect(boost::bind(&property_wrapper::on_value_changed, this, _1));
 }
 
-const bool_t nag_message_dialog::show_message() const
+QVariant property_wrapper::value() const
 {
-	return ui.showMessage->isChecked();
+	return k3d::convert<QVariant>(m_property.property_pipeline_value());
 }
 
-void nag_message_dialog::nag(const string_t& Type, const ustring& Message, const ustring& SecondaryMessage)
+void property_wrapper::set_value(const QVariant &Value)
 {
-	if(batch_mode())
-		return;
-
-	if(!options::nag(Type))
-		return;
-
-	nag_message_dialog dialog(convert<QString>(Message), convert<QString>(SecondaryMessage));
-	dialog.exec();
-	options::enable_nag(Type, dialog.show_message());
+	iwritable_property* writable_property = dynamic_cast<iwritable_property*>(&m_property);
+	return_if_fail(writable_property);
+	writable_property->property_set_value(k3d::convert<boost::any>(Value));
 }
+
+void property_wrapper::on_value_changed(ihint *)
+{
+	emit value_changed(value());
+}
+
 
 } // namespace qtui
 

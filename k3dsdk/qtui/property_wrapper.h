@@ -1,8 +1,8 @@
-#ifndef K3DSDK_QTUI_SCRIPT_MODEL_H
-#define K3DSDK_QTUI_SCRIPT_MODEL_H
+#ifndef K3DSDK_QTUI_PROPERTY_WRAPPER_H
+#define K3DSDK_QTUI_PROPERTY_WRAPPER_H
 
 // K-3D
-// Copyright (c) 1995-2010, Timothy M. Shead
+// Copyright (c) 1995-2015, K-3D
 //
 // Contact: tshead@k-3d.com
 //
@@ -21,11 +21,15 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 /** \file
-	\author Tim Shead (tshead@k-3d.com)
+	\author Bart Janssens (bart@bartjanssens.org)
 */
 
-class QScriptEngine;
-class QScriptValue;
+#include <k3dsdk/iproperty.h>
+#include <k3dsdk/iwritable_property.h>
+#include <k3dsdk/result.h>
+
+#include <QObject>
+#include <QVariant>
 
 namespace k3d
 {
@@ -33,21 +37,30 @@ namespace k3d
 namespace qtui
 {
 
-namespace script
+/// Wrapper class for a property, exposing it to QML
+class property_wrapper : public QObject
 {
+	Q_OBJECT
+	Q_PROPERTY(QVariant value READ value WRITE set_value NOTIFY value_changed)
+public:
+	property_wrapper(iproperty& Property, QObject* Parent);
 
-namespace model
-{
+	QVariant value() const;
 
-void setup(QScriptEngine* Engine, QScriptValue Namespace);
+	void set_value(const QVariant& Value);
 
-} // namespace model
+signals:
+	void value_changed(const QVariant& Value);
 
-} // namespace script
+protected:
+	void on_value_changed(ihint*);
+
+	iproperty& m_property;
+};
 
 } // namespace qtui
 
 } // namespace k3d
 
-#endif // !K3DSDK_QTUI_SCRIPT_MODEL_H
+#endif // !K3DSDK_QTUI_PROPERTY_WRAPPER_H
 

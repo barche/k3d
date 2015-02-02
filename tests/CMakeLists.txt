@@ -149,3 +149,5 @@ ADD_SUBDIRECTORY(ngui)
 # Run miscellaneous odds-and-ends ...
 ADD_SUBDIRECTORY(other)
 
+# Run tests that exercise the Qt user interface
+ADD_SUBDIRECTORY(qtui)

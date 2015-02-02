@@ -24,6 +24,10 @@
 	\author Tim Shead (tshead@k-3d.com)
 */
 
+#include <k3dsdk/qtui/property_wrapper.h>
+
+#include <QObject>
+
 namespace k3d
 {
 
@@ -34,6 +38,20 @@ namespace qtui
 
 /// Populates a newly-created document to provide users with a good out-of-box experience.
 void populate_new_document(idocument& Document);
+
+/// Wrapper class for a document, allowing access from QML
+class document_model : public QObject
+{
+	Q_OBJECT
+	Q_PROPERTY(property_wrapper* title MEMBER m_title CONSTANT)
+public:
+	document_model(idocument& Document);
+
+private:
+	idocument& m_document;
+
+	property_wrapper* m_title;
+};
 
 } // namespace qtui
 

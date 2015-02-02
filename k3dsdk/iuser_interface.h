@@ -77,7 +77,7 @@ public:
 	virtual void synchronize() = 0;
 
 	/// Returns a connection to a signal that will be emitted at the requested frame rate (could return an empty connection, if the UI doesn't support timers)
-	virtual boost::signals2::connection get_timer(const double_t FrameRate, k3d::void_signal_t::slot_type Slot) = 0;
+	virtual boost::signals2::connection get_timer(const double_t FrameRate, const k3d::void_signal_t::slot_type& Slot) = 0;
 	
 	/// Call a slot whenever given filesystem path is modified.  Note that we are watching the
 	/// path, not an inode, so it isn't an error to specify a path for a nonexistent file.

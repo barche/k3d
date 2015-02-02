@@ -117,7 +117,7 @@ public:
 	{
 	}
 
-	boost::signals2::connection get_timer(const k3d::double_t FrameRate, k3d::void_signal_t::slot_type Slot)
+	boost::signals2::connection get_timer(const k3d::double_t FrameRate, const k3d::void_signal_t::slot_type& Slot)
 	{
 		return boost::signals2::connection();
 	}

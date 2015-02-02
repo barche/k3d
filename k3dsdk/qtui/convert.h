@@ -26,27 +26,117 @@
 
 #include <k3dsdk/color.h>
 #include <k3dsdk/convert.h>
-#include <k3dsdk/ustring.h>
+#include <k3dsdk/type_registry.h>
 #include <k3dsdk/types.h>
 
 #include <QColor>
 #include <QString>
+#include <QVariant>
+
+#include <boost/any.hpp>
+#include <boost/mpl/for_each.hpp>
+#include <boost/mpl/pair.hpp>
+#include <boost/mpl/vector.hpp>
 
 namespace k3d
 {
+
+namespace qtui
+{
+
+/// Types for the conversion between any and variant. Pairs form a mapping, single entries are the same in Qt and K-3D
+typedef boost::mpl::vector<
+k3d::bool_t,
+k3d::double_t,
+k3d::int32_t,
+boost::mpl::pair<k3d::string_t, QString>,
+boost::mpl::pair<k3d::color, QColor>
+> k3d_qt_types;
+
+namespace detail
+{
+
+struct any_to_variant
+{
+	any_to_variant(const boost::any& From, QVariant& Result) : m_from(From), m_result(Result)
+	{
+	}
+
+	// Called if source and target types are the same
+	template<typename T>
+	void operator()(T)
+	{
+		if(m_result.isValid())
+			return;
+
+		const T* tried_cast = boost::any_cast<const T>(&m_from);
+		if(tried_cast != nullptr)
+			m_result = QVariant(*tried_cast);
+	}
+
+	// Called if source and target types differ
+	template<typename A, typename B>
+	void operator()(boost::mpl::pair<A,B>)
+	{
+		if(m_result.isValid())
+			return;
+
+		const A* tried_cast = boost::any_cast<const A>(&m_from);
+		if(tried_cast != nullptr)
+			m_result = QVariant(k3d::convert<B>(*tried_cast));
+	}
+
+	const boost::any& m_from;
+	QVariant& m_result;
+};
+
+struct variant_to_any
+{
+	variant_to_any(const QVariant& From, boost::any& Result) : m_from(From), m_result(Result)
+	{
+	}
+
+	// Called if source and target types are the same
+	template<typename T>
+	void operator()(T)
+	{
+		if(!m_result.empty())
+			return;
+
+		const int type_id = qMetaTypeId<T>();
+		if(m_from.userType() == type_id)
+		{
+			m_result = m_from.value<T>();
+		}
+	}
+
+	// Called if source and target types differ
+	template<typename A, typename B>
+	void operator()(boost::mpl::pair<A,B>)
+	{
+		if(!m_result.empty())
+			return;
+
+		const int type_id = qMetaTypeId<B>();
+		if(m_from.userType() == type_id)
+		{
+			m_result = k3d::convert<A>(m_from.value<B>());
+		}
+	}
+
+	const QVariant& m_from;
+	boost::any& m_result;
+};
+
+}
+
+}
 
 /// Specialization of k3d::convert that converts k3d::string_t to QString.
 template<>
 inline QString convert(const string_t& From)
 {
 	return QString(From.c_str());
-}
-
-/// Specialization of k3d::convert that converts k3d::ustring to QString.
-template<>
-inline QString convert(const ustring& From)
-{
-	return QString::fromUtf8(From.utf8_str().c_str());
 }
 
 /// Specialization of k3d::convert that converts k3d::color to QColor.
@@ -64,18 +154,34 @@ inline color convert(const QColor& From)
 }
 
 /// Specialization of k3d::convert that converts QString to k3d::string_t.
-/** \deprecated This is a potentially lossy conversion, since we're going from Unicode to ASCII. */
 template<>
 inline string_t convert(const QString& From)
 {
-	return From.toAscii().data();
+	return From.toUtf8().constData();
 }
 
-/// Specialization of k3d::convert that converts QString to k3d::ustring.
+/// Convert boost::any to QVariant
 template<>
-inline ustring convert(const QString& From)
+inline QVariant convert(const boost::any& From)
 {
-	return ustring::from_utf8(From.toUtf8().data());
+	QVariant result;
+	boost::mpl::for_each<qtui::k3d_qt_types>(qtui::detail::any_to_variant(From, result));
+	if(!result.isValid())
+		k3d::log() << warning << "Failed to convert boost::any of type " << k3d::demangle(From.type()) << " to a QVariant" << std::endl;
+
+	return result;
+}
+
+/// Convert QVariant to boost::any
+template<>
+inline boost::any convert(const QVariant& From)
+{
+	boost::any result;
+	boost::mpl::for_each<qtui::k3d_qt_types>(qtui::detail::variant_to_any(From, result));
+	if(result.empty())
+		k3d::log() << warning << "Failed to convert QVariant of type " << From.typeName() << " to a QVariant" << std::endl;
+
+	return result;
 }
 
 } // namespace k3d

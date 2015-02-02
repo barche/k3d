@@ -56,7 +56,7 @@ class application_implementation::implementation :
 public:
 
 	typedef boost::signals2::signal< void () > close_signal_t;
-	typedef boost::signals2::signal<void(idocument&)> close_document_signal_t;
+	typedef boost::signals2::signal<void(idocument&)> document_signal_t;
 
 	implementation()
 	{
@@ -112,6 +112,8 @@ public:
 			}
 		}
 
+		m_document_created_signal(*document);
+
 		return document;
 	}
 
@@ -161,7 +163,12 @@ public:
 		return m_close_signal.connect(Slot);
 	}
 
-	boost::signals2::connection connect_close_document_signal(const close_document_signal_t::slot_type& Slot)
+	boost::signals2::connection connect_document_created_signal(const document_signal_t::slot_type& Slot)
+	{
+		return m_document_created_signal.connect(Slot);
+	}
+
+	boost::signals2::connection connect_close_document_signal(const document_signal_t::slot_type& Slot)
 	{
 		return m_close_document_signal.connect(Slot);
 	}
@@ -176,8 +183,10 @@ public:
 	startup_message_signal_t m_startup_message_signal;
 	/// Signal emitted when the application is closing
 	close_signal_t m_close_signal;
+	/// Signal emitted when a document is created
+	document_signal_t m_document_created_signal;
 	/// Signal emitted when an open document is closed
-	close_document_signal_t m_close_document_signal;
+	document_signal_t m_close_document_signal;
 	/// Signal emitted to request application close
 	application_implementation::exit_signal_t m_exit_signal;
 };

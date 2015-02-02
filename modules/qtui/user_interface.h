@@ -27,13 +27,19 @@
 #include <k3dsdk/iuser_interface.h>
 #include <k3dsdk/ievent_loop.h>
 
-#include <QComboBox>
-#include <QMainWindow>
-#include <QSplashScreen>
+#include <QQmlComponent>
+#include <QQmlEngine>
 
 #include <boost/scoped_ptr.hpp>
 
-namespace k3d { class iplugin_factory; }
+namespace k3d {
+
+class idocument;
+class iplugin_factory;
+
+namespace qtui { class application; }
+
+}
 
 namespace module
 {
@@ -47,7 +53,8 @@ namespace qtui
 /// Implements the Qt User Interface plugin
 class user_interface :
 	public k3d::ievent_loop,
-	public k3d::iuser_interface
+	public k3d::iuser_interface,
+	public QObject
 {
 public:	
 	user_interface();
@@ -66,19 +73,23 @@ public:
 	void warning_message(const k3d::string_t& Message);
 	void error_message(const k3d::string_t& Message);
 	k3d::uint_t query_message(const k3d::string_t& Message, const k3d::uint_t DefaultOption, const std::vector<k3d::string_t>& Options);
-	void nag_message(const k3d::string_t& Type, const k3d::ustring& Message, const k3d::ustring& SecondaryMessage);
-	bool get_file_path(const k3d::ipath_property::mode_t Mode, const k3d::string_t& Type, const k3d::string_t& Prompt, const k3d::filesystem::path& OldPath, k3d::filesystem::path& Result);
+	void nag_message(const k3d::string_t& Type, const k3d::string_t& Message, const k3d::string_t& SecondaryMessage);
+	bool get_file_path(const k3d::ipath_property::mode_t Mode, const k3d::string_t& Type, const k3d::string_t& Prompt, const boost::filesystem::path& OldPath, boost::filesystem::path& Result);
 	bool show(iunknown& Object);
 	void synchronize();
-	sigc::connection get_timer(const double FrameRate, sigc::slot<void> Slot);
-	k3d::uint_t watch_path(const k3d::filesystem::path& Path, const sigc::slot<void>& Slot);
+	boost::signals2::connection get_timer(const double FrameRate, const k3d::void_signal_t::slot_type& Slot);
+	k3d::uint_t watch_path(const boost::filesystem::path& Path, const k3d::void_signal_t::slot_type& Slot);
 	void unwatch_path(const k3d::uint_t WatchID);
 
 	static k3d::iplugin_factory& get_factory();
 
 private:
-	boost::scoped_ptr<QApplication> m_application;
-	boost::scoped_ptr<QSplashScreen> m_splash_box;
+	void on_new_document(k3d::idocument& Document);
+	void build_document_window(k3d::idocument& Document);
+
+	std::unique_ptr<k3d::qtui::application> m_application;
+	std::unique_ptr<QQmlEngine> m_engine;
+	std::unique_ptr<QQmlComponent> m_document_window_component;
 	/// Keeps track of auto-start plugins
 	std::vector<k3d::iunknown*> m_auto_start_plugins;
 };

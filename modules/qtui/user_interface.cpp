@@ -22,7 +22,6 @@
 */
 
 #include "config.h"
-#include "main_window.h"
 #include "user_interface.h"
 
 #include <k3d-i18n-config.h>
@@ -38,20 +37,14 @@
 #include <k3dsdk/module.h>
 #include <k3dsdk/node.h>
 #include <k3dsdk/plugin.h>
-#include <k3dsdk/qtui/convert.h>
-#include <k3dsdk/qtui/document.h>
-#include <k3dsdk/qtui/message.h>
-#include <k3dsdk/qtui/nag_message_dialog.h>
 #include <k3dsdk/share.h>
 
-#include <QAction>
-#include <QApplication>
-#include <QComboBox>
-#include <QFileDialog>
-#include <QMenuBar>
-#include <QMessageBox>
-#include <QStatusBar>
-#include <QToolBar>
+#include <k3dsdk/qtui/application.h>
+#include <k3dsdk/qtui/convert.h>
+#include <k3dsdk/qtui/document.h>
+
+#include <QIcon>
+#include <QQmlContext>
 
 #include <boost/scoped_ptr.hpp>
 
@@ -66,28 +59,28 @@ namespace qtui
 /////////////////////////////////////////////////////////////////////////////
 // user_interface
 
-void qt_message_output(QtMsgType Type, const char* Message)
+void qt_message_output(QtMsgType Type, const QMessageLogContext& Context, const QString& Message)
 {
 	switch(Type)
 	{
 	case QtDebugMsg:
-		k3d::log() << debug << Message << std::endl;
+		k3d::log() << debug << k3d::convert<k3d::string_t>(Message) << std::endl;
 		break;
 	case QtWarningMsg:
-		k3d::log() << warning << Message << std::endl;
+		k3d::log() << warning << k3d::convert<k3d::string_t>(Message) << std::endl;
 		break;
 	case QtCriticalMsg:
-		k3d::log() << error << Message << std::endl;
+		k3d::log() << error << k3d::convert<k3d::string_t>(Message) << std::endl;
 		break;
 	case QtFatalMsg:
-		k3d::log() << critical << Message << std::endl;
+		k3d::log() << critical << k3d::convert<k3d::string_t>(Message) << std::endl;
 		abort();
 	}
 }
 
 user_interface::user_interface()
 {
-	qInstallMsgHandler(qt_message_output);
+	qInstallMessageHandler(qt_message_output);
 }
 
 user_interface::~user_interface()
@@ -142,73 +135,75 @@ const k3d::ievent_loop::arguments_t user_interface::parse_startup_arguments(cons
 		}
 	}
 
-	m_application.reset(new QApplication(argc, argv));
+	m_application.reset(new k3d::qtui::application(argc, argv));
 	m_application->setApplicationName("K-3D");
 	m_application->setApplicationVersion(K3D_VERSION);
 	m_application->setOrganizationDomain("k-3d.org");
 	m_application->setOrganizationName("k-3d.org");
 
-	QFile stylesheet(":/QTUI/stylesheet.css");
-	stylesheet.open(QIODevice::ReadOnly);
-	m_application->setStyleSheet(stylesheet.readAll());
-
 	m_application->setWindowIcon(QIcon(":/QTUI/window_icon.png"));
 	m_application->addLibraryPath(K3D_EXTRA_QT_PLUGINS);
 
-	k3d::log() << info << "Loading Qt plugins from " << m_application->libraryPaths().join(", ").toAscii().data() << std::endl;
+	m_engine.reset(new QQmlEngine());
+	m_engine->rootContext()->setContextProperty("k3d", m_application.get());
+
+	QObject::connect(m_engine.get(), &QQmlEngine::quit, m_application.get(), &QApplication::quit);
+
+	m_document_window_component.reset(new QQmlComponent(m_engine.get()));
+	m_document_window_component->loadUrl(QUrl(QStringLiteral("qrc:/QTUI/document_window.qml")), QQmlComponent::PreferSynchronous);
+
+	k3d::log() << info << "Loading Qt plugins from " << k3d::convert<k3d::string_t>(m_application->libraryPaths().join(", ")) << std::endl;
 	
-	if(show_splash)
-	{
-		m_splash_box.reset(new QSplashScreen(QPixmap(":/QTUI/splash.png")));
-		m_splash_box->show();
-		m_application->processEvents();
-	}
+//	if(show_splash)
+//	{
+//		m_splash_box.reset(new QSplashScreen(QPixmap(":/QTUI/splash.png")));
+//		m_splash_box->show();
+//		m_application->processEvents();
+//	}
 
 	return unused;
 }
 
 void user_interface::startup_message_handler(const k3d::string_t& Message)
 {
-	if(m_splash_box.get())
-	{
-		m_splash_box->showMessage(Message.c_str());
-		m_application->processEvents();
-	}
+//	if(m_splash_box.get())
+//	{
+//		m_splash_box->showMessage(Message.c_str());
+//		m_application->processEvents();
+//	}
 }
 
 void user_interface::display_user_interface()
 {
-	k3d::idocument* const document = k3d::application().create_document();
-	return_if_fail(document);
+	k3d::application().connect_document_created_signal(boost::bind(&user_interface::on_new_document, this, _1));
+	m_application->on_new_document();
 
-	k3d::qtui::populate_new_document(*document);
+//	main_window* const window = new main_window(*document);
+//	window->show();
 
-	main_window* const window = new main_window(*document);
-	window->show();
+//	m_splash_box.reset();
 
-	m_splash_box.reset();
+//	// Setup auto-start plugins ...
+//	const k3d::plugin::factory::collection_t factories = k3d::plugin::factory::lookup("qtui:application-start", "true");
+//	for(k3d::plugin::factory::collection_t::const_iterator factory = factories.begin(); factory != factories.end(); ++factory)
+//	{
+//		k3d::log() << info << "Creating plugin [" << (**factory).name() << "] via qtui:application-start" << std::endl;
 
-	// Setup auto-start plugins ...
-	const k3d::plugin::factory::collection_t factories = k3d::plugin::factory::lookup("qtui:application-start", "true");
-	for(k3d::plugin::factory::collection_t::const_iterator factory = factories.begin(); factory != factories.end(); ++factory)
-	{
-		k3d::log() << info << "Creating plugin [" << (**factory).name() << "] via qtui:application-start" << std::endl;
+//		k3d::iunknown* const plugin = k3d::plugin::create(**factory);
+//		if(!plugin)
+//		{
+//			k3d::log() << error << "Error creating plugin [" << (**factory).name() << "] via qtui:application-start" << std::endl;
+//			continue;
+//		}
+//		m_auto_start_plugins.push_back(plugin);
 
-		k3d::iunknown* const plugin = k3d::plugin::create(**factory);
-		if(!plugin)
-		{
-			k3d::log() << error << "Error creating plugin [" << (**factory).name() << "] via qtui:application-start" << std::endl;
-			continue;
-		}
-		m_auto_start_plugins.push_back(plugin);
-
-		if(k3d::iscripted_action* const scripted_action = dynamic_cast<k3d::iscripted_action*>(plugin))
-		{
-			k3d::iscript_engine::context context;
-			context["command"] = k3d::string_t("startup");
-			scripted_action->execute(context);
-		}
-	}
+//		if(k3d::iscripted_action* const scripted_action = dynamic_cast<k3d::iscripted_action*>(plugin))
+//		{
+//			k3d::iscript_engine::context context;
+//			context["command"] = k3d::string_t("startup");
+//			scripted_action->execute(context);
+//		}
+//	}
 }
 
 const k3d::ievent_loop::arguments_t user_interface::parse_runtime_arguments(const arguments_t& Arguments, bool& Quit, bool& Error)
@@ -233,17 +228,17 @@ void user_interface::open_uri(const k3d::string_t& URI)
 
 void user_interface::message(const k3d::string_t& Message)
 {
-	k3d::qtui::message(k3d::convert<QString>(Message), "");
+	//k3d::qtui::message(k3d::convert<QString>(Message), "");
 }
 
 void user_interface::warning_message(const k3d::string_t& Message)
 {
-	k3d::qtui::warning_message(k3d::convert<QString>(Message), "");
+	//k3d::qtui::warning_message(k3d::convert<QString>(Message), "");
 }
 
 void user_interface::error_message(const k3d::string_t& Message)
 {
-	k3d::qtui::error_message(k3d::convert<QString>(Message), "");
+	//k3d::qtui::error_message(k3d::convert<QString>(Message), "");
 }
 
 k3d::uint_t user_interface::query_message(const k3d::string_t& Message, const k3d::uint_t DefaultOption, const std::vector<k3d::string_t>& Options)
@@ -252,12 +247,12 @@ k3d::uint_t user_interface::query_message(const k3d::string_t& Message, const k3
 	return 0;
 }
 
-void user_interface::nag_message(const k3d::string_t& Type, const k3d::ustring& Message, const k3d::ustring& SecondaryMessage)
+void user_interface::nag_message(const k3d::string_t& Type, const k3d::string_t& Message, const k3d::string_t& SecondaryMessage)
 {
-	k3d::qtui::nag_message_dialog::nag(Type, Message, SecondaryMessage);
+	//k3d::qtui::nag_message_dialog::nag(Type, Message, SecondaryMessage);
 }
 
-bool user_interface::get_file_path(const k3d::ipath_property::mode_t Mode, const k3d::string_t& Type, const k3d::string_t& Prompt, const k3d::filesystem::path& OldPath, k3d::filesystem::path& Result)
+bool user_interface::get_file_path(const k3d::ipath_property::mode_t Mode, const k3d::string_t& Type, const k3d::string_t& Prompt, const boost::filesystem::path& OldPath, boost::filesystem::path& Result)
 {
 	assert_not_implemented();
 	return false;
@@ -274,13 +269,13 @@ void user_interface::synchronize()
 	assert_not_implemented();
 }
 
-sigc::connection user_interface::get_timer(const double FrameRate, sigc::slot<void> Slot)
+boost::signals2::connection user_interface::get_timer(const double FrameRate, const k3d::void_signal_t::slot_type& Slot)
 {
 	assert_not_implemented();
-	return sigc::connection();
+	return boost::signals2::connection();
 }
 
-k3d::uint_t user_interface::watch_path(const k3d::filesystem::path& Path, const sigc::slot<void>& Slot)
+k3d::uint_t user_interface::watch_path(const boost::filesystem::path& Path, const k3d::void_signal_t::slot_type& Slot)
 {
 	assert_not_implemented();
 	return 0;
@@ -289,6 +284,29 @@ k3d::uint_t user_interface::watch_path(const k3d::filesystem::path& Path, const 
 void user_interface::unwatch_path(const k3d::uint_t WatchID)
 {
 	assert_not_implemented();
+}
+
+void user_interface::on_new_document(k3d::idocument& Document)
+{
+	k3d::qtui::populate_new_document(Document);
+	build_document_window(Document);
+}
+
+void user_interface::build_document_window(k3d::idocument &Document)
+{
+	if(m_document_window_component->status() == QQmlComponent::Error)
+	{
+		k3d::log() << error << "document_window_component error: " << k3d::convert<k3d::string_t>(m_document_window_component->errors()[0].toString()) << std::endl;
+	}
+
+	QQmlContext* document_context = new QQmlContext(m_engine->rootContext());
+	k3d::qtui::document_model* document_model = new k3d::qtui::document_model(Document);
+	document_context->setContextProperty("document", document_model);
+	document_model->setParent(document_context); // Ensures deletion
+
+
+	QObject* document_window = m_document_window_component->create(document_context);
+	document_window->setParent(document_context); // Ensures deletion
 }
 
 k3d::iplugin_factory& user_interface::get_factory()
