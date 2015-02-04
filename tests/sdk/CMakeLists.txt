@@ -54,6 +54,9 @@ K3D_TEST(sdk.path.relative.001 TARGET test-path-relative ARGUMENTS "/home/bubba/
 K3D_TEST(sdk.path.relative.002 TARGET test-path-relative ARGUMENTS "/home/bubba/k3d/test.k3d" "/home/bubba" "k3d/test.k3d" LABELS sdk)
 K3D_TEST(sdk.path.relative.003 TARGET test-path-relative ARGUMENTS "/home/bubba/k3d/test.k3d" "/var/documents" "../../home/bubba/k3d/test.k3d" LABELS sdk)
 
+ADD_EXECUTABLE(test-pointer-demand-storage pointer_demand_storage.cpp)
+K3D_TEST(sdk.pointer-demand-storage TARGET test-pointer-demand-storage LABELS sdk)
+
 ADD_EXECUTABLE(test-program-options program_options.cpp)
 K3D_TEST(sdk.program-options TARGET test-program-options LABELS sdk)
 
