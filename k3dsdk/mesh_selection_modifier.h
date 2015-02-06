@@ -68,7 +68,7 @@ protected:
 		m_input_mesh.changed_signal().connect(hint::converter<
 			hint::convert<hint::any, hint::none> >(make_update_mesh_slot()));
 
-		m_output_mesh.set_update_slot(boost::bind(&mesh_selection_modifier<base_t>::execute, this));
+		m_output_mesh.set_update_slot(boost::bind(&mesh_selection_modifier<base_t>::execute, this, _1, _2));
 	}
 
 	/// Called whenever the output mesh has been modified and needs to be updated.

@@ -73,6 +73,7 @@ GLEWContext* context::glew_context()
 		on_begin();
 		m_glew_context.reset(new GLEWContext());
 		g_current_glew() = m_glew_context.get();
+		glewExperimental = GL_TRUE;
 		GLenum err = glewInit(); // needs to be called after context creation
 		if (GLEW_OK != err)
 		{

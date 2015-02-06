@@ -47,7 +47,7 @@ public:
 	node_selection(k3d::iplugin_factory& Factory, k3d::idocument& Document) : base(Factory, Document),
 		m_selection_weights((init_owner(*this) + init_name("selection_weights") + init_label(_("Selection Weights")) + init_description(_("Selection weight for all nodes")) + init_value(selection_t())))
 	{
-		m_selection_weights.changed_signal().connect(sigc::mem_fun(*this, &node_selection::on_weights_changed));
+		m_selection_weights.changed_signal().connect(boost::bind(&node_selection::on_weights_changed, this, _1));
 	}
 
 	void select(k3d::inode& Node, const k3d::double_t Weight)

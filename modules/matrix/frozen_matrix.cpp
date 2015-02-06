@@ -60,7 +60,7 @@ public:
 		m_matrix.changed_signal().connect(k3d::hint::converter<
 			k3d::hint::convert<k3d::hint::any, k3d::hint::none> >(m_output.make_slot()));
 
-		m_output.set_update_slot(sigc::mem_fun(*this, &frozen_matrix::execute));
+    m_output.set_update_slot(boost::bind(&frozen_matrix::execute, this, _1, _2));
 	}
 
 	k3d::iproperty& matrix_source_output()

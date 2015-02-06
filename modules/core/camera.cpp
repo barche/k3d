@@ -68,7 +68,7 @@ public:
 		base(Factory, Document),
 		m_navigation_target(init_owner(*this) + init_name("navigation_target") + init_label(_("Navigation Target")) + init_description(_("Navigation Target")) + init_value<k3d::imatrix_source*>(this)),
 		m_world_target(init_owner(*this) + init_name("world_target") + init_label(_("World target")) + init_description(_("World target")) + init_value(k3d::point3(0, -5, 0))),
-		m_target_distance(init_owner(*this) + init_name("target_distance") + init_label(_("Target distance")) + init_description(_("Target distance from camera position")) + init_value(0) + init_units(typeid(k3d::measurement::distance)) + init_slot(sigc::mem_fun(*this, &camera::get_target_distance))),
+		m_target_distance(init_owner(*this) + init_name("target_distance") + init_label(_("Target distance")) + init_description(_("Target distance from camera position")) + init_value(0) + init_units(typeid(k3d::measurement::distance)) + init_slot(boost::bind(&camera::get_target_distance, this))),
 		m_aspect_ratio(init_owner(*this) + init_name("aspect_ratio") + init_label(_("Aspect Ratio")) + init_description(_("Choose a predefined aspect ratio")) + init_enumeration(k3d::aspect_ratio_values()) + init_value(std::string(""))),
 		m_show_projection(init_owner(*this) + init_name("show_projection") + init_label(_("Show Projection")) + init_description(_("Show viewing projection")) + init_value(false)),
 		m_orthographic(init_owner(*this) + init_name("orthographic") + init_label(_("Orthographic")) + init_description(_("Orthographic projection")) + init_value(false)),
@@ -111,7 +111,7 @@ public:
 		register_property_group(projection_group);
 		register_property_group(output_group);
 
-		m_aspect_ratio.changed_signal().connect(sigc::mem_fun(*this, &camera::on_aspect_ratio_changed));
+		m_aspect_ratio.changed_signal().connect(boost::bind(&camera::on_aspect_ratio_changed, this, _1));
 
 		m_show_projection.changed_signal().connect(make_async_redraw_slot());
 		m_orthographic.changed_signal().connect(make_async_redraw_slot());
@@ -130,8 +130,8 @@ public:
 		m_crop_window_bottom.changed_signal().connect(make_async_redraw_slot());
 		m_input_matrix.changed_signal().connect(make_async_redraw_slot());
 
-		m_input_matrix.changed_signal().connect(sigc::mem_fun(*this, &camera::on_position_changed));
-		m_world_target.changed_signal().connect(sigc::mem_fun(*this, &camera::on_position_changed));
+		m_input_matrix.changed_signal().connect(boost::bind(&camera::on_position_changed, this, _1));
+		m_world_target.changed_signal().connect(boost::bind(&camera::on_position_changed, this, _1));
 	}
 
 	k3d::imatrix_source& transformation()

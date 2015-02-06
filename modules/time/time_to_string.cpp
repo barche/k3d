@@ -52,7 +52,7 @@ public:
 		m_format.changed_signal().connect(k3d::hint::converter<
 			k3d::hint::convert<k3d::hint::any, k3d::hint::none> >(m_output.make_slot()));
 
-		m_output.set_update_slot(sigc::mem_fun(*this, &time_to_string::execute));
+		m_output.set_update_slot(boost::bind(&time_to_string::execute, this, _1, _2));
 	}
 
 	static k3d::iplugin_factory& get_factory()

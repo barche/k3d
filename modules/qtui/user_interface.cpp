@@ -45,6 +45,7 @@
 
 #include <QIcon>
 #include <QQmlContext>
+#include <QSurfaceFormat>
 
 #include <boost/scoped_ptr.hpp>
 
@@ -151,6 +152,12 @@ const k3d::ievent_loop::arguments_t user_interface::parse_startup_arguments(cons
 
 	m_document_window_component.reset(new QQmlComponent(m_engine.get()));
 	m_document_window_component->loadUrl(QUrl(QStringLiteral("qrc:/QTUI/document_window.qml")), QQmlComponent::PreferSynchronous);
+
+	QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+	format.setProfile(QSurfaceFormat::CoreProfile);
+	format.setMajorVersion(3);
+	format.setMinorVersion(3);
+	QSurfaceFormat::setDefaultFormat(format);
 
 	k3d::log() << info << "Loading Qt plugins from " << k3d::convert<k3d::string_t>(m_application->libraryPaths().join(", ")) << std::endl;
 	

@@ -50,7 +50,7 @@ public:
 		m_input_matrix.changed_signal().connect(hint::converter<
 			hint::convert<hint::any, hint::none> >(make_update_matrix_slot()));
 
-		m_output_matrix.set_update_slot(boost::bind(&transformable<base_t>::execute, this));
+		m_output_matrix.set_update_slot(boost::bind(&transformable<base_t>::execute, this, _1, _2));
 	}
 
 	iproperty& matrix_source_output()

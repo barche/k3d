@@ -24,6 +24,7 @@
 	\author Tim Shead (tshead@k-3d.com)
 */
 
+#include <k3dsdk/qtui/node_wrapper.h>
 #include <k3dsdk/qtui/property_wrapper.h>
 
 #include <QObject>
@@ -46,6 +47,8 @@ class document_model : public QObject
 	Q_PROPERTY(property_wrapper* title MEMBER m_title CONSTANT)
 public:
 	document_model(idocument& Document);
+
+	Q_INVOKABLE node_wrapper lookup_by_name(const QString& Name);
 
 private:
 	idocument& m_document;

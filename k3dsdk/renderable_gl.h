@@ -99,7 +99,7 @@ public:
 protected:
 	hint::slot_t make_async_redraw_slot()
 	{
-		return boost::bind(&renderable<base_t>::async_redraw, this);
+		return boost::bind(&renderable<base_t>::async_redraw, this, _1);
 	}
 
 	void async_redraw(ihint*)

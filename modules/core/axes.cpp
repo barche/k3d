@@ -37,8 +37,7 @@
 #include <k3dsdk/transformable.h>
 #include <k3dsdk/vectors.h>
 
-#include <FTGL/ftgl.h>
-
+#include <boost/filesystem.hpp>
 #include <boost/scoped_ptr.hpp>
 
 namespace module
@@ -69,9 +68,9 @@ public:
 		m_x_color(init_owner(*this) + init_name("xcolor") + init_label(_("X Color")) + init_description(_("X axis color")) + init_value(k3d::color(1, 0, 0))),
 		m_y_color(init_owner(*this) + init_name("ycolor") + init_label(_("Y Color")) + init_description(_("Y axis color")) + init_value(k3d::color(0, 0.7, 0))),
 		m_z_color(init_owner(*this) + init_name("zcolor") + init_label(_("Z Color")) + init_description(_("Z axis color")) + init_value(k3d::color(0, 0, 0.7))),
-		m_grid_color(init_owner(*this) + init_name("gridcolor") + init_label(_("Grid Color")) + init_description(_("Grid color")) + init_value(k3d::color(0.4, 0.4, 0.4))),
-		m_font_path(init_owner(*this) + init_name("font") + init_label(_("Font")) + init_description(_("Font path")) + init_value(k3d::share_path() / k3d::filesystem::generic_path("fonts/Vera.ttf")) + init_path_mode(k3d::ipath_property::READ) + init_path_type(k3d::options::path::fonts())),
-		m_font_size(init_owner(*this) + init_name("font_size") + init_label(_("Font Size")) + init_description(_("Font size.")) + init_value(12.0))
+		m_grid_color(init_owner(*this) + init_name("gridcolor") + init_label(_("Grid Color")) + init_description(_("Grid color")) + init_value(k3d::color(0.4, 0.4, 0.4)))
+		//m_font_path(init_owner(*this) + init_name("font") + init_label(_("Font")) + init_description(_("Font path")) + init_value(k3d::share_path() / boost::filesystem::path("fonts/Vera.ttf")) + init_path_mode(k3d::ipath_property::READ) + init_path_type(k3d::options::path::fonts())),
+		//m_font_size(init_owner(*this) + init_name("font_size") + init_label(_("Font Size")) + init_description(_("Font size.")) + init_value(12.0))
 	{
 		m_axes.changed_signal().connect(make_async_redraw_slot());
 		m_xy_plane.changed_signal().connect(make_async_redraw_slot());
@@ -85,15 +84,15 @@ public:
 		m_grid_color.changed_signal().connect(make_async_redraw_slot());
 		m_input_matrix.changed_signal().connect(make_async_redraw_slot());
 
-		m_font_path.changed_signal().connect(sigc::mem_fun(this, &axes::on_font_changed));
-		m_font_size.changed_signal().connect(sigc::mem_fun(this, &axes::on_font_changed));
+		//m_font_path.changed_signal().connect(boost::bind(&axes::on_font_changed, this, _1));
+		//m_font_size.changed_signal().connect(boost::bind(&axes::on_font_changed, this, _1));
 
-		add_snap_target(new k3d::snap_target(_("Grid"), sigc::mem_fun(*this, &axes::grid_target_position), sigc::mem_fun(*this, &axes::grid_target_orientation)));
+		add_snap_target(new k3d::snap_target(_("Grid"), boost::bind(&axes::grid_target_position, this, _1, _2), boost::bind(&axes::grid_target_orientation, this, _1, _2, _3)));
 	}
 
 	void on_font_changed(k3d::ihint*)
 	{
-		m_font.reset();
+		//m_font.reset();
 		async_redraw(0);
 	}
 
@@ -216,43 +215,43 @@ public:
 			glEnd();
 		}
 
-		if(m_axes.pipeline_value())
-		{
-			// Draw axis labels ...
-			k3d::gl::color3d(grid_color);
+//		if(m_axes.pipeline_value())
+//		{
+//			// Draw axis labels ...
+//			k3d::gl::color3d(grid_color);
 
-			k3d::double_t labelposition = size * 1.1;
+//			k3d::double_t labelposition = size * 1.1;
 
-			if(!m_font)
-			{
-				k3d::filesystem::path font_path = m_font_path.pipeline_value();
-				if(!k3d::filesystem::exists(font_path))
-				{
-					k3d::log() << error << "axis: error loading font " << font_path.native_filesystem_string().c_str() << std::endl;
-					return;
-				}
+//			if(!m_font)
+//			{
+//				boost::filesystem::path font_path = m_font_path.pipeline_value();
+//				if(!boost::filesystem::exists(font_path))
+//				{
+//					k3d::log() << error << "axis: error loading font " << font_path.native_filesystem_string().c_str() << std::endl;
+//					return;
+//				}
 
-				m_font.reset(new FTPixmapFont(font_path.native_filesystem_string().c_str()));
-				m_font->FaceSize(static_cast<unsigned int>(m_font_size.pipeline_value()));
-				m_font->UseDisplayList(true);
-				if(m_font->Error())
-					k3d::log() << error << "error initializing font" << std::endl;
-			}
+//				m_font.reset(new FTPixmapFont(font_path.native_filesystem_string().c_str()));
+//				m_font->FaceSize(static_cast<unsigned int>(m_font_size.pipeline_value()));
+//				m_font->UseDisplayList(true);
+//				if(m_font->Error())
+//					k3d::log() << error << "error initializing font" << std::endl;
+//			}
 
-			glRasterPos3d(labelposition, 0, 0);
-			m_font->Render("+X");
-			glRasterPos3d(0, labelposition, 0);
-			m_font->Render("+Y");
-			glRasterPos3d(0, 0, labelposition);
-			m_font->Render("+Z");
+//			glRasterPos3d(labelposition, 0, 0);
+//			m_font->Render("+X");
+//			glRasterPos3d(0, labelposition, 0);
+//			m_font->Render("+Y");
+//			glRasterPos3d(0, 0, labelposition);
+//			m_font->Render("+Z");
 
-			glRasterPos3d(-labelposition, 0, 0);
-			m_font->Render("-X");
-			glRasterPos3d(0, -labelposition, 0);
-			m_font->Render("-Y");
-			glRasterPos3d(0, 0, -labelposition);
-			m_font->Render("-Z");
-		}
+//			glRasterPos3d(-labelposition, 0, 0);
+//			m_font->Render("-X");
+//			glRasterPos3d(0, -labelposition, 0);
+//			m_font->Render("-Y");
+//			glRasterPos3d(0, 0, -labelposition);
+//			m_font->Render("-Z");
+//		}
 	}
 
 	void on_gl_select(const k3d::gl::render_state& State, const k3d::gl::selection_state& SelectState)
@@ -299,10 +298,10 @@ private:
 	k3d_data(k3d::color, immutable_name, change_signal, with_undo, local_storage, no_constraint, writable_property, with_serialization) m_y_color;
 	k3d_data(k3d::color, immutable_name, change_signal, with_undo, local_storage, no_constraint, writable_property, with_serialization) m_z_color;
 	k3d_data(k3d::color, immutable_name, change_signal, with_undo, local_storage, no_constraint, writable_property, with_serialization) m_grid_color;
-	k3d_data(k3d::filesystem::path, immutable_name, change_signal, with_undo, local_storage, no_constraint, path_property, path_serialization) m_font_path;
-	k3d_data(k3d::double_t, immutable_name, change_signal, with_undo, local_storage, no_constraint, writable_property, with_serialization) m_font_size;
+	//k3d_data(boost::filesystem::path, immutable_name, change_signal, with_undo, local_storage, no_constraint, path_property, path_serialization) m_font_path;
+	//k3d_data(k3d::double_t, immutable_name, change_signal, with_undo, local_storage, no_constraint, writable_property, with_serialization) m_font_size;
 
-	boost::scoped_ptr<FTFont> m_font;
+	//boost::scoped_ptr<FTFont> m_font;
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -87,8 +87,8 @@ public:
 		m_snap_target(init_owner(*this) + init_name("snap_target") + init_label(_("Snap Target")) + init_description(_("Snap Target")) + init_value(std::string("-- None --")) + init_values(m_snap_targets)),
 		m_snap_orientation(init_owner(*this) + init_name("snap_orientation") + init_label(_("Snap Orientation")) + init_description(_("Snap Orientation")) + init_value(true))
 	{
-		m_source.changed_signal().connect(sigc::mem_fun(*this, &snap::on_source_changed));
-		m_target.changed_signal().connect(sigc::mem_fun(*this, &snap::on_target_changed));
+    m_source.changed_signal().connect(boost::bind(&snap::on_source_changed, this, _1));
+    m_target.changed_signal().connect(boost::bind(&snap::on_target_changed, this, _1));
 
 		m_source.changed_signal().connect(k3d::hint::converter<
 			k3d::hint::convert<k3d::hint::any, k3d::hint::none> >(make_update_matrix_slot()));

@@ -17,17 +17,12 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-/** \file Register QML types
-	\author Bart Janssens (bart@bartjanssens.org)
+/** \file
+	\author Bart Janssens
 */
 
-#include <k3dsdk/inode.h>
+#include <k3dsdk/qtui/glew_context.h>
 
-#include <k3dsdk/qtui/node_wrapper.h>
-#include <k3dsdk/qtui/property_wrapper.h>
-#include <k3dsdk/qtui/viewport.h>
-
-#include <QtQml>
 
 namespace k3d
 {
@@ -35,19 +30,17 @@ namespace k3d
 namespace qtui
 {
 
-struct qml_type_registry
+glew_context::glew_context()
 {
-	qml_type_registry()
-	{
-		// Register QML types
-		qRegisterMetaType<property_wrapper*>("property_wrapper*");
-		qRegisterMetaType<node_wrapper>("node_wrapper");
-		qmlRegisterType<viewport>("K3D", 1, 0, "Viewport");
-	}
-};
+}
 
-qml_type_registry registry;
+void glew_context::on_begin()
+{
+}
 
+void glew_context::on_end()
+{
+}
 
 } // namespace qtui
 

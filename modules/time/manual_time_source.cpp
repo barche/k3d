@@ -69,7 +69,7 @@ public:
 		m_second.changed_signal().connect(k3d::hint::converter<
 			k3d::hint::convert<k3d::hint::any, k3d::hint::none> >(m_time.make_slot()));
 
-		m_time.set_update_slot(sigc::mem_fun(*this, &manual_time_source::execute));
+		m_time.set_update_slot(boost::bind(&manual_time_source::execute, this, _1, _2));
 	}
 
 	static k3d::iplugin_factory& get_factory()

@@ -26,6 +26,7 @@
 #include <k3dsdk/classes.h>
 #include <k3dsdk/idocument.h>
 #include <k3dsdk/imesh_painter_gl.h>
+#include <k3dsdk/node.h>
 #include <k3dsdk/plugin.h>
 #include <k3dsdk/property.h>
 #include <k3dsdk/transform.h>
@@ -46,13 +47,13 @@ void populate_new_document(idocument& Document)
 	const k3d::string_t new_title = k3d::string_cast(boost::format(_("Untitled Document %1%")) % ++document_number);
 	k3d::property::set_internal_value(Document.title(), new_title);
 
-//	k3d::imetadata* const node_selection = k3d::plugin::create<k3d::imetadata>("NodeSelection", Document, "Node Selection");
-//	return_if_fail(node_selection);
-//	node_selection->set_metadata_value("ngui:unique_node", "node_selection"); // metadata to ensure this node is found by the UI layer
+	k3d::imetadata* const node_selection = k3d::plugin::create<k3d::imetadata>("NodeSelection", Document, "Node Selection");
+	return_if_fail(node_selection);
+	node_selection->set_metadata_value("ngui:unique_node", "node_selection"); // metadata to ensure this node is found by the UI layer
 
-//	k3d::plugin::create(k3d::classes::Axes(), Document, "Axes");
-//	k3d::iunknown* gl_engine = k3d::plugin::create(k3d::classes::OpenGLEngine(), Document, "GL Engine");
-//	k3d::plugin::create(k3d::classes::TimeSource(), Document, "TimeSource");
+	k3d::plugin::create(k3d::classes::Axes(), Document, "Axes");
+	k3d::iunknown* gl_engine = k3d::plugin::create(k3d::classes::OpenGLEngine(), Document, "GL Engine");
+	k3d::plugin::create(k3d::classes::TimeSource(), Document, "TimeSource");
 	
 //	k3d::inode* const multi_painter = k3d::plugin::create<k3d::inode>("OpenGLMultiPainter", Document, "GL Default Painter");
 //	return_if_fail(multi_painter);
@@ -86,25 +87,25 @@ void populate_new_document(idocument& Document)
 	k3d::property::create<k3d::gl::imesh_painter*>(*multi_painter, "tori", "Tori", "", k3d::plugin::create<k3d::gl::imesh_painter>("OpenGLTorusPainter", Document, "GL Torus Painter"));
 */
 
-//	k3d::property::set_internal_value(*gl_engine, "node_selection", dynamic_cast<k3d::inode*>(node_selection));
-//	return_if_fail(k3d::plugin::factory::lookup("Camera"));
+	k3d::property::set_internal_value(*gl_engine, "node_selection", dynamic_cast<k3d::inode*>(node_selection));
+	return_if_fail(k3d::plugin::factory::lookup("Camera"));
 
-//	k3d::inode* const camera = k3d::plugin::create<k3d::inode>("Camera", Document, "Camera");
-//	return_if_fail(camera);
+	k3d::inode* const camera = k3d::plugin::create<k3d::inode>("Camera", Document, "Camera");
+	return_if_fail(camera);
 
-//	const k3d::point3 origin = k3d::point3(0, 0, 0);
-//	const k3d::vector3 world_up = k3d::vector3(0, 0, 1);
+	const k3d::point3 origin = k3d::point3(0, 0, 0);
+	const k3d::vector3 world_up = k3d::vector3(0, 0, 1);
 
-//	const k3d::point3 position = k3d::point3(-15, 20, 10);
-//	const k3d::vector3 look_vector = origin - position;
-//	const k3d::vector3 right_vector = look_vector ^ world_up;
-//	const k3d::vector3 up_vector = right_vector ^ look_vector;
+	const k3d::point3 position = k3d::point3(-15, 20, 10);
+	const k3d::vector3 look_vector = origin - position;
+	const k3d::vector3 right_vector = look_vector ^ world_up;
+	const k3d::vector3 up_vector = right_vector ^ look_vector;
 
-//	k3d::inode* const camera_transformation = k3d::set_matrix(*camera, k3d::view_matrix(look_vector, up_vector, position));
-//	return_if_fail(camera_transformation);
+	k3d::inode* const camera_transformation = k3d::set_matrix(*camera, k3d::view_matrix(look_vector, up_vector, position));
+	return_if_fail(camera_transformation);
 
-//	camera_transformation->set_name("Camera Transformation");
-//	k3d::property::set_internal_value(*camera, "world_target", k3d::point3(0, 0, 0));
+	camera_transformation->set_name("Camera Transformation");
+	k3d::property::set_internal_value(*camera, "world_target", k3d::point3(0, 0, 0));
 }
 
 document_model::document_model(idocument &Document) :
@@ -113,6 +114,10 @@ document_model::document_model(idocument &Document) :
 	m_title = new property_wrapper(Document.title(), this);
 }
 
+node_wrapper document_model::lookup_by_name(const QString &Name)
+{
+	return node_wrapper(k3d::node::lookup_one(m_document, k3d::convert<string_t>(Name)));
+}
 
 } // namespace qtui
 

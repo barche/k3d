@@ -1,3 +1,6 @@
+#ifndef K3DSDK_QTUI_GLEW_CONTEXT_H
+#define K3DSDK_QTUI_GLEW_CONTEXT_H
+
 // K-3D
 // Copyright (c) 1995-2010, Timothy M. Shead
 //
@@ -17,17 +20,11 @@
 // License along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-/** \file Register QML types
-	\author Bart Janssens (bart@bartjanssens.org)
+/** \file
+	\author Bart Janssens
 */
 
-#include <k3dsdk/inode.h>
-
-#include <k3dsdk/qtui/node_wrapper.h>
-#include <k3dsdk/qtui/property_wrapper.h>
-#include <k3dsdk/qtui/viewport.h>
-
-#include <QtQml>
+#include <k3dsdk/gl/context.h>
 
 namespace k3d
 {
@@ -35,21 +32,23 @@ namespace k3d
 namespace qtui
 {
 
-struct qml_type_registry
+/////////////////////////////////////////////////////////////////////////////
+// viewport
+
+/// The viewport widget for the Qt interface
+class glew_context :
+	public k3d::gl::context
 {
-	qml_type_registry()
-	{
-		// Register QML types
-		qRegisterMetaType<property_wrapper*>("property_wrapper*");
-		qRegisterMetaType<node_wrapper>("node_wrapper");
-		qmlRegisterType<viewport>("K3D", 1, 0, "Viewport");
-	}
+public:
+	glew_context();
+private:
+	void on_begin();
+	void on_end();
 };
-
-qml_type_registry registry;
-
 
 } // namespace qtui
 
 } // namespace k3d
+
+#endif // !K3DSDK_QTUI_GLEW_CONTEXT_H
 

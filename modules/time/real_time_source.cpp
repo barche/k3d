@@ -54,8 +54,8 @@ public:
 		m_frame_rate(init_owner(*this) + init_name("frame_rate") + init_label(_("Frame rate")) + init_description(_("Frame rate")) + init_value(1.0) + init_step_increment(1) + init_units(typeid(k3d::measurement::scalar)) + init_constraint(constraint::minimum(std::numeric_limits<k3d::double_t>::epsilon()))),
 		m_time(init_owner(*this) + init_name("time") + init_label(_("Time")) + init_description(_("Time")) + init_value(0.0))
 	{
-		m_frame_rate.changed_signal().connect(sigc::mem_fun(*this, &real_time_source::on_reset_source));
-		m_time.set_update_slot(sigc::mem_fun(*this, &real_time_source::execute));
+		m_frame_rate.changed_signal().connect(boost::bind(&real_time_source::on_reset_source, this, _1));
+		m_time.set_update_slot(boost::bind(&real_time_source::execute, this, _1, _2));
 		on_reset_source(0);
 	}
 
@@ -67,7 +67,7 @@ public:
 	void on_reset_source(k3d::ihint* Hint = 0)
 	{
 		m_timeout_connection.disconnect();
-		m_timeout_connection = k3d::user_interface().get_timer(m_frame_rate.pipeline_value(), sigc::bind(m_time.make_slot(), static_cast<k3d::ihint*>(0)));
+		m_timeout_connection = k3d::user_interface().get_timer(m_frame_rate.pipeline_value(), boost::bind(m_time.make_slot(), static_cast<k3d::ihint*>(0)));
 	}
 
 	static k3d::iplugin_factory& get_factory()
@@ -85,7 +85,7 @@ public:
 private:
 	k3d_data(k3d::double_t, immutable_name, change_signal, with_undo, local_storage, with_constraint, measurement_property, with_serialization) m_frame_rate;
 	k3d_data(k3d::double_t, immutable_name, change_signal, no_undo, value_demand_storage, no_constraint, read_only_property, no_serialization) m_time;
-	sigc::connection m_timeout_connection;
+	boost::signals2::connection m_timeout_connection;
 
 	/// Called whenever the output time has been modified and needs to be updated.
 	void execute(const std::vector<k3d::ihint*>& Hints, k3d::double_t& Time)
