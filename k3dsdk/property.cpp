@@ -29,6 +29,7 @@
 #include <k3dsdk/ipipeline.h>
 #include <k3dsdk/iuser_property.h>
 #include <k3dsdk/metadata.h>
+#include <k3dsdk/node_storage.h>
 #include <k3dsdk/property.h>
 #include <k3dsdk/property_types.h>
 #include <k3dsdk/property_types_ri.h>

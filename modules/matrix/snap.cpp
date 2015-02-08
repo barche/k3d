@@ -29,6 +29,7 @@
 #include <k3dsdk/isnap_target.h>
 #include <k3dsdk/measurement.h>
 #include <k3dsdk/node.h>
+#include <k3dsdk/node_storage.h>
 #include <k3dsdk/transformable.h>
 #include <k3dsdk/transform.h>
 

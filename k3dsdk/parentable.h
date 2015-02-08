@@ -27,6 +27,7 @@
 #include <k3d-i18n-config.h>
 #include <k3dsdk/data.h>
 #include <k3dsdk/iparentable.h>
+#include <k3dsdk/node_storage.h>
 
 namespace k3d
 {
