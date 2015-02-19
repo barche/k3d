@@ -27,6 +27,7 @@
 
 #include <boost/uuid/nil_generator.hpp>
 #include <boost/uuid/random_generator.hpp>
+#include <boost/uuid/string_generator.hpp>
 
 #include <iomanip>
 #include <iostream>
@@ -65,6 +66,11 @@ uuid::uuid(const uint32_t Data1, const uint32_t Data2, const uint32_t Data3, con
 	data[13] = Data4 >> 16 & 0xff;
 	data[14] = Data4 >> 8 & 0xff;
 	data[15] = Data4 >> 0 & 0xff;
+}
+
+uuid::uuid(const std::string &UuidString) :
+	boost::uuids::uuid(boost::uuids::string_generator()(UuidString))
+{
 }
 
 const uuid uuid::null()

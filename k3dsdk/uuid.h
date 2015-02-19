@@ -40,6 +40,8 @@ public:
 	uuid();
 	explicit uuid(const boost::uuids::uuid&);
 	uuid(const uint32_t Data1, const uint32_t Data2, const uint32_t Data3, const uint32_t Data4);
+	/// Constructor based on the standard string output by uuidgen
+	uuid(const std::string& UuidString);
 
 	/// Creates a NULL (all zeros) uuid
 	static const uuid null();

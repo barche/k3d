@@ -34,6 +34,7 @@ int main(int argc, char* argv[])
 		test_expression(k3d::uuid::null() == k3d::uuid(0, 0, 0, 0));
 		test_expression(k3d::uuid(1, 2, 3, 3) != k3d::uuid(1, 2, 3, 4));
 		test_expression(k3d::uuid(1, 2, 3, 3) < k3d::uuid(1, 2, 3, 4));
+		test_expression(k3d::uuid(0, 0, 0, 1) == k3d::uuid("00000000-0000-0000-0000-000000000001"));
 
 		test_serialization(k3d::uuid::null());
 		test_serialization(k3d::uuid(1, 2, 3, 4));
