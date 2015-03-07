@@ -51,6 +51,7 @@ node_wrapper::node_wrapper(const node_wrapper &Other)
 node_wrapper& node_wrapper::operator=(const node_wrapper& Other)
 {
 	set_node(Other.m_node);
+	return *this;
 }
 
 void node_wrapper::set_node(iunknown* Node)

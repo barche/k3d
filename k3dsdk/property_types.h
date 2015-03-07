@@ -31,10 +31,11 @@
 #include <k3dsdk/inode.h>
 #include <k3dsdk/itexture_ri.h>
 #include <k3dsdk/mesh.h>
-#include <boost/filesystem/path.hpp>
 #include <k3dsdk/types.h>
 
-#include <boost/mpl/vector/vector20.hpp>
+#include <boost/filesystem/path.hpp>
+
+#include <boost/mpl/vector.hpp>
 
 namespace k3d
 {
@@ -43,7 +44,7 @@ namespace property
 {
 
 /// Enumerates all of the types that can be stored using user properties.
-typedef boost::mpl::vector17<
+typedef boost::mpl::vector<
 	k3d::bool_t,
 	k3d::color,
 	k3d::double_t,

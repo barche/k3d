@@ -292,6 +292,11 @@ const string_t demangle(const string_t& Type)
 
 } // namespace detail
 
+void register_type(const std::type_info& Info, const string_t& Name)
+{
+	detail::register_type(Info, Name);
+}
+
 bool_t type_registered(const std::type_info& Info)
 {
 	detail::initialize_types();

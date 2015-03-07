@@ -222,6 +222,7 @@ public:
 
 	void on_gl_draw(const k3d::gl::render_state& State)
 	{
+/*
 		glDisable(GL_LIGHTING);
 		glDisable(GL_TEXTURE_1D);
 		glDisable(GL_TEXTURE_2D);
@@ -237,13 +238,16 @@ public:
 
 		if(m_show_reference_plane.pipeline_value())
 			draw_reference_plane();
+*/
 	}
 
 	void on_gl_select(const k3d::gl::render_state& State, const k3d::gl::selection_state& SelectState)
 	{
+/*
 		k3d::gl::push_selection_token(this);
 		draw();
 		k3d::gl::pop_selection_token();
+*/
 	}
 
 	void draw_projection()

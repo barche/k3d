@@ -121,7 +121,7 @@ protected:
 
 		GLfloat gl_modelview_matrix[16];
 		glGetFloatv(GL_MODELVIEW_MATRIX, gl_modelview_matrix);
-		gluLoadSamplingMatrices(m_nurbs_renderer, gl_modelview_matrix, State.gl_projection_matrix, State.gl_viewport);
+//		gluLoadSamplingMatrices(m_nurbs_renderer, gl_modelview_matrix, State.gl_projection_matrix, State.gl_viewport);
 
 		return m_nurbs_renderer;
 	}
@@ -133,15 +133,15 @@ protected:
 private:
 	void push_draw()
 	{
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		push_matrix(base_t::matrix());
+//		glMatrixMode(GL_MODELVIEW); // deprecated
+//		glPushMatrix();
+//		push_matrix(base_t::matrix());
 	}
 
 	void pop_draw()
 	{
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
+//		glMatrixMode(GL_MODELVIEW); // deprecated
+//		glPopMatrix();
 	}
 
 	virtual void on_gl_draw(const render_state& State) = 0;

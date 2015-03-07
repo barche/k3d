@@ -31,6 +31,17 @@ namespace k3d
 namespace gl
 {
 
+void gl_logging_callback(GLenum source,
+												 GLenum type,
+												 GLuint id,
+												 GLenum severity,
+												 GLsizei length,
+												 const GLchar* message,
+												 const void* userParam)
+{
+	k3d::log() << debug << "Got OpenGL callback message " << message << std::endl;
+}
+
 static context*& g_current()
 {
 	static context* storage = 0;
@@ -80,6 +91,16 @@ GLEWContext* context::glew_context()
 			k3d::log() << error << "GLEW init failed: " << glewGetErrorString(err) << std::endl;
 			m_glew_context.reset();
 		}
+		else
+		{
+			k3d::log() << debug << "GLEW initialized" << std::endl;
+		}
+
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		glDebugMessageCallback(gl_logging_callback, nullptr);
+		GLuint unused_id = 0;
+		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, &unused_id, true);
+
 		on_end();
 		assert(m_glew_context);
 	}

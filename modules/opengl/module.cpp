@@ -29,15 +29,21 @@ namespace module
 namespace opengl
 {
 
+extern k3d::iplugin_factory& fragment_shader_factory();
+extern k3d::iplugin_factory& program_factory();
 extern k3d::iplugin_factory& render_engine_factory();
 extern k3d::iplugin_factory& version_check_factory();
+extern k3d::iplugin_factory& vertex_shader_factory();
 
 } // namespace opengl
 
 } // namespace module
 
 K3D_MODULE_START(Registry)
+	Registry.register_factory(module::opengl::fragment_shader_factory());
+	Registry.register_factory(module::opengl::program_factory());
 	Registry.register_factory(module::opengl::render_engine_factory());
 	Registry.register_factory(module::opengl::version_check_factory());
+	Registry.register_factory(module::opengl::vertex_shader_factory());
 K3D_MODULE_END
 

@@ -293,82 +293,6 @@ void gl_setup_lights(const bool Headlight)
 	}
 }
 
-GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path){
-
-		// Create the shaders
-		GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-		GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-
-		// Read the Vertex Shader code from the file
-		std::string VertexShaderCode;
-		std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
-		if(VertexShaderStream.is_open())
-		{
-				std::string Line = "";
-				while(getline(VertexShaderStream, Line))
-						VertexShaderCode += "\n" + Line;
-				VertexShaderStream.close();
-		}
-
-		// Read the Fragment Shader code from the file
-		std::string FragmentShaderCode;
-		std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
-		if(FragmentShaderStream.is_open()){
-				std::string Line = "";
-				while(getline(FragmentShaderStream, Line))
-						FragmentShaderCode += "\n" + Line;
-				FragmentShaderStream.close();
-		}
-
-		GLint Result = GL_FALSE;
-		int InfoLogLength;
-
-		// Compile Vertex Shader
-		printf("Compiling shader : %s\n", vertex_file_path);
-		char const * VertexSourcePointer = VertexShaderCode.c_str();
-		glShaderSource(VertexShaderID, 1, &VertexSourcePointer , NULL);
-		glCompileShader(VertexShaderID);
-
-		// Check Vertex Shader
-		glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
-		glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-		std::vector<char> VertexShaderErrorMessage(InfoLogLength);
-		glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
-		fprintf(stdout, "%s\n", &VertexShaderErrorMessage[0]);
-
-		// Compile Fragment Shader
-		printf("Compiling shader : %s\n", fragment_file_path);
-		char const * FragmentSourcePointer = FragmentShaderCode.c_str();
-		glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer , NULL);
-		glCompileShader(FragmentShaderID);
-
-		// Check Fragment Shader
-		glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
-		glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-		std::vector<char> FragmentShaderErrorMessage(InfoLogLength);
-		glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-		fprintf(stdout, "%s\n", &FragmentShaderErrorMessage[0]);
-
-		// Link the program
-		fprintf(stdout, "Linking program\n");
-		GLuint ProgramID = glCreateProgram();
-		glAttachShader(ProgramID, VertexShaderID);
-		glAttachShader(ProgramID, FragmentShaderID);
-		glLinkProgram(ProgramID);
-
-		// Check the program
-		glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
-		glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-		std::vector<char> ProgramErrorMessage( std::max(InfoLogLength, int(1)) );
-		glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
-		fprintf(stdout, "%s\n", &ProgramErrorMessage[0]);
-
-		glDeleteShader(VertexShaderID);
-		glDeleteShader(FragmentShaderID);
-
-		return ProgramID;
-}
-
 } // namespace detail
 
 /////////////////////////////////////////////////////////////////////////////
@@ -467,63 +391,20 @@ public:
 
 	void render_viewport(k3d::icamera& Camera, const unsigned long PixelWidth, const unsigned long PixelHeight, GLdouble ViewMatrix[16], GLdouble ProjectionMatrix[16], GLint Viewport[4])
 	{
-		// Dark blue background
-		glClearColor(0.0f, 0.0f, 0.4f, 1.0f);
-//		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//		return;
+		k3d::gl::render_state state(Camera, PixelWidth, PixelHeight);
 
-		GLuint VertexArrayID;
-		glGenVertexArrays(1, &VertexArrayID);
-		glBindVertexArray(VertexArrayID);
+		const k3d::color background_color = m_background_color.pipeline_value();
+		glClearColor(background_color.red, background_color.green, background_color.blue, 1.);
 
-		// Create and compile our GLSL program from the shaders
-		GLuint programID = detail::LoadShaders( "SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader" );
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		k3d::inode_selection* const node_selection = m_node_selection.pipeline_value();
+		std::vector<k3d::gl::irenderable*> renderable_nodes = k3d::node::lookup<k3d::gl::irenderable>(document());
+		std::sort(renderable_nodes.begin(), renderable_nodes.end(), detail::render_order());
 
-		static const GLfloat g_vertex_buffer_data[] = {
-		-0.5f, -0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		0.5f, 0.5f, 0.0f,
-		0.5f, 0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		-0.5f, -0.5f, 0.0f,
-		};
-
-		GLuint vertexbuffer;
-		glGenBuffers(1, &vertexbuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
-		// Clear the screen
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		// Use our shader
-		glUseProgram(programID);
-
-		// 1rst attribute buffer : vertices
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-		glVertexAttribPointer(
-		0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-		3,                  // size
-		GL_FLOAT,           // type
-		GL_FALSE,           // normalized?
-		0,                  // stride
-		(void*)0            // array buffer offset
-		);
-
-		// Draw the triangle !
-		glDrawArrays(GL_LINES, 0, 8); // 3 indices starting at 0 -> 1 triangle
-
-		glDisableVertexAttribArray(0);
-
-		// Cleanup VBO
-		glDeleteBuffers(1, &vertexbuffer);
-		glDeleteVertexArrays(1, &VertexArrayID);
-		glDeleteProgram(programID);
-
+		std::for_each(renderable_nodes.begin(), renderable_nodes.end(), detail::draw(state, node_selection));
 /*
 		k3d::ipipeline_profiler::profile profile(document().pipeline_profiler(), *this, "Render Viewport");
 		k3d::gl::render_state state(Camera);
@@ -571,7 +452,7 @@ public:
 
 	void render_viewport_selection(const k3d::gl::selection_state& SelectState, k3d::icamera& Camera, const unsigned long PixelWidth, const unsigned long PixelHeight, const k3d::rectangle& Region, GLdouble ViewMatrix[16], GLdouble ProjectionMatrix[16], GLint Viewport[4])
 	{
-		k3d::gl::render_state state(Camera);
+		k3d::gl::render_state state(Camera, PixelWidth, PixelHeight);
 		if(!draw_scene(Camera, PixelWidth, PixelHeight, ViewMatrix, ProjectionMatrix, Viewport, true, Region, state))
 			return;
 
@@ -592,173 +473,6 @@ public:
 private:
 	bool draw_scene(k3d::icamera& Camera, const unsigned long PixelWidth, const unsigned long PixelHeight, GLdouble ViewMatrix[16], GLdouble ProjectionMatrix[16], GLint Viewport[4], const bool Select, const k3d::rectangle& SelectionRegion, k3d::gl::render_state& RenderState)
 	{
-		// If width or height are zero, we're done ...
-		if(!PixelWidth || !PixelHeight)
-			return false;
-
-		if(!Select)
-			detail::gl_reset(m_background_color.pipeline_value(), m_point_size.pipeline_value());
-
-		// Setup culling ...
-		glFrontFace(GL_CW);
-		glCullFace(GL_BACK);
-
-		// Setup dithering ...
-		glDisable(GL_DITHER);
-
-		// Setup antialiasing ...
-		glDisable(GL_LINE_SMOOTH);
-		glDisable(GL_BLEND);
-		glLineWidth(1.0f);
-
-		// Disable stencil ...
-		glDisable(GL_STENCIL_TEST);
-		glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-		glStencilMask(0x00);
-
-		// Set Z buffer options ...
-		glDepthMask(GL_TRUE);
-		glDepthFunc(GL_LESS);
-		glEnable(GL_DEPTH_TEST);
-
-		// Normalization ...
-		glShadeModel(Select ? GL_FLAT : GL_SMOOTH);
-		glEnable(GL_NORMALIZE);
-		glEnable(GL_AUTO_NORMAL);
-
-		// Prepare texture options ...
-		glDisable(GL_TEXTURE_2D);
-
-		if(!Select)
-			detail::gl_setup_textures();
-
-		// Setup viewport ...
-		glViewport(0, 0, PixelWidth, PixelHeight);
-		glGetIntegerv(GL_VIEWPORT, static_cast<GLint*>(RenderState.gl_viewport));
-		glGetIntegerv(GL_VIEWPORT, Viewport);
-
-		k3d::rectangle window_rect(0, 0, 0, 0);
-		k3d::rectangle camera_rect(0, 0, 0, 0);
-		double near = 0;
-		double far = 0;
-		bool orthographic = false;
-		k3d::gl::calculate_projection(Camera, PixelWidth, PixelHeight, window_rect, camera_rect, near, far, orthographic);
-
-		if(!Select)
-			detail::gl_draw_2d_widgets(Camera, window_rect, camera_rect, m_draw_frustum.pipeline_value(), m_draw_crop_window.pipeline_value(), m_draw_safe_zone.pipeline_value(), m_draw_aimpoint.pipeline_value(), document());
-
-		// Setup projection ...
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		if(orthographic)
-		{
-			const k3d::matrix4 transform_matrix = k3d::property::pipeline_value<k3d::matrix4>(Camera.transformation().matrix_source_output());
-			const k3d::point3 world_position = transform_matrix * k3d::point3(0, 0, 0);
-			const k3d::point3 world_target = boost::any_cast<k3d::point3>(Camera.world_target().property_internal_value());
-			const double distance = k3d::distance(world_position, world_target);
-
-			const double window_aspect = (window_rect.x2 - window_rect.x1) / (window_rect.y1 - window_rect.y2);
-			const double window_tan_fov = (window_rect.y1 - window_rect.y2) * 0.5 / near;
-			const double window_size = distance * window_tan_fov;
-
-			RenderState.orthographic = true;
-			RenderState.draw_two_sided = m_draw_two_sided.pipeline_value();
-			
-			RenderState.gl_window_frustum_left = -window_size * window_aspect;
-			RenderState.gl_window_frustum_right = window_size * window_aspect;
-			RenderState.gl_window_frustum_top = window_size;
-			RenderState.gl_window_frustum_bottom = -window_size;
-			RenderState.gl_window_frustum_near = near;
-			RenderState.gl_window_frustum_far = far;
-			
-			const double camera_aspect = (camera_rect.x2 - camera_rect.x1) / (camera_rect.y1 - camera_rect.y2);
-
-			if(camera_aspect > window_aspect)
-			{
-				RenderState.gl_camera_frustum_left = RenderState.gl_window_frustum_left;
-				RenderState.gl_camera_frustum_right = RenderState.gl_window_frustum_right;
-				RenderState.gl_camera_frustum_top = RenderState.gl_window_frustum_top * window_aspect / camera_aspect;
-				RenderState.gl_camera_frustum_bottom = RenderState.gl_window_frustum_bottom * window_aspect / camera_aspect;
-				RenderState.gl_camera_frustum_near = near;
-				RenderState.gl_camera_frustum_far = far;
-			}
-			else
-			{
-				RenderState.gl_camera_frustum_left = RenderState.gl_window_frustum_left * camera_aspect / window_aspect;
-				RenderState.gl_camera_frustum_right = RenderState.gl_window_frustum_right * camera_aspect / window_aspect;
-				RenderState.gl_camera_frustum_top = RenderState.gl_window_frustum_top;
-				RenderState.gl_camera_frustum_bottom = RenderState.gl_window_frustum_bottom;
-				RenderState.gl_camera_frustum_near = near;
-				RenderState.gl_camera_frustum_far = far;
-			}
-
-			glOrtho(-window_size * window_aspect, window_size * window_aspect, -window_size, window_size, near, far);
-
-			if(Select)
-			{
-				// Setup the projection matrix with the pick matrix ...
-				glLoadIdentity();
-
-				const double width  = SelectionRegion.width();
-				const double height = SelectionRegion.height();
-				gluPickMatrix(SelectionRegion.x1 + (width * 0.5), RenderState.gl_viewport[3] - (SelectionRegion.y1 + (height * 0.5)), width, height, static_cast<GLint*>(RenderState.gl_viewport));
-
-				glOrtho(-window_size * window_aspect, window_size * window_aspect, -window_size, window_size, near, far);
-			}
-		}
-		else
-		{
-			RenderState.orthographic = false;
-			
-			RenderState.gl_window_frustum_left = window_rect.x1;
-			RenderState.gl_window_frustum_right = window_rect.x2;
-			RenderState.gl_window_frustum_top = window_rect.y1;
-			RenderState.gl_window_frustum_bottom = window_rect.y2;
-			RenderState.gl_window_frustum_near = near;
-			RenderState.gl_window_frustum_far = far;
-
-			RenderState.gl_camera_frustum_left = camera_rect.x1;
-			RenderState.gl_camera_frustum_right = camera_rect.x2;
-			RenderState.gl_camera_frustum_top = camera_rect.y1;
-			RenderState.gl_camera_frustum_bottom = camera_rect.y2;
-			RenderState.gl_camera_frustum_near = near;
-			RenderState.gl_camera_frustum_far = far;
-
-			glFrustum(window_rect.x1, window_rect.x2, window_rect.y2, window_rect.y1, near, far);
-
-			if(Select)
-			{
-				// Setup the projection matrix with the pick matrix ...
-				glLoadIdentity();
-
-				const double width  = SelectionRegion.width();
-				const double height = SelectionRegion.height();
-				gluPickMatrix(SelectionRegion.x1 + (width * 0.5), RenderState.gl_viewport[3] - (SelectionRegion.y1 + (height * 0.5)), width, height, static_cast<GLint*>(RenderState.gl_viewport));
-
-				glFrustum(window_rect.x1, window_rect.x2, window_rect.y2, window_rect.y1, near, far);
-			}
-		}
-
-		glGetFloatv(GL_PROJECTION_MATRIX, RenderState.gl_projection_matrix);
-		glGetDoublev(GL_PROJECTION_MATRIX, ProjectionMatrix);
-
-		// Setup modelview matrix
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-
-		if(!Select)
-			detail::gl_setup_lights(m_headlight.pipeline_value());
-
-		const k3d::matrix4 transform_matrix = k3d::property::pipeline_value<k3d::matrix4>(Camera.transformation().matrix_source_output());
-		const k3d::angle_axis orientation(k3d::euler_angles(transform_matrix, k3d::euler_angles::ZXYstatic));
-		const k3d::point3 position(k3d::position(transform_matrix));
-
-		glScaled(1.0, 1.0, -1.0);
-		glRotated(-k3d::degrees(orientation.angle), orientation.axis[0], orientation.axis[1], orientation.axis[2]);
-		glTranslated(-position[0], -position[1], -position[2]);
-
-		glGetDoublev(GL_MODELVIEW_MATRIX, ViewMatrix);
-
 		return true;
 	}
 

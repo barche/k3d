@@ -60,6 +60,7 @@ inline const string_t light_shaders() { return "light_shaders"; }
 inline const string_t surface_shaders() { return "surface_shaders"; }
 inline const string_t transformation_shaders() { return "transformation_shaders"; }
 inline const string_t volume_shaders() { return "volume_shaders"; }
+inline const string_t opengl_shaders() { return "opengl_shaders"; }
 
 } // namespace path
 

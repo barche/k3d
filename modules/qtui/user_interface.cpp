@@ -155,8 +155,9 @@ const k3d::ievent_loop::arguments_t user_interface::parse_startup_arguments(cons
 
 	QSurfaceFormat format = QSurfaceFormat::defaultFormat();
 	format.setProfile(QSurfaceFormat::CoreProfile);
-	format.setMajorVersion(3);
-	format.setMinorVersion(3);
+	format.setMajorVersion(4);
+	format.setMinorVersion(3); // 4.3 for debugging output
+	format.setOption(QSurfaceFormat::DebugContext);
 	QSurfaceFormat::setDefaultFormat(format);
 
 	k3d::log() << info << "Loading Qt plugins from " << k3d::convert<k3d::string_t>(m_application->libraryPaths().join(", ")) << std::endl;

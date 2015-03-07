@@ -217,6 +217,8 @@ void set_storage(istorage& Storage)
 		detail::path_element(path::transformation_shaders()).text = (share_path() / boost::filesystem::path("shaders/transformation")).native();
 	if(detail::path_element(path::volume_shaders()).text.empty())
 		detail::path_element(path::volume_shaders()).text = (share_path() / boost::filesystem::path("shaders/volume")).native();
+	if(detail::path_element(path::opengl_shaders()).text.empty())
+		detail::path_element(path::opengl_shaders()).text = (share_path() / boost::filesystem::path("shaders/glsl")).native();
 
 	// Default external commands
 	if(get_command(command::bitmap_viewer()).empty())

@@ -26,13 +26,18 @@
 #include <k3dsdk/classes.h>
 #include <k3dsdk/idocument.h>
 #include <k3dsdk/imesh_painter_gl.h>
+#include <k3dsdk/inode_selection.h>
 #include <k3dsdk/node.h>
+#include <k3dsdk/options.h>
 #include <k3dsdk/plugin.h>
 #include <k3dsdk/property.h>
 #include <k3dsdk/transform.h>
 
 #include <k3dsdk/qtui/convert.h>
 #include <k3dsdk/qtui/document.h>
+
+#include <k3dsdk/gl/iprogram.h>
+#include <k3dsdk/gl/ishader.h>
 
 namespace k3d
 {
@@ -51,9 +56,23 @@ void populate_new_document(idocument& Document)
 	return_if_fail(node_selection);
 	node_selection->set_metadata_value("ngui:unique_node", "node_selection"); // metadata to ensure this node is found by the UI layer
 
-	k3d::plugin::create(k3d::classes::Axes(), Document, "Axes");
 	k3d::iunknown* gl_engine = k3d::plugin::create(k3d::classes::OpenGLEngine(), Document, "GL Engine");
 	k3d::plugin::create(k3d::classes::TimeSource(), Document, "TimeSource");
+
+	k3d::gl::iprogram* const gl_constant_color_program = k3d::plugin::create<k3d::gl::iprogram>("OpenGLProgram", Document, "GL Constant Color Program");
+
+	k3d::gl::ishader* const gl_constant_color_shader = k3d::plugin::create<k3d::gl::ishader>("OpenGLFragmentShader", Document, "GL Constant Color Shader");
+	k3d::property::set_internal_value(*gl_constant_color_shader, "shader_path", k3d::options::get_path(k3d::options::path::opengl_shaders()) / boost::filesystem::path("constant_color_fragment.glsl"));
+
+	k3d::gl::ishader* const gl_mvp_vertex_shader = k3d::plugin::create<k3d::gl::ishader>("OpenGLVertexShader", Document, "GL MVP Vertex Shader");
+	k3d::property::set_internal_value(*gl_mvp_vertex_shader, "shader_path", k3d::options::get_path(k3d::options::path::opengl_shaders()) / boost::filesystem::path("mvp_vertex_shader.glsl"));
+
+	k3d::property::set_internal_value(*gl_constant_color_program, "fragment_shader", dynamic_cast<k3d::inode*>(gl_constant_color_shader));
+	k3d::property::set_internal_value(*gl_constant_color_program, "vertex_shader", dynamic_cast<k3d::inode*>(gl_mvp_vertex_shader));
+
+	k3d::plugin::create(k3d::classes::Axes(), Document, "Axes");
+
+	k3d::log() << debug << "created Axes" << std::endl;
 	
 //	k3d::inode* const multi_painter = k3d::plugin::create<k3d::inode>("OpenGLMultiPainter", Document, "GL Default Painter");
 //	return_if_fail(multi_painter);

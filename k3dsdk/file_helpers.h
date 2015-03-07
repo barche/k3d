@@ -27,6 +27,8 @@
 #include <sstream>
 #include <string>
 
+namespace boost { namespace filesystem { class path; } }
+
 namespace k3d
 {
 
@@ -39,6 +41,9 @@ void getline(std::istream& Stream, std::string& LineBuffer);
 bool big_endian();
 /// Returns true if the architecture is little endian
 bool little_endian();
+
+/// Read file contents into the given string
+std::string read_file(const boost::filesystem::path& Path);
 
 } // namespace k3d
 

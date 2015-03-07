@@ -22,6 +22,14 @@
 */
 
 #include <k3dsdk/file_helpers.h>
+#include <k3dsdk/log.h>
+#include <k3dsdk/log_control.h>
+
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/iostreams/copy.hpp>
+
+#include <sstream>
 
 namespace
 {
@@ -90,6 +98,26 @@ bool little_endian()
 {
 	static endian_test test;
 	return test.little_endian();
+}
+
+std::string read_file(const boost::filesystem::path& Path)
+{
+	if(!boost::filesystem::exists(Path))
+	{
+		k3d::log() << error << "File [" << Path.native() << "] does not exist" << std::endl;
+		return std::string();
+	}
+
+	boost::filesystem::ifstream file(Path, std::ios::in);
+	if(!file.is_open())
+	{
+		k3d::log() << error << "Error reading file [" << Path.native() << "]: " << strerror(errno) << std::endl;
+		return std::string();
+	}
+
+	std::stringstream sstream;
+	boost::iostreams::copy(file, sstream);
+	return sstream.str();
 }
 
 } // namespace k3d

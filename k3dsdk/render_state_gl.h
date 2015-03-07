@@ -41,12 +41,7 @@ namespace gl
 class render_state
 {
 public:
-	render_state(icamera& Camera) :
-		camera(Camera),
-		orthographic(false),
-		draw_two_sided(true)
-	{
-	}
+	render_state(icamera& Camera, const unsigned long PixelWidth, const unsigned long PixelHeight);
 
 	/// Stores the camera used for drawing
 	icamera& camera;
@@ -82,7 +77,10 @@ public:
 	//@}
 
 	/// Stores the current OpenGL projection matrix
-	GLfloat gl_projection_matrix[16];
+	matrix4 gl_projection_matrix;
+
+	/// Stores the current (projection * view) matrix
+	matrix4 gl_projection_view_matrix;
 	
 	/// Stores the current OpenGL viewport
 	GLint gl_viewport[4];
@@ -91,6 +89,8 @@ public:
 	double_t node_selection;
 	/// Stores the selection state of the parent of the calling node
 	double_t parent_selection;
+
+
 };
 
 } // namespace gl

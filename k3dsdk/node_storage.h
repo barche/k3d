@@ -26,7 +26,6 @@
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/static_assert.hpp>
-#include <boost/type_traits.hpp>
 
 #include <algorithm>
 #include <vector>
@@ -43,8 +42,8 @@ class node_storage :
 		public signal_policy_t
 {
 public:
-	/// Signal type for a signal that is emitted when the node is about to change from a non-null value
-	typedef boost::signals2::signal<void(typename boost::remove_pointer<value_t>::type&)> about_to_change_signal_t;
+	/// Signal type for a signal that is emitted when the node is about to change
+	typedef boost::signals2::signal<void(value_t)> about_to_change_signal_t;
 
 	/// Returns an interface pointer to the node (could be NULL)
 	value_t internal_value()
@@ -115,17 +114,10 @@ protected:
 	/// Sets a new value for the data
 	void set_value(value_t Value, ihint* const Hint)
 	{
+		m_about_to_change_signal(dynamic_cast<value_t>(m_node));
+
 		if(m_node)
 		{
-			value_t old_value = dynamic_cast<value_t>(m_node);
-			if(old_value != nullptr)
-			{
-				m_about_to_change_signal(*old_value);
-			}
-			else
-			{
-				k3d::log() << error << "Invalid value found in node_storage property" << std::endl;
-			}
 			m_node_deleted_connection.disconnect();
 			m_node_changed_connection.disconnect();
 		}

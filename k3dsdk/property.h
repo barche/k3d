@@ -25,6 +25,8 @@
 */
 
 #include <k3dsdk/iproperty.h>
+#include <k3dsdk/iuser_property.h>
+#include <k3dsdk/metadata.h>
 #include <vector>
 
 namespace k3d
@@ -36,6 +38,21 @@ class iunknown;
 
 namespace property
 {
+
+/// Wraps a k3d_data object to mark it as a user property
+template<typename property_t>
+class user_property :
+	public property_t,
+	public iuser_property,
+	public metadata::storage
+{
+public:
+	template<typename init_t>
+	user_property(const init_t& Init) :
+		property_t(Init)
+	{
+	}
+};
 
 /// Makes a connection from one property to another.
 void connect(idocument& Document, iproperty& From, iproperty& To);
@@ -103,9 +120,19 @@ bool set_internal_value(iproperty& Property, const boost::any& Value);
 /// Returns the set of user properties (if any) owned by an object
 const std::vector<iproperty*> user_properties(iunknown& Object);
 
+/// Abstract base class for a property factory
+class iproperty_factory
+{
+public:
+	virtual iproperty* create(inode& Owner, const string_t& Name, const string_t& Label, const string_t& Description, const boost::any& Value = boost::any()) = 0;
+};
+
+/// Register a factory to the list of factories to search through. Note that the passed type must be registered (see type_registry.h)
+void register_property_factory(const string_t& Type, const std::shared_ptr<iproperty_factory>& Factory);
+
 /// Creates a new user property with the given type and initial value.
 iproperty* create(inode& Owner, const std::type_info& Type, const string_t& Name, const string_t& Label, const string_t& Description, const boost::any& Value = boost::any());
-/// Creates a new user property with the given type and initial value.
+/// Creates a new user property with the given type and initial value, searching the factory list for any registered types
 iproperty* create(inode& Owner, const string_t& Type, const string_t& Name, const string_t& Label, const string_t& Description, const boost::any& Value = boost::any());
 /// Creates a new user property with the given type and initial value.
 template<typename T>

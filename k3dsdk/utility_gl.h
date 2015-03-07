@@ -28,7 +28,9 @@
 #include <k3dsdk/bitmap.h>
 #include <k3dsdk/color.h>
 #include <k3dsdk/gl.h>
+#include <k3dsdk/property.h>
 #include <k3dsdk/irender_viewport_gl.h>
+#include <k3dsdk/rectangle.h>
 
 namespace k3d
 {
@@ -48,6 +50,60 @@ inline const matrix4 matrix(GLdouble* GLMatrix)
 	memcpy(&result[0][0], &GLMatrix[0], 16 * sizeof(GLdouble));
 	return transpose(result);
 }
+
+/// Encapsulate OpenGL vector data
+template<int Dim, typename FloatT=GLfloat>
+class gl_points
+{
+public:
+	void reserve(const k3d::uint_t Size)
+	{
+		m_points.reserve(Size*Dim);
+	}
+
+	// Size in number of points
+	k3d::uint_t size() const
+	{
+		return m_points.size() / Dim;
+	}
+
+	// Size in bytes
+	k3d::uint_t byte_size() const
+	{
+		return sizeof(FloatT) * m_points.size();
+	}
+
+	template<typename... ComponentsT>
+	void push_back(const ComponentsT... Components)
+	{
+		static_assert(sizeof...(Components) == Dim, "Invalid dimension");
+		push_back_impl(Components...);
+	}
+
+	const FloatT* data()
+	{
+		return m_points.data();
+	}
+
+private:
+	// Ends recursion
+	template<typename NumberT>
+	void push_back_impl(const NumberT First)
+	{
+		m_points.push_back(static_cast<FloatT>(First));
+	}
+
+	// Recurse over arguments
+	template<typename NumberT, typename... ComponentsT>
+	void push_back_impl(const NumberT First, const ComponentsT... Others)
+	{
+		push_back_impl(First);
+		push_back_impl(Others...);
+	}
+
+
+	std::vector<FloatT> m_points;
+};
 
 /// Converts an OpenGL matrix into a standard K-3D matrix
 inline const matrix4 matrix(const GLfloat GLMatrix[16])
@@ -122,12 +178,12 @@ struct store_attributes
 {
 	store_attributes(const GLbitfield Mask = GL_ALL_ATTRIB_BITS)
 	{
-		glPushAttrib(Mask);
+//		glPushAttrib(Mask); //deprecated
 	}
 
 	~store_attributes()
 	{
-		glPopAttrib();
+//		glPopAttrib(); //deprecated
 	}
 };
 
@@ -147,6 +203,22 @@ const point3 project(const point3& WorldCoords);
 
 /// Calculates the settings for a projection for the given camera
 void calculate_projection(k3d::icamera& Camera, const uint_t PixelWidth, const uint_t PixelHeight, k3d::rectangle& WindowRect, k3d::rectangle& CameraRect, double& Near, double& Far, bool& Orthographic);
+
+/// Return the OpenGL projection matrix
+inline matrix4 projection(const bool Orthographic, const rectangle& WindowRect, const k3d::double_t Near, const k3d::double_t Far)
+{
+	if(Orthographic)
+		return matrix4(vector4(2./(WindowRect.x2-WindowRect.x1), 0., 0., (WindowRect.x1 + WindowRect.x2) / (WindowRect.x1 - WindowRect.x2)),
+                 vector4(0., 2./(WindowRect.y1-WindowRect.y2), 0., (WindowRect.y2 + WindowRect.y1) / (WindowRect.y2 - WindowRect.y1)),
+								 vector4(0., 0., 2./(Near-Far), (Near+Far)/(Near-Far)),
+								 vector4(0., 0., 0., 1.));
+
+	// Perspective projection
+	return matrix4(vector4(2.*Near/(WindowRect.x2-WindowRect.x1), 0., (WindowRect.x1 + WindowRect.x2) / (WindowRect.x2 - WindowRect.x1), 0.),
+                 vector4(0., 2.*Near/(WindowRect.y1-WindowRect.y2), (WindowRect.y2 + WindowRect.y1) / (WindowRect.y1 - WindowRect.y2), 0),
+								 vector4(0., 0., (Near+Far)/(Near-Far), 2.*Near*Far/(Near-Far)),
+								 vector4(0., 0., -1., 0.));
+}
 
 } // namespace gl
 

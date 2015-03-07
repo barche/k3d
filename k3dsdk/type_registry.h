@@ -30,6 +30,9 @@
 namespace k3d
 {
 
+/// Register the given type
+void register_type(const std::type_info& Info, const string_t& Name);
+
 /// Returns true iff the given type is registered
 bool_t type_registered(const std::type_info& Info);
 /// Returns true iff the given type if registered

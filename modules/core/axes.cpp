@@ -28,6 +28,7 @@
 #include <k3dsdk/ibounded.h>
 #include <k3dsdk/measurement.h>
 #include <k3dsdk/node.h>
+#include <k3dsdk/node_storage.h>
 #include <k3dsdk/options.h>
 #include <k3dsdk/renderable_gl.h>
 #include <k3dsdk/share.h>
@@ -36,6 +37,8 @@
 #include <k3dsdk/transform.h>
 #include <k3dsdk/transformable.h>
 #include <k3dsdk/vectors.h>
+
+#include <k3dsdk/gl/iprogram.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -68,33 +71,30 @@ public:
 		m_x_color(init_owner(*this) + init_name("xcolor") + init_label(_("X Color")) + init_description(_("X axis color")) + init_value(k3d::color(1, 0, 0))),
 		m_y_color(init_owner(*this) + init_name("ycolor") + init_label(_("Y Color")) + init_description(_("Y axis color")) + init_value(k3d::color(0, 0.7, 0))),
 		m_z_color(init_owner(*this) + init_name("zcolor") + init_label(_("Z Color")) + init_description(_("Z axis color")) + init_value(k3d::color(0, 0, 0.7))),
-		m_grid_color(init_owner(*this) + init_name("gridcolor") + init_label(_("Grid Color")) + init_description(_("Grid color")) + init_value(k3d::color(0.4, 0.4, 0.4)))
-		//m_font_path(init_owner(*this) + init_name("font") + init_label(_("Font")) + init_description(_("Font path")) + init_value(k3d::share_path() / boost::filesystem::path("fonts/Vera.ttf")) + init_path_mode(k3d::ipath_property::READ) + init_path_type(k3d::options::path::fonts())),
-		//m_font_size(init_owner(*this) + init_name("font_size") + init_label(_("Font Size")) + init_description(_("Font size.")) + init_value(12.0))
+		m_grid_color(init_owner(*this) + init_name("gridcolor") + init_label(_("Grid Color")) + init_description(_("Grid color")) + init_value(k3d::color(0.4, 0.4, 0.4))),
+		m_program(init_owner(*this) + init_name("gl_program") + init_label(_("GL Program")) + init_description(_("OpenGL program used for drawing")) + init_value(dynamic_cast<k3d::gl::iprogram*>(k3d::node::lookup_one(Document, "GL Constant Color Program")))),
+		m_vertex_array(0),
+		m_vertex_buffer(0)
 	{
-		m_axes.changed_signal().connect(make_async_redraw_slot());
-		m_xy_plane.changed_signal().connect(make_async_redraw_slot());
-		m_yz_plane.changed_signal().connect(make_async_redraw_slot());
-		m_xz_plane.changed_signal().connect(make_async_redraw_slot());
-		m_grid_size.changed_signal().connect(make_async_redraw_slot());
-		m_grid_count.changed_signal().connect(make_async_redraw_slot());
+		m_axes.changed_signal().connect(boost::bind(&axes::on_option_changed, this, _1));
+		m_xy_plane.changed_signal().connect(boost::bind(&axes::on_option_changed, this, _1));
+		m_yz_plane.changed_signal().connect(boost::bind(&axes::on_option_changed, this, _1));
+		m_xz_plane.changed_signal().connect(boost::bind(&axes::on_option_changed, this, _1));
+		m_grid_size.changed_signal().connect(boost::bind(&axes::on_option_changed, this, _1));
+		m_grid_count.changed_signal().connect(boost::bind(&axes::on_option_changed, this, _1));
 		m_x_color.changed_signal().connect(make_async_redraw_slot());
 		m_y_color.changed_signal().connect(make_async_redraw_slot());
 		m_z_color.changed_signal().connect(make_async_redraw_slot());
 		m_grid_color.changed_signal().connect(make_async_redraw_slot());
 		m_input_matrix.changed_signal().connect(make_async_redraw_slot());
 
-		//m_font_path.changed_signal().connect(boost::bind(&axes::on_font_changed, this, _1));
-		//m_font_size.changed_signal().connect(boost::bind(&axes::on_font_changed, this, _1));
-
 		add_snap_target(new k3d::snap_target(_("Grid"), boost::bind(&axes::grid_target_position, this, _1, _2), boost::bind(&axes::grid_target_orientation, this, _1, _2, _3)));
 	}
 
-	void on_font_changed(k3d::ihint*)
+	~axes()
 	{
-		//m_font.reset();
-		async_redraw(0);
-	}
+		cleanup();
+	}	
 
 	bool grid_target_position(const k3d::point3& Position, k3d::point3& TargetPosition)
 	{
@@ -126,94 +126,50 @@ public:
 
 	void on_gl_draw(const k3d::gl::render_state& State)
 	{
-		const long grid_count = m_grid_count.pipeline_value();
-		const k3d::double_t grid_size = m_grid_size.pipeline_value();
+		k3d::gl::iprogram* program = m_program.pipeline_value();
+		if(program == nullptr)
+			return;
+
+		if(!program->bind())
+			return;
+
+		program->set_uniform("MVP", State.gl_projection_view_matrix);
+
+		if(!glIsVertexArray(m_vertex_array))
+		{
+			rebuild_vbo();
+		}
+
 		const k3d::color x_color = m_x_color.pipeline_value();
 		const k3d::color y_color = m_y_color.pipeline_value();
 		const k3d::color z_color = m_z_color.pipeline_value();
 		const k3d::color grid_color = m_grid_color.pipeline_value();
 
-		const k3d::double_t size = grid_count * grid_size;
 
-		k3d::gl::store_attributes attributes;
+		glBindVertexArray(m_vertex_array);
 
-		glDisable(GL_LIGHTING);
-		glDisable(GL_TEXTURE_1D);
-		glDisable(GL_TEXTURE_2D);
-		glDisable(GL_BLEND);
+		glLineWidth(1.);
 
-		glLineWidth(1.0f);
-		glDisable(GL_LINE_STIPPLE);
-
-		// Draw axes and labels
+		GLint start_idx = 0;
 		if(m_axes.pipeline_value())
 		{
-			// Draw X axis
-			k3d::gl::color3d(x_color);
-			glBegin(GL_LINE_LOOP);
-			glVertex3d(-size, 0.0, 0.0);
-			glVertex3d(size, 0.0, 0.0);
-			glEnd();
+			program->set_uniform("ConstantColor", x_color);
+			glDrawArrays(GL_LINES, start_idx, 2);
+			start_idx += 2;
 
-			// Draw Y axis
-			k3d::gl::color3d(y_color);
-			glBegin(GL_LINE_LOOP);
-			glVertex3d(0.0, -size, 0.0);
-			glVertex3d(0.0, size, 0.0);
-			glEnd();
+			program->set_uniform("ConstantColor", y_color);
+			glDrawArrays(GL_LINES, start_idx, 2);
+			start_idx += 2;
 
-			// Draw Z axis
-			k3d::gl::color3d(z_color);
-			glBegin(GL_LINE_LOOP);
-			glVertex3d(0.0, 0.0, -size);
-			glVertex3d(0.0, 0.0, size);
-			glEnd();
+			program->set_uniform("ConstantColor", z_color);
+			glDrawArrays(GL_LINES, start_idx, 2);
+			start_idx += 2;
 		}
 
-		// Setup grid color
-		k3d::gl::color3d(grid_color);
+		program->set_uniform("ConstantColor", grid_color);
+		glDrawArrays(GL_LINES, start_idx, m_nb_points-start_idx);
 
-		// Draw XY plane
-		if(m_xy_plane.pipeline_value())
-		{
-			glBegin(GL_LINES);
-			for(long i = -grid_count; i <= grid_count; ++i)
-			{
-				glVertex3d(i * grid_size, -size, 0.0);
-				glVertex3d(i * grid_size, size, 0.0);
-				glVertex3d(-size, i * grid_size, 0.0);
-				glVertex3d(size, i * grid_size, 0.0);
-			}
-			glEnd();
-		}
-
-		// Draw YZ plane
-		if(m_yz_plane.pipeline_value())
-		{
-			glBegin(GL_LINES);
-			for(long i = -grid_count; i <= grid_count; ++i)
-			{
-				glVertex3d(0.0, i * grid_size, -size);
-				glVertex3d(0.0, i * grid_size, size);
-				glVertex3d(0.0, -size, i * grid_size);
-				glVertex3d(0.0, size, i * grid_size);
-			}
-			glEnd();
-		}
-
-		// Draw XZ plane
-		if(m_xz_plane.pipeline_value())
-		{
-			glBegin(GL_LINES);
-			for(long i = -grid_count; i <= grid_count; ++i)
-			{
-				glVertex3d(i * grid_size, 0.0, -size);
-				glVertex3d(i * grid_size, 0.0, size);
-				glVertex3d(-size, 0.0, i * grid_size);
-				glVertex3d(size, 0.0, i * grid_size);
-			}
-			glEnd();
-		}
+		glBindVertexArray(0);
 
 //		if(m_axes.pipeline_value())
 //		{
@@ -288,6 +244,95 @@ public:
 	}
 
 private:
+	// Rebuild the data needed for GL rendering
+	void rebuild_vbo()
+	{
+		const long grid_count = m_grid_count.pipeline_value();
+		const k3d::double_t grid_size = m_grid_size.pipeline_value();
+		const k3d::double_t size = grid_count * grid_size;
+
+		k3d::gl::gl_points<3> points;
+		points.reserve(6 + 4*(grid_count)+1*3);
+
+		// Store axes points
+		if(m_axes.pipeline_value())
+		{
+			// X axis
+			points.push_back(-size, 0.0, 0.0);
+			points.push_back(size, 0.0, 0.0);
+
+			// Y axis
+			points.push_back(0.0, -size, 0.0);
+			points.push_back(0.0, size, 0.0);
+
+			// Z axis
+			points.push_back(0.0, 0.0, -size);
+			points.push_back(0.0, 0.0, size);
+		}
+
+		// plane
+		if(m_xy_plane.pipeline_value())
+		{
+			for(long i = -grid_count; i <= grid_count; ++i)
+			{
+				points.push_back(i * grid_size, -size, 0.0);
+				points.push_back(i * grid_size, size, 0.0);
+				points.push_back(-size, i * grid_size, 0.0);
+				points.push_back(size, i * grid_size, 0.0);
+			}
+		}
+
+		// YZ plane
+		if(m_yz_plane.pipeline_value())
+		{
+			for(long i = -grid_count; i <= grid_count; ++i)
+			{
+				points.push_back(0.0, i * grid_size, -size);
+				points.push_back(0.0, i * grid_size, size);
+				points.push_back(0.0, -size, i * grid_size);
+				points.push_back(0.0, size, i * grid_size);
+			}
+		}
+
+		// XZ plane
+		if(m_xz_plane.pipeline_value())
+		{
+			for(long i = -grid_count; i <= grid_count; ++i)
+			{
+				points.push_back(i * grid_size, 0.0, -size);
+				points.push_back(i * grid_size, 0.0, size);
+				points.push_back(-size, 0.0, i * grid_size);
+				points.push_back(size, 0.0, i * grid_size);
+			}
+		}
+
+		m_nb_points = points.size();
+
+		glGenVertexArrays(1, &m_vertex_array);
+		glBindVertexArray(m_vertex_array);
+		glEnableVertexAttribArray(0);
+
+		glGenBuffers(1, &m_vertex_buffer);
+		glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
+		glBufferData(GL_ARRAY_BUFFER, points.byte_size(), points.data(), GL_STATIC_DRAW);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,	0, nullptr);
+	}
+
+	void cleanup()
+	{
+		glDeleteVertexArrays(1, &m_vertex_array);
+		glDeleteBuffers(1, &m_vertex_buffer);
+		m_vertex_array = 0;
+		m_vertex_buffer = 0;
+	}
+
+	void on_option_changed(k3d::ihint*)
+	{
+		cleanup();
+		async_redraw(0);
+	}
+
 	k3d_data(bool, immutable_name, change_signal, with_undo, local_storage, no_constraint, writable_property, with_serialization) m_axes;
 	k3d_data(bool, immutable_name, change_signal, with_undo, local_storage, no_constraint, writable_property, with_serialization) m_xy_plane;
 	k3d_data(bool, immutable_name, change_signal, with_undo, local_storage, no_constraint, writable_property, with_serialization) m_yz_plane;
@@ -298,10 +343,15 @@ private:
 	k3d_data(k3d::color, immutable_name, change_signal, with_undo, local_storage, no_constraint, writable_property, with_serialization) m_y_color;
 	k3d_data(k3d::color, immutable_name, change_signal, with_undo, local_storage, no_constraint, writable_property, with_serialization) m_z_color;
 	k3d_data(k3d::color, immutable_name, change_signal, with_undo, local_storage, no_constraint, writable_property, with_serialization) m_grid_color;
+	k3d_data(k3d::gl::iprogram*, immutable_name, change_signal, with_undo, node_storage, no_constraint, node_property, node_serialization) m_program;
 	//k3d_data(boost::filesystem::path, immutable_name, change_signal, with_undo, local_storage, no_constraint, path_property, path_serialization) m_font_path;
 	//k3d_data(k3d::double_t, immutable_name, change_signal, with_undo, local_storage, no_constraint, writable_property, with_serialization) m_font_size;
 
 	//boost::scoped_ptr<FTFont> m_font;
+
+	GLuint m_vertex_array;
+	GLuint m_vertex_buffer;
+	GLint m_nb_points;
 };
 
 /////////////////////////////////////////////////////////////////////////////

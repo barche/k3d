@@ -27,8 +27,6 @@
 #include <k3dsdk/inode.h>
 #include <k3dsdk/ioption_property_ri.h>
 #include <k3dsdk/ipipeline.h>
-#include <k3dsdk/iuser_property.h>
-#include <k3dsdk/metadata.h>
 #include <k3dsdk/node_storage.h>
 #include <k3dsdk/property.h>
 #include <k3dsdk/property_types.h>
@@ -36,6 +34,7 @@
 #include <k3dsdk/result.h>
 #include <k3dsdk/tokens.h>
 #include <k3dsdk/type_registry.h>
+#include <k3dsdk/user_node_serialization.h>
 
 #include <boost/mpl/for_each.hpp>
 
@@ -48,24 +47,6 @@ namespace property
 
 namespace detail
 {
-
-//////////////////////////////////////////////////////////////////////////////////////////
-// user_property
-
-/// Wraps a k3d_data object to mark it as a user property
-template<typename property_t>
-class user_property :
-	public property_t,
-	public iuser_property,
-	public metadata::storage
-{
-public:
-	template<typename init_t>
-	user_property(const init_t& Init) :
-		property_t(Init)
-	{
-	}
-};
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // null_property_collection
@@ -186,65 +167,6 @@ protected:
 	{
 		Init.persistent_collection().enable_serialization(Init.name(), *this);
 	}
-};
-
-/////////////////////////////////////////////////////////////////////////////
-// user_node_serialization
-
-/// Serialization policy for data containers that store a document node and can be serialized as XML
-template<typename value_t, class property_policy_t>
-class user_node_serialization :
-	public property_policy_t,
-	public ipersistent
-{
-	// If this assertion fires, it means that you're trying to use node_serialization with a non-node data type
-	BOOST_STATIC_ASSERT((boost::is_base_and_derived<iunknown, typename boost::remove_pointer<value_t>::type>::value));
-
-public:
-	void save(xml::element& Element, const ipersistent::save_context& Context)
-	{
-		if(property_policy_t::internal_node())
-		{
-			Element.append(
-				xml::element(
-					"property",
-					string_cast(Context.lookup.lookup_id(property_policy_t::internal_node())),
-					xml::attribute("name", property_policy_t::name()),
-					xml::attribute("label", static_cast<iproperty&>(*this).property_label()),
-					xml::attribute("description", static_cast<iproperty&>(*this).property_description()),
-					xml::attribute("type", type_string<value_t>()),
-					xml::attribute("user_property", "generic")));
-		}
-		else
-		{
-			Element.append(
-				xml::element(
-					"property",
-					"0",
-					xml::attribute("name", property_policy_t::name()),
-					xml::attribute("label", static_cast<iproperty&>(*this).property_label()),
-					xml::attribute("description", static_cast<iproperty&>(*this).property_description()),
-					xml::attribute("type", type_string<value_t>()),
-					xml::attribute("user_property", "generic")));
-		}
-	}
-
-	void load(xml::element& Element, const ipersistent::load_context& Context)
-	{
-		string_t value = Element.text;
-		property_policy_t::set_value(dynamic_cast<value_t>(Context.lookup.lookup_object(from_string(value, static_cast<ipersistent_lookup::id_type>(0)))), 0);
-	}
-
-protected:
-	template<typename init_t>
-	user_node_serialization(const init_t& Init) :
-		property_policy_t(Init)
-	{
-		Init.persistent_collection().enable_serialization(Init.name(), *this);
-	}
-
-private:
-	ipersistent_lookup::id_type m_node_id;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -803,7 +725,7 @@ public:
 	template<typename T>
 	void operator()(T) const
 	{
-		create_property<T, k3d::property::detail::user_property<k3d_data(T, immutable_name, change_signal, with_undo, local_storage, no_constraint, renderman_attribute_property, renderman_attribute_serialization)> >();
+		create_property<T, k3d::property::user_property<k3d_data(T, immutable_name, change_signal, with_undo, local_storage, no_constraint, renderman_attribute_property, renderman_attribute_serialization)> >();
 	}
 
 private:
@@ -878,7 +800,7 @@ public:
 	template<typename T>
 	void operator()(T) const
 	{
-		create_property<T, k3d::property::detail::user_property<k3d_data(T, immutable_name, change_signal, with_undo, local_storage, no_constraint, renderman_option_property, renderman_option_serialization)> >();
+		create_property<T, k3d::property::user_property<k3d_data(T, immutable_name, change_signal, with_undo, local_storage, no_constraint, renderman_option_property, renderman_option_serialization)> >();
 	}
 
 private:
@@ -893,6 +815,16 @@ private:
 	const boost::any& value;
 	iproperty*& result;
 };
+
+/// Keeps a mapping of types to property factories
+typedef std::map< string_t, std::shared_ptr<iproperty_factory> > property_factory_registry_t;
+property_factory_registry_t property_factory_registry;
+
+void register_property_factory(const string_t& Type, const std::shared_ptr<iproperty_factory>& Factory)
+{
+	if(!property_factory_registry.insert(std::make_pair(Type, Factory)).second)
+		k3d::log() << error << "Type " << Type << " was already registered in the property factory register" << std::endl;
+}
 
 } // namespace detail
 
@@ -1031,18 +963,31 @@ const std::vector<iproperty*> user_properties(iunknown& Object)
 	return results;
 }
 
+void register_property_factory(const string_t& Type, const std::shared_ptr<iproperty_factory>& Factory)
+{
+	detail::register_property_factory(Type, Factory);
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // create
 
 iproperty* create(inode& Owner, const std::type_info& Type, const string_t& Name, const string_t& Label, const string_t& Description, const boost::any& Value)
 {
 	iproperty_collection* const property_collection = dynamic_cast<iproperty_collection*>(&Owner);
-	return_val_if_fail(property_collection, 0);
+	return_val_if_fail(property_collection, nullptr);
 
 	ipersistent_collection* const persistent_collection = dynamic_cast<ipersistent_collection*>(&Owner);
-	return_val_if_fail(persistent_collection, 0);
+	return_val_if_fail(persistent_collection, nullptr);
 
-	iproperty* result = 0;
+	return_val_if_fail(k3d::type_registered(Type), nullptr);
+
+	const detail::property_factory_registry_t::const_iterator factory_it = detail::property_factory_registry.find(k3d::type_string(Type));
+	if(factory_it != detail::property_factory_registry.end())
+	{
+		return factory_it->second->create(Owner, Name, Label, Description, Value);
+	}
+
+	iproperty* result = nullptr;
 	boost::mpl::for_each<k3d::property::types>(detail::property_factory(Owner, *property_collection, *persistent_collection, Type, Name, Label, Description, Value, result));
 
 	return result;
