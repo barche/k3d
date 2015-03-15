@@ -25,7 +25,6 @@
 */
 
 #include <k3dsdk/algebra.h>
-#include <k3dsdk/gl.h>
 #include <k3dsdk/point3.h>
 #include <k3dsdk/types.h>
 
@@ -33,6 +32,7 @@ namespace k3d
 {
 
 class icamera;
+class iviewport_state;
 
 namespace gl
 {
@@ -41,10 +41,10 @@ namespace gl
 class render_state
 {
 public:
-	render_state(icamera& Camera, const unsigned long PixelWidth, const unsigned long PixelHeight);
+	render_state(iviewport_state& ViewportState);
 
 	/// Stores the camera used for drawing
-	icamera& camera;
+	icamera* camera;
 
 	/// Set to true iff the OpenGL viewing frustum used for drawing is orthographic
 	bool_t orthographic;
@@ -81,9 +81,6 @@ public:
 
 	/// Stores the current (projection * view) matrix
 	matrix4 gl_projection_view_matrix;
-	
-	/// Stores the current OpenGL viewport
-	GLint gl_viewport[4];
 	
 	/// Stores the selection state of the calling node
 	double_t node_selection;

@@ -40,6 +40,7 @@
 #include <k3dsdk/irenderable_gl.h>
 #include <k3dsdk/imatrix_source.h>
 #include <k3dsdk/iuser_interface.h>
+#include <k3dsdk/iviewport_state.h>
 #include <k3dsdk/measurement.h>
 #include <k3dsdk/node.h>
 #include <k3dsdk/node_storage.h>
@@ -381,17 +382,17 @@ public:
 	{
 		return_val_if_fail(PixelWidth && PixelHeight, false);
 
-		double near = 0;
-		double far = 0;
-		bool orthographic = false;
-		k3d::gl::calculate_projection(Camera, PixelWidth, PixelHeight, WindowRect, CameraRect, near, far, orthographic);
+		CameraRect = k3d::gl::camera_rectangle(Camera);
+		WindowRect = k3d::gl::window_rectangle(Camera, PixelWidth, PixelHeight);
 
 		return true;
 	}
 
-	void render_viewport(k3d::icamera& Camera, const unsigned long PixelWidth, const unsigned long PixelHeight, GLdouble ViewMatrix[16], GLdouble ProjectionMatrix[16], GLint Viewport[4])
+	void render_viewport(k3d::iviewport_state& ViewportState)
 	{
-		k3d::gl::render_state state(Camera, PixelWidth, PixelHeight);
+		//static k3d::uint_t count = 0;
+		//k3d::log() << debug << "render nr " << count++ << std::endl;
+		k3d::gl::render_state state(ViewportState);
 
 		const k3d::color background_color = m_background_color.pipeline_value();
 		glClearColor(background_color.red, background_color.green, background_color.blue, 1.);
@@ -452,17 +453,17 @@ public:
 
 	void render_viewport_selection(const k3d::gl::selection_state& SelectState, k3d::icamera& Camera, const unsigned long PixelWidth, const unsigned long PixelHeight, const k3d::rectangle& Region, GLdouble ViewMatrix[16], GLdouble ProjectionMatrix[16], GLint Viewport[4])
 	{
-		k3d::gl::render_state state(Camera, PixelWidth, PixelHeight);
-		if(!draw_scene(Camera, PixelWidth, PixelHeight, ViewMatrix, ProjectionMatrix, Viewport, true, Region, state))
-			return;
+//		k3d::gl::render_state state(Camera, PixelWidth, PixelHeight);
+//		if(!draw_scene(Camera, PixelWidth, PixelHeight, ViewMatrix, ProjectionMatrix, Viewport, true, Region, state))
+//			return;
 
-		glClear(GL_DEPTH_BUFFER_BIT);
-		glDisable(GL_LIGHTING);
+//		glClear(GL_DEPTH_BUFFER_BIT);
+//		glDisable(GL_LIGHTING);
 
-		k3d::inode_selection* const node_selection = m_node_selection.pipeline_value();
-		std::vector<k3d::gl::irenderable*> renderable_nodes = k3d::node::lookup<k3d::gl::irenderable>(document());
-		std::sort(renderable_nodes.begin(), renderable_nodes.end(), detail::render_order());
-		std::for_each(renderable_nodes.begin(), renderable_nodes.end(), detail::draw_selection(state, SelectState, node_selection));
+//		k3d::inode_selection* const node_selection = m_node_selection.pipeline_value();
+//		std::vector<k3d::gl::irenderable*> renderable_nodes = k3d::node::lookup<k3d::gl::irenderable>(document());
+//		std::sort(renderable_nodes.begin(), renderable_nodes.end(), detail::render_order());
+//		std::for_each(renderable_nodes.begin(), renderable_nodes.end(), detail::draw_selection(state, SelectState, node_selection));
 	}
 
 	redraw_request_signal_t& redraw_request_signal()

@@ -1,5 +1,7 @@
 project(k3dsdk-qtui)
 
+add_definitions(-DQT_QML_DEBUG)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 

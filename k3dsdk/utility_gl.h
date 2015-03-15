@@ -201,8 +201,11 @@ void tex_image_2d(const bitmap& Bitmap);
 /// Projects a point in world coordinates into screen space, returning the 2D widget coordinates and Z-buffer depth
 const point3 project(const point3& WorldCoords);
 
-/// Calculates the settings for a projection for the given camera
-void calculate_projection(k3d::icamera& Camera, const uint_t PixelWidth, const uint_t PixelHeight, k3d::rectangle& WindowRect, k3d::rectangle& CameraRect, double& Near, double& Far, bool& Orthographic);
+/// Calculate the window rectangle
+k3d::rectangle window_rectangle(k3d::icamera& Camera, const uint_t PixelWidth, const uint_t PixelHeight);
+
+/// Calculate the camera rectangle
+k3d::rectangle camera_rectangle(icamera& Camera);
 
 /// Return the OpenGL projection matrix
 inline matrix4 projection(const bool Orthographic, const rectangle& WindowRect, const k3d::double_t Near, const k3d::double_t Far)

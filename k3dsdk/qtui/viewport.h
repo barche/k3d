@@ -42,29 +42,22 @@ class viewport :
 	public QQuickFramebufferObject
 {
 	Q_OBJECT
-	Q_PROPERTY(node_wrapper gl_engine READ gl_engine WRITE set_gl_engine NOTIFY gl_engine_changed)
-	Q_PROPERTY(node_wrapper camera READ camera WRITE set_camera NOTIFY camera_changed)
+	Q_PROPERTY(node_wrapper state READ state WRITE set_state NOTIFY state_changed)
 public:
 	Renderer *createRenderer() const;
 
 	/// gl_engine property implementation
-	const node_wrapper& gl_engine() { return m_gl_engine; }
-	void set_gl_engine(const node_wrapper& GlEngine);
-
-	/// camera property implementation
-	const node_wrapper& camera() { return m_camera; }
-	void set_camera(const node_wrapper& Camera);
+	const node_wrapper& state() { return m_state; }
+	void set_state(const node_wrapper& State);
 
 signals:
-	void gl_engine_changed(node_wrapper);
-	void camera_changed(node_wrapper);
+	void state_changed(node_wrapper);
 
 protected:
 	QSGNode* updatePaintNode(QSGNode *node, QQuickItem::UpdatePaintNodeData *nodeData);
 
 private:
-	node_wrapper m_gl_engine = nullptr;
-	node_wrapper m_camera = nullptr;
+	node_wrapper m_state = nullptr;
 };
 
 } // namespace qtui

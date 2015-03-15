@@ -9,7 +9,7 @@ ApplicationWindow {
 	visible: true
 	width: 1024
 	height: 768
-	title: document.title.value
+    title: document.title.value
 
 	menuBar: MenuBar
 	{
@@ -56,8 +56,11 @@ ApplicationWindow {
 			id: viewportArea
 			Layout.minimumWidth: 50
 			Layout.fillWidth: true
-			gl_engine: document.lookup_by_name("GL Engine")
-			camera: document.lookup_by_name("Camera")
+            state: document.lookup_by_name("Default Viewport State")
+            Text {
+                text: "ViewPort"
+                anchors.centerIn: parent
+            }
 		}
 	}
 

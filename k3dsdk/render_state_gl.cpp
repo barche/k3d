@@ -23,45 +23,50 @@
 
 #include <k3dsdk/icamera.h>
 #include <k3dsdk/imatrix_source.h>
+#include <k3dsdk/inode.h>
+#include <k3dsdk/iprojection.h>
+#include <k3dsdk/iviewport_state.h>
+#include <k3dsdk/property.h>
 #include <k3dsdk/render_state_gl.h>
 #include <k3dsdk/utility_gl.h>
 
 namespace k3d
 {
 
-class icamera;
-
 namespace gl
 {
 
-	render_state::render_state(icamera &Camera, const unsigned long PixelWidth, const unsigned long PixelHeight) :
-		camera(Camera),
+	render_state::render_state(iviewport_state& ViewportState) :
+		camera(dynamic_cast<k3d::icamera*>(k3d::property::pipeline_value<k3d::inode*>((ViewportState.camera_property())))),
 		draw_two_sided(true)
 	{
-		glGetIntegerv(GL_VIEWPORT, static_cast<GLint*>(gl_viewport));
+		const k3d::uint_t pixel_width = k3d::property::pipeline_value<k3d::uint_t>(ViewportState.pixel_width_property());
+		const k3d::uint_t pixel_height = k3d::property::pipeline_value<k3d::uint_t>(ViewportState.pixel_height_property());
+		assert(camera != nullptr);
 
-		k3d::rectangle window_rect(0, 0, 0, 0);
-		k3d::rectangle camera_rect(0, 0, 0, 0);
-		double near = 0;
-		double far = 0;
-		bool orthographic = false;
-		k3d::gl::calculate_projection(Camera, PixelWidth, PixelHeight, window_rect, camera_rect, near, far, orthographic);
+		k3d::iprojection* projection = k3d::property::pipeline_value<k3d::iprojection*>(camera->projection());
+		assert(projection != nullptr);
 
-		gl_projection_matrix = k3d::gl::projection(orthographic, window_rect, near, far);
+		const double near = k3d::property::pipeline_value<double>(projection->near());
+		const double far = k3d::property::pipeline_value<double>(projection->far());
+		orthographic = (dynamic_cast<k3d::iorthographic*>(projection) != nullptr);
+
+		const k3d::rectangle window_rect = k3d::gl::window_rectangle(*camera, pixel_width, pixel_height);
+		const k3d::rectangle camera_rect = k3d::gl::camera_rectangle(*camera);
+
+		gl_projection_matrix = k3d::property::pipeline_value<k3d::matrix4>(ViewportState.projection_matrix_property());
 
 		// Setup projection ...
 		if(orthographic)
 		{
-			const k3d::matrix4 transform_matrix = k3d::property::pipeline_value<k3d::matrix4>(Camera.transformation().matrix_source_output());
+			const k3d::matrix4 transform_matrix = k3d::property::pipeline_value<k3d::matrix4>(camera->transformation().matrix_source_output());
 			const k3d::point3 world_position = transform_matrix * k3d::point3(0, 0, 0);
-			const k3d::point3 world_target = boost::any_cast<k3d::point3>(Camera.world_target().property_internal_value());
+			const k3d::point3 world_target = boost::any_cast<k3d::point3>(camera->world_target().property_internal_value());
 			const double distance = k3d::distance(world_position, world_target);
 
 			const double window_aspect = (window_rect.x2 - window_rect.x1) / (window_rect.y1 - window_rect.y2);
 			const double window_tan_fov = (window_rect.y1 - window_rect.y2) * 0.5 / near;
 			const double window_size = distance * window_tan_fov;
-
-			orthographic = true;
 
 			gl_window_frustum_left = -window_size * window_aspect;
 			gl_window_frustum_right = window_size * window_aspect;
@@ -110,15 +115,11 @@ namespace gl
 			gl_camera_frustum_far = far;
 		}
 
-		const k3d::matrix4 transform_matrix = k3d::property::pipeline_value<k3d::matrix4>(Camera.transformation().matrix_source_output());
-
-		// Invert the rotation
-		k3d::angle_axis orientation(k3d::euler_angles(transform_matrix, k3d::euler_angles::ZXYstatic));
-		orientation.angle = -orientation.angle;
-		k3d::vector3 translation = -k3d::extract_translation(transform_matrix);
-
-		const k3d::matrix4 view_matrix =  k3d::scale3(1., 1., -1.)*k3d::rotate3(orientation)*k3d::translate3(translation);
+		const k3d::matrix4 view_matrix = k3d::property::pipeline_value<k3d::matrix4>(camera->view_matrix());
 		gl_projection_view_matrix = gl_projection_matrix * view_matrix;
+
+//		k3d::log() << debug << "projection matrix: " << gl_projection_matrix << std::endl;
+//		k3d::log() << debug << "view matrix: " << view_matrix << std::endl;
 
 		// Note: default expected matrices:
 		// projection matrix: 1.5 0 0 0 0 1.9040660858154297 0 0 0 0 -1.0020020008087158 -2.0020020008087158 0 0 -1 0

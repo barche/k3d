@@ -36,6 +36,7 @@
 #include <k3dsdk/selection.h>
 #include <k3dsdk/transform.h>
 #include <k3dsdk/transformable.h>
+#include <k3dsdk/value_demand_storage.h>
 
 #ifdef	WIN32
 #ifdef	near
@@ -85,6 +86,8 @@ public:
 		m_show_reference_plane(init_owner(*this) + init_name("show_reference_plane") + init_label(_("Show Reference Plane")) + init_description(_("Show Reference Plane")) + init_value(false)),
 		m_reference_plane(init_owner(*this) + init_name("reference_plane") + init_label(_("Reference Plane")) + init_description(_("Reference Plane Distance")) + init_value(0.0) + init_constraint(constraint::minimum<k3d::double_t>(0.0))  + init_step_increment(0.1) + init_units(typeid(k3d::measurement::distance))),
 		m_reference_plane_color(init_owner(*this) + init_name("reference_plane_color") + init_label(_("Reference Plane Color")) + init_description(_("Reference Plane Color")) + init_value(k3d::color(0, 0, 0.7))),
+		m_projection(init_owner(*this) + init_name("projection") + init_label(_("Projection")) + init_description(_("Object representing the camera projection")) + init_value(static_cast<k3d::iprojection*>(nullptr))),
+		m_view_matrix(init_owner(*this) + init_name("view_matrix") + init_label(_("View Matrix")) + init_description(_("The view matrix from this camera")) + init_value(k3d::identity3())),
 		m_perspective_projection(m_left, m_right, m_top, m_bottom, m_near, m_far),
 		m_orthographic_projection(m_left, m_right, m_top, m_bottom, m_near, m_far)
 	{
@@ -114,7 +117,7 @@ public:
 		m_aspect_ratio.changed_signal().connect(boost::bind(&camera::on_aspect_ratio_changed, this, _1));
 
 		m_show_projection.changed_signal().connect(make_async_redraw_slot());
-		m_orthographic.changed_signal().connect(make_async_redraw_slot());
+		m_orthographic.changed_signal().connect(m_projection.make_slot());
 		m_left.changed_signal().connect(make_async_redraw_slot());
 		m_right.changed_signal().connect(make_async_redraw_slot());
 		m_top.changed_signal().connect(make_async_redraw_slot());
@@ -132,6 +135,11 @@ public:
 
 		m_input_matrix.changed_signal().connect(boost::bind(&camera::on_position_changed, this, _1));
 		m_world_target.changed_signal().connect(boost::bind(&camera::on_position_changed, this, _1));
+
+		m_input_matrix.changed_signal().connect(m_view_matrix.make_slot());
+
+		m_projection.set_update_slot(boost::bind(&camera::update_projection, this, _1, _2));
+		m_view_matrix.set_update_slot(boost::bind(&camera::update_view_matrix, this, _1, _2));
 	}
 
 	k3d::imatrix_source& transformation()
@@ -139,14 +147,31 @@ public:
 		return *this;
 	}
 
-	k3d::iprojection& projection()
+	void update_projection(const std::vector<k3d::ihint*>&, k3d::iprojection*& Output)
 	{
 		const k3d::bool_t orthographic = m_orthographic.pipeline_value();
 
 		if(orthographic)
-			return m_orthographic_projection;
+			Output = &m_orthographic_projection;
+		else
+			Output = &m_perspective_projection;
+	}
 
-		return m_perspective_projection;
+	void update_view_matrix(const std::vector<k3d::ihint*>&, k3d::matrix4& Output)
+	{
+		const k3d::matrix4 transform_matrix = matrix();
+
+		// Invert the rotation
+		k3d::angle_axis orientation(k3d::euler_angles(transform_matrix, k3d::euler_angles::ZXYstatic));
+		orientation.angle = -orientation.angle;
+		k3d::vector3 translation = -k3d::extract_translation(transform_matrix);
+
+		Output =  k3d::scale3(1., 1., -1.)*k3d::rotate3(orientation)*k3d::translate3(translation);
+	}
+
+	k3d::iproperty& projection()
+	{
+		return m_projection;
 	}
 
 	k3d::icrop_window& crop_window()
@@ -166,6 +191,11 @@ public:
 	k3d::iproperty& world_target()
 	{
 		return m_world_target;
+	}
+
+	k3d::iproperty& view_matrix()
+	{
+		return m_view_matrix;
 	}
 
 	k3d::iproperty& crop_left()
@@ -648,6 +678,8 @@ private:
 	k3d_data(k3d::bool_t, immutable_name, change_signal, with_undo, local_storage, no_constraint, writable_property, with_serialization) m_show_reference_plane;
 	k3d_data(k3d::double_t, immutable_name, change_signal, with_undo, local_storage, with_constraint, measurement_property, with_serialization) m_reference_plane;
 	k3d_data(k3d::color, immutable_name, change_signal, with_undo, local_storage, no_constraint, writable_property, with_serialization) m_reference_plane_color;
+	k3d_data(k3d::iprojection*, immutable_name, change_signal, no_undo, value_demand_storage, no_constraint, read_only_property, no_serialization) m_projection;
+	k3d_data(k3d::matrix4, immutable_name, change_signal, no_undo, value_demand_storage, no_constraint, read_only_property, no_serialization) m_view_matrix;
 
 	perspective_projection m_perspective_projection;
 	orthographic_projection m_orthographic_projection;

@@ -43,13 +43,15 @@ public:
 	/// Returns the required position data for this camera
 	virtual imatrix_source& transformation() = 0;
 	/// Returns the required viewing projection for this camera
-	virtual iprojection& projection() = 0;
+	virtual iproperty& projection() = 0;
 	/// Returns the required crop-window for this camera
 	virtual icrop_window& crop_window() = 0;
 	/// Returns the transformable object that should be altered during interactive user navigation
 	virtual imatrix_source& navigation_target() = 0;
 	/// Retuns the camera's world target, a point (in world coordinates) around which the viewport orbits
 	virtual iproperty& world_target() = 0;
+	/// Returns the view matrix
+	virtual iproperty& view_matrix() = 0;
 
 protected:
 	icamera() {}

@@ -51,7 +51,12 @@ class iprojection :
 	public virtual k3d::iunknown
 {
 public:
-
+	virtual iproperty& left() = 0;
+	virtual iproperty& right() = 0;
+	virtual iproperty& top() = 0;
+	virtual iproperty& bottom() = 0;
+	virtual iproperty& near() = 0;
+	virtual iproperty& far() = 0;
 protected:
 	iprojection() {}
 	iprojection(const iprojection& Other) : iunknown(Other) {}
@@ -63,14 +68,6 @@ protected:
 class iperspective :
 	public iprojection
 {
-public:
-	virtual iproperty& left() = 0;
-	virtual iproperty& right() = 0;
-	virtual iproperty& top() = 0;
-	virtual iproperty& bottom() = 0;
-	virtual iproperty& near() = 0;
-	virtual iproperty& far() = 0;
-
 protected:
 	iperspective() {}
 	iperspective(const iperspective& Other) : iunknown(Other) {}
@@ -82,14 +79,6 @@ protected:
 class iorthographic :
 	public iprojection
 {
-public:
-	virtual iproperty& left() = 0;
-	virtual iproperty& right() = 0;
-	virtual iproperty& top() = 0;
-	virtual iproperty& bottom() = 0;
-	virtual iproperty& near() = 0;
-	virtual iproperty& far() = 0;
-
 protected:
 	iorthographic() {}
 	iorthographic(const iorthographic& Other) : iunknown(Other) {}

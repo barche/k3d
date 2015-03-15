@@ -21,8 +21,11 @@
 	\author Bart Janssens
 */
 
-#include <k3dsdk/irender_viewport_gl.h>
 #include <k3dsdk/icamera.h>
+#include <k3dsdk/irender_viewport_gl.h>
+#include <k3dsdk/iviewport_state.h>
+#include <k3dsdk/property.h>
+
 
 #include <k3dsdk/qtui/glew_context.h>
 #include <k3dsdk/qtui/viewport.h>
@@ -40,26 +43,39 @@ namespace qtui
 class fbo_renderer : public QQuickFramebufferObject::Renderer
 {
 public:
-	fbo_renderer(const node_wrapper& GlEngine, const node_wrapper& Camera) : m_gl_engine(GlEngine), m_camera(Camera)
+	fbo_renderer(const node_wrapper& State) : m_state(State)
 	{
+		k3d::log() << debug << "creating new renderer" << std::endl;
 	}
 
 	void render()
 	{
-		k3d::gl::irender_viewport* engine = extract_node<k3d::gl::irender_viewport>(m_gl_engine, "gl_engine");
+		k3d::iviewport_state* state = extract_node<k3d::iviewport_state>(m_state, "state");
+		if(state == nullptr)
+		{
+			k3d::log() << error << "state is null, not rendering" << std::endl;
+			return;
+		}
+
+		k3d::property::set_internal_value(state->pixel_width_property(), static_cast<k3d::uint_t>(framebufferObject()->size().width()));
+		k3d::property::set_internal_value(state->pixel_height_property(), static_cast<k3d::uint_t>(framebufferObject()->size().height()));
+
+		k3d::gl::irender_viewport* engine = dynamic_cast<k3d::gl::irender_viewport*>(k3d::property::pipeline_value<k3d::inode*>(state->render_engine_property()));
 		if(engine == nullptr)
+		{
 			k3d::log() << error << "gl_engine is null, not rendering" << std::endl;
+			return;
+		}
 
-		k3d::icamera* camera = extract_node<k3d::icamera>(m_camera, "camera");
+		k3d::icamera* camera = dynamic_cast<k3d::icamera*>(k3d::property::pipeline_value<k3d::inode*>(state->camera_property()));
 		if(camera == nullptr)
+		{
 			k3d::log() << error << "camera is null, not rendering" << std::endl;
-
-		GLdouble view_matrix[16];
-		GLdouble projection_matrix[16];
-		GLint viewport[4];
+			return;
+		}
 
 		m_context.begin();
-		engine->render_viewport(*camera, framebufferObject()->size().width(), framebufferObject()->size().height(), view_matrix, projection_matrix, viewport);
+		engine->render_viewport(*state);
 		m_context.end();
 
 		update();
@@ -74,28 +90,19 @@ public:
 	}
 
 private:
-	node_wrapper m_gl_engine;
-	node_wrapper m_camera;
+	node_wrapper m_state;
 	glew_context m_context;
-
-	//LogoRenderer m_logo;
 };
 
-void viewport::set_gl_engine(const node_wrapper& GlEngine)
+void viewport::set_state(const node_wrapper& State)
 {
-	m_gl_engine = GlEngine;
-	emit gl_engine_changed(m_gl_engine);
-}
-
-void viewport::set_camera(const node_wrapper& Camera)
-{
-	m_camera = Camera;
-	emit camera_changed(m_camera);
+	m_state = State;
+	emit state_changed(m_state);
 }
 
 QQuickFramebufferObject::Renderer *viewport::createRenderer() const
 {
-	return new fbo_renderer(m_gl_engine, m_camera);
+	return new fbo_renderer(m_state);
 }
 
 QSGNode* viewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePaintNodeData *nodeData)

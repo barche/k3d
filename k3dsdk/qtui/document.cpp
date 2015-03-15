@@ -27,6 +27,7 @@
 #include <k3dsdk/idocument.h>
 #include <k3dsdk/imesh_painter_gl.h>
 #include <k3dsdk/inode_selection.h>
+#include <k3dsdk/iviewport_state.h>
 #include <k3dsdk/node.h>
 #include <k3dsdk/options.h>
 #include <k3dsdk/plugin.h>
@@ -125,6 +126,10 @@ void populate_new_document(idocument& Document)
 
 	camera_transformation->set_name("Camera Transformation");
 	k3d::property::set_internal_value(*camera, "world_target", k3d::point3(0, 0, 0));
+
+	k3d::iviewport_state* const viewport_state = k3d::plugin::create<k3d::iviewport_state>("ViewportState", Document, "Default Viewport State");
+	k3d::property::set_internal_value(viewport_state->camera_property(), camera);
+	k3d::property::set_internal_value(viewport_state->render_engine_property(), dynamic_cast<k3d::inode*>(gl_engine));
 }
 
 document_model::document_model(idocument &Document) :

@@ -40,9 +40,6 @@ template<typename value_t, typename signal_policy_t>
 class value_demand_storage :
 	public signal_policy_t
 {
-	// This policy only works for data stored by-value
-	BOOST_STATIC_ASSERT((!boost::is_pointer<value_t>::value));
-
 public:
 	typedef value_demand_storage<value_t, signal_policy_t> this_t;
 	typedef std::vector<ihint*> pending_hints_t;

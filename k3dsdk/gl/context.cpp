@@ -96,10 +96,10 @@ GLEWContext* context::glew_context()
 			k3d::log() << debug << "GLEW initialized" << std::endl;
 		}
 
-		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-		glDebugMessageCallback(gl_logging_callback, nullptr);
-		GLuint unused_id = 0;
-		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, &unused_id, true);
+//		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+//		glDebugMessageCallback(gl_logging_callback, nullptr);
+//		GLuint unused_id = 0;
+//		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, &unused_id, true);
 
 		on_end();
 		assert(m_glew_context);

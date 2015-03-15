@@ -33,6 +33,7 @@ namespace k3d
 
 class icamera;
 class rectangle;
+class iviewport_state;
 
 namespace gl
 {
@@ -48,8 +49,8 @@ public:
 	virtual bool get_ndc(icamera& Camera, const unsigned long PixelWidth, const unsigned long PixelHeight, rectangle& CameraRect, rectangle& WindowRect) = 0;
 
 	/** \brief Redraws the document
-	    \note The caller must setup an OpenGL render context before calling this method, and must call glFlush() after it returns */
-	virtual void render_viewport(icamera& Camera, const unsigned long PixelWidth, const unsigned long PixelHeight, GLdouble ViewMatrix[16], GLdouble ProjectionMatrix[16], GLint Viewport[4]) = 0;
+			\note The caller must setup an OpenGL render context before calling this method */
+	virtual void render_viewport(iviewport_state& ViewportState) = 0;
 
 	/**
 	  \brief Draws the document in OpenGL selection mode, so selection "hits" can be extracted

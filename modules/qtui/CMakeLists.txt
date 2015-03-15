@@ -2,6 +2,8 @@
 
 #CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
+add_definitions(-DQT_QML_DEBUG)
+
 qt5_add_resources(RESOURCES qtui.qrc)
 
 k3d_build_qtui_module(k3d-qtui EXTRA_SOURCES ${RESOURCES} ${MOC_BUILT_SOURCES} ${UI_BUILT_SOURCES})
