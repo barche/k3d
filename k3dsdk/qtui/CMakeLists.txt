@@ -9,6 +9,7 @@ set(HEADERS
   application.h
   convert.h
   document.h
+	events.h
   glew_context.h
   node_wrapper.h
   property_wrapper.h
@@ -18,6 +19,7 @@ set(HEADERS
 set(SOURCES
   application.cpp
   document.cpp
+	events.cpp
   glew_context.cpp
   node_wrapper.cpp
   property_wrapper.cpp

@@ -159,7 +159,7 @@ public:
 
 	void update_view_matrix(const std::vector<k3d::ihint*>&, k3d::matrix4& Output)
 	{
-		const k3d::matrix4 transform_matrix = matrix();
+		const k3d::matrix4 transform_matrix = k3d::node_to_world_matrix(navigation_target());
 
 		// Invert the rotation
 		k3d::angle_axis orientation(k3d::euler_angles(transform_matrix, k3d::euler_angles::ZXYstatic));

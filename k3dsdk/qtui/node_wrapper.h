@@ -48,7 +48,7 @@ public:
 
 	node_wrapper& operator=(const node_wrapper& Other);
 
-	inode* node() { return m_node; }
+	inode* node() const { return m_node; }
 	void set_node(iunknown* Node);
 
 private:
@@ -58,7 +58,7 @@ private:
 };
 
 template<typename T>
-T* extract_node(node_wrapper& Wrapper, const k3d::string_t& PropertyName)
+T* extract_node(const node_wrapper& Wrapper, const k3d::string_t& PropertyName)
 {
 	if(Wrapper.node() == nullptr)
 		return nullptr;

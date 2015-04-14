@@ -44,6 +44,7 @@
 #include <k3dsdk/qtui/document.h>
 
 #include <QIcon>
+#include <QLoggingCategory>
 #include <QQmlContext>
 #include <QSurfaceFormat>
 
@@ -82,6 +83,7 @@ void qt_message_output(QtMsgType Type, const QMessageLogContext& Context, const 
 user_interface::user_interface()
 {
 	qInstallMessageHandler(qt_message_output);
+	//QLoggingCategory::setFilterRules(QStringLiteral("qt.scenegraph.info=true\nqt.scenegraph.renderloop=true\nqt.quick.dialogs.window=true\nqt.quick.touch\nqt.quick.mouse\nqt.quick.focus\nqt.quick.dirty"));
 }
 
 user_interface::~user_interface()

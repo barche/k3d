@@ -25,8 +25,9 @@
 #include <k3dsdk/irender_viewport_gl.h>
 #include <k3dsdk/iviewport_state.h>
 #include <k3dsdk/property.h>
+#include <k3dsdk/result.h>
 
-
+#include <k3dsdk/qtui/events.h>
 #include <k3dsdk/qtui/glew_context.h>
 #include <k3dsdk/qtui/viewport.h>
 
@@ -40,34 +41,38 @@ namespace k3d
 namespace qtui
 {
 
-class fbo_renderer : public QQuickFramebufferObject::Renderer
+viewport::viewport(QQuickItem *parent) : QQuickFramebufferObject(parent)
+{
+	setAcceptedMouseButtons(Qt::AllButtons);
+}
+
+class viewport::fbo_renderer : public QQuickFramebufferObject::Renderer
 {
 public:
-	fbo_renderer(const node_wrapper& State) : m_state(State)
+	fbo_renderer(k3d::iviewport_state* State) : m_state(State)
 	{
 		k3d::log() << debug << "creating new renderer" << std::endl;
 	}
 
 	void render()
 	{
-		k3d::iviewport_state* state = extract_node<k3d::iviewport_state>(m_state, "state");
-		if(state == nullptr)
+		if(m_state == nullptr)
 		{
 			k3d::log() << error << "state is null, not rendering" << std::endl;
 			return;
 		}
 
-		k3d::property::set_internal_value(state->pixel_width_property(), static_cast<k3d::uint_t>(framebufferObject()->size().width()));
-		k3d::property::set_internal_value(state->pixel_height_property(), static_cast<k3d::uint_t>(framebufferObject()->size().height()));
+		k3d::property::set_internal_value(m_state->pixel_width_property(), static_cast<k3d::uint_t>(framebufferObject()->size().width()));
+		k3d::property::set_internal_value(m_state->pixel_height_property(), static_cast<k3d::uint_t>(framebufferObject()->size().height()));
 
-		k3d::gl::irender_viewport* engine = dynamic_cast<k3d::gl::irender_viewport*>(k3d::property::pipeline_value<k3d::inode*>(state->render_engine_property()));
+		k3d::gl::irender_viewport* engine = dynamic_cast<k3d::gl::irender_viewport*>(k3d::property::pipeline_value<k3d::inode*>(m_state->render_engine_property()));
 		if(engine == nullptr)
 		{
 			k3d::log() << error << "gl_engine is null, not rendering" << std::endl;
 			return;
 		}
 
-		k3d::icamera* camera = dynamic_cast<k3d::icamera*>(k3d::property::pipeline_value<k3d::inode*>(state->camera_property()));
+		k3d::icamera* camera = dynamic_cast<k3d::icamera*>(k3d::property::pipeline_value<k3d::inode*>(m_state->camera_property()));
 		if(camera == nullptr)
 		{
 			k3d::log() << error << "camera is null, not rendering" << std::endl;
@@ -75,10 +80,8 @@ public:
 		}
 
 		m_context.begin();
-		engine->render_viewport(*state);
+		engine->render_viewport(*m_state);
 		m_context.end();
-
-		update();
 	}
 
 	QOpenGLFramebufferObject *createFramebufferObject(const QSize &size)
@@ -90,20 +93,28 @@ public:
 	}
 
 private:
-	node_wrapper m_state;
+	k3d::iviewport_state* m_state;
 	glew_context m_context;
 };
 
 void viewport::set_state(const node_wrapper& State)
 {
+	m_redraw_connection.disconnect();
 	m_state = State;
+	if(m_state.node() != nullptr)
+	{
+		k3d::gl::irender_viewport* engine = dynamic_cast<k3d::gl::irender_viewport*>(k3d::property::pipeline_value<k3d::inode*>(extract_node<k3d::iviewport_state>(m_state, "state")->render_engine_property()));
+		engine->redraw_request_signal().connect(boost::bind(&viewport::on_redraw_request, this, _1));
+	}
 	emit state_changed(m_state);
+
 }
 
 QQuickFramebufferObject::Renderer *viewport::createRenderer() const
 {
-	return new fbo_renderer(m_state);
+	return new fbo_renderer(extract_node<k3d::iviewport_state>(m_state, "state"));
 }
+
 
 QSGNode* viewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePaintNodeData *nodeData)
 {
@@ -117,6 +128,35 @@ QSGNode* viewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePaintNodeDat
 		return node;
 	}
 	return QQuickFramebufferObject::updatePaintNode(node, nodeData);
+}
+
+void viewport::mousePressEvent(QMouseEvent *Event)
+{
+	process_mouse_event(Event);
+}
+
+void viewport::mouseReleaseEvent(QMouseEvent* Event)
+{
+	process_mouse_event(Event);
+}
+
+void viewport::mouseMoveEvent(QMouseEvent * Event)
+{
+	process_mouse_event(Event);
+}
+
+void viewport::process_mouse_event(QMouseEvent* Event)
+{
+	k3d::iviewport_state* state = extract_node<k3d::iviewport_state>(m_state, "state");
+	k3d::input_event k3d_event = make_k3d_event(*Event);
+	k3d_event.position[0] = Event->x();
+	k3d_event.position[1] = Event->y();
+	state->input_event_signal()(k3d_event);
+}
+
+void viewport::on_redraw_request(gl::irender_viewport::redraw_type_t RedrawType)
+{
+	update();
 }
 
 } // namespace qtui

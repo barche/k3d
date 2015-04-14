@@ -28,6 +28,7 @@
 #include <k3dsdk/imesh_painter_gl.h>
 #include <k3dsdk/inode_selection.h>
 #include <k3dsdk/iviewport_state.h>
+#include <k3dsdk/iviewport_tool.h>
 #include <k3dsdk/node.h>
 #include <k3dsdk/options.h>
 #include <k3dsdk/plugin.h>
@@ -130,6 +131,9 @@ void populate_new_document(idocument& Document)
 	k3d::iviewport_state* const viewport_state = k3d::plugin::create<k3d::iviewport_state>("ViewportState", Document, "Default Viewport State");
 	k3d::property::set_internal_value(viewport_state->camera_property(), camera);
 	k3d::property::set_internal_value(viewport_state->render_engine_property(), dynamic_cast<k3d::inode*>(gl_engine));
+
+	k3d::iviewport_tool* const orbit_tool = k3d::plugin::create<k3d::iviewport_tool>("OrbitViewport", Document, "Default Orbit Tool");
+	k3d::property::set_internal_value(orbit_tool->viewport_state_property(), dynamic_cast<k3d::inode*>(viewport_state));
 }
 
 document_model::document_model(idocument &Document) :

@@ -53,4 +53,3 @@ protected:
 } // namespace k3d
 
 #endif // !K3DSDK_IVIEWPORT_TOOL_H
-

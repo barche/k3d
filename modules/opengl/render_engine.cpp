@@ -390,8 +390,8 @@ public:
 
 	void render_viewport(k3d::iviewport_state& ViewportState)
 	{
-		//static k3d::uint_t count = 0;
-		//k3d::log() << debug << "render nr " << count++ << std::endl;
+//		static k3d::uint_t count = 0;
+//		k3d::log() << debug << "render nr " << count++ << std::endl;
 		k3d::gl::render_state state(ViewportState);
 
 		const k3d::color background_color = m_background_color.pipeline_value();

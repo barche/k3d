@@ -24,7 +24,11 @@
 	\author Bart Janssens
 */
 
+#include <k3dsdk/algebra.h>
+#include <k3dsdk/input_event.h>
+#include <k3dsdk/irender_viewport_gl.h>
 #include <k3dsdk/qtui/node_wrapper.h>
+#include <k3dsdk/signal_system.h>
 
 #include <QQuickFramebufferObject>
 
@@ -44,6 +48,8 @@ class viewport :
 	Q_OBJECT
 	Q_PROPERTY(node_wrapper state READ state WRITE set_state NOTIFY state_changed)
 public:
+	viewport(QQuickItem *parent = 0);
+
 	Renderer *createRenderer() const;
 
 	/// gl_engine property implementation
@@ -55,9 +61,26 @@ signals:
 
 protected:
 	QSGNode* updatePaintNode(QSGNode *node, QQuickItem::UpdatePaintNodeData *nodeData);
+	void mousePressEvent(QMouseEvent* Event);
+	void mouseReleaseEvent(QMouseEvent* Event);
+	void mouseMoveEvent(QMouseEvent * Event);
 
 private:
 	node_wrapper m_state = nullptr;
+
+	// The last event that was captured, if any
+	std::shared_ptr<k3d::input_event> m_last_event;
+	// Position for the last event
+	k3d::point2 m_last_event_position;
+
+	class fbo_renderer;
+
+	// Process a mouse event
+	void process_mouse_event(QMouseEvent* Event);
+
+	void on_redraw_request(k3d::gl::irender_viewport::redraw_type_t RedrawType);
+
+	boost::signals2::connection m_redraw_connection;
 };
 
 } // namespace qtui

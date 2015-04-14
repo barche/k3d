@@ -26,6 +26,7 @@
 */
 
 #include <k3dsdk/iunknown.h>
+#include <k3dsdk/input_event.h>
 
 namespace k3d
 {
@@ -52,6 +53,16 @@ public:
 
 	/// Projection matrix related to the current viewport
 	virtual iproperty& projection_matrix_property() = 0;
+
+	/// Up axis for this viewport
+	virtual iproperty& up_axis_property() = 0;
+
+	/// Signal that is emitted when an input event occurs
+	typedef boost::signals2::signal<void(const k3d::input_event&)> input_event_signal_t;
+	virtual input_event_signal_t& input_event_signal() = 0;
+
+	/// Converts screen coordinates into normalized device coordinates in the range [-0.5, 0.5]
+	virtual k3d::point2 normalized_device_coordinates(const k3d::point2& Point) = 0;
 
 protected:
 	iviewport_state() {}

@@ -47,7 +47,6 @@ namespace module
 namespace core
 {
 
-/// Abstract interface for objects that can consume time data
 class viewport_state : public k3d::node, public k3d::iviewport_state
 {
 public:
@@ -57,7 +56,8 @@ public:
 		m_render_engine(init_owner(*this) + init_name("render_engine") + init_label(_("Render Engine")) + init_description(_("Render engine for this viewport")) + init_value(static_cast<k3d::gl::irender_viewport*>(nullptr))),
 		m_pixel_width(init_owner(*this) + init_name("pixel_width") + init_label(_("Pixel Width")) + init_description(_("Width of the viewport, in pixels")) + init_value(0)),
 		m_pixel_height(init_owner(*this) + init_name("pixel_height") + init_label(_("Pixel Height")) + init_description(_("Height of the viewport, in pixels")) + init_value(0)),
-		m_projection_matrix(init_owner(*this) + init_name("projection_matrix") + init_label(_("Projection Matrix")) + init_description(_("Projection matrix, as computed from the camera settings and the viewport dimensions")) + init_value(k3d::identity3()))
+		m_projection_matrix(init_owner(*this) + init_name("projection_matrix") + init_label(_("Projection Matrix")) + init_description(_("Projection matrix, as computed from the camera settings and the viewport dimensions")) + init_value(k3d::identity3())),
+		m_up_axis(init_owner(*this) + init_name("up_axis") + init_label(_("Up axis")) + init_description(_("Up direction of the viewport")) + init_value(k3d::vector3(0.,0.,1.)))
 		{
 			m_camera.property_changed_signal().connect(boost::bind(&viewport_state::on_camera_changed, this, _1));
 			m_pixel_width.property_changed_signal().connect(m_projection_matrix.make_slot());
@@ -67,33 +67,48 @@ public:
 
 
 	/// The camera used by this viewport
-	virtual k3d::iproperty& camera_property()
+	k3d::iproperty& camera_property()
 	{
 		return m_camera;
 	}
 
 	/// The OpenGL render engine used by this viewport
-	virtual k3d::iproperty& render_engine_property()
+	k3d::iproperty& render_engine_property()
 	{
 		return m_render_engine;
 	}
 
 	/// Width (in pixels) of the viewport
-	virtual k3d::iproperty& pixel_width_property()
+	k3d::iproperty& pixel_width_property()
 	{
 		return m_pixel_width;
 	}
 
 	/// Height (in pixels) of the viewport
-	virtual k3d::iproperty& pixel_height_property()
+	k3d::iproperty& pixel_height_property()
 	{
 		return m_pixel_height;
 	}
 
 	/// Projection matrix related to the current viewport
-	virtual k3d::iproperty& projection_matrix_property()
+	k3d::iproperty& projection_matrix_property()
 	{
 		return m_projection_matrix;
+	}
+
+	k3d::iproperty& up_axis_property()
+	{
+		return m_up_axis;
+	}
+
+	input_event_signal_t& input_event_signal()
+	{
+		return m_input_event_signal;
+	}
+
+	k3d::point2 normalized_device_coordinates(const k3d::point2& Point)
+	{
+		return k3d::point2(Point[0] / static_cast<double>(m_pixel_width.internal_value()) - 0.5, 0.5 - Point[1] / static_cast<double>(m_pixel_height.internal_value()));
 	}
 
 	static k3d::iplugin_factory& get_factory()
@@ -141,8 +156,11 @@ private:
 	k3d_data(k3d::uint_t, immutable_name, change_signal, no_undo, local_storage, no_constraint, writable_property, no_serialization) m_pixel_width;
 	k3d_data(k3d::uint_t, immutable_name, change_signal, no_undo, local_storage, no_constraint, writable_property, no_serialization) m_pixel_height;
 	k3d_data(k3d::matrix4, immutable_name, change_signal, no_undo, value_demand_storage, no_constraint, read_only_property, no_serialization) m_projection_matrix;
+	k3d_data(k3d::vector3, immutable_name, change_signal, no_undo, value_demand_storage, no_constraint, read_only_property, no_serialization) m_up_axis;
 
 	boost::signals2::connection m_projection_connection;
+
+	input_event_signal_t m_input_event_signal;
 };
 
 k3d::iplugin_factory& viewport_state_factory()

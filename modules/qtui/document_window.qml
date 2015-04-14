@@ -56,11 +56,12 @@ ApplicationWindow {
 			id: viewportArea
 			Layout.minimumWidth: 50
 			Layout.fillWidth: true
-            state: document.lookup_by_name("Default Viewport State")
-            Text {
-                text: "ViewPort"
-                anchors.centerIn: parent
-            }
+			state: document.lookup_by_name("Default Viewport State")
+
+			Text {
+				text: "ViewPort"
+				anchors.centerIn: parent
+			}
 		}
 	}
 
