@@ -27,13 +27,18 @@
 #include <k3dsdk/property.h>
 #include <k3dsdk/result.h>
 
+#include <k3dsdk/qtui/convert.h>
+#include <k3dsdk/qtui/document.h>
 #include <k3dsdk/qtui/events.h>
 #include <k3dsdk/qtui/glew_context.h>
 #include <k3dsdk/qtui/viewport.h>
+#include <k3dsdk/qtui/utility.h>
 
 #include <QOpenGLFramebufferObject>
 #include <QSGNode>
 #include <QSGSimpleTextureNode>
+
+k3d::qtui::qml_type_registrator<k3d::qtui::viewport> register_viewport(QUrl(), true);
 
 namespace k3d
 {
@@ -44,6 +49,16 @@ namespace qtui
 viewport::viewport(QQuickItem *parent) : QQuickFramebufferObject(parent)
 {
 	setAcceptedMouseButtons(Qt::AllButtons);
+}
+
+void viewport::componentComplete()
+{
+	QQuickFramebufferObject::componentComplete();
+
+	if(m_state.node() == nullptr)
+	{
+		set_state_name("Default Viewport State");
+	}
 }
 
 class viewport::fbo_renderer : public QQuickFramebufferObject::Renderer
@@ -157,6 +172,29 @@ void viewport::process_mouse_event(QMouseEvent* Event)
 void viewport::on_redraw_request(gl::irender_viewport::redraw_type_t RedrawType)
 {
 	update();
+}
+
+QString viewport::state_name() const
+{
+	if(m_state.node() == nullptr)
+		return QString();
+
+	return k3d::convert<QString>(m_state.node()->name());
+}
+
+void viewport::set_state_name(const QString& StateName)
+{
+	QQmlContext* ctx = qmlContext(this);
+	if(ctx != nullptr)
+	{
+		k3d::qtui::document_model* docmodel = ctx->contextProperty("document").value<k3d::qtui::document_model*>();
+		return_if_fail(docmodel);
+		set_state(docmodel->lookup_by_name(StateName));
+		if(m_state.node() != nullptr)
+		{
+			emit state_name_changed(StateName);
+		}
+	}
 }
 
 } // namespace qtui

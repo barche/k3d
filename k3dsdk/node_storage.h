@@ -101,7 +101,9 @@ protected:
 
 	void on_node_deleted()
 	{
-		internal_set_value(0, 0);
+		// The old node is invalid, so set to null
+		m_node = nullptr;
+		internal_set_value(nullptr, nullptr);
 	}
 
 	/// Optionally called to store the original state of the data prior to modification

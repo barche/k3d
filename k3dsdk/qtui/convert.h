@@ -26,11 +26,13 @@
 
 #include <k3dsdk/color.h>
 #include <k3dsdk/convert.h>
+#include <k3dsdk/system.h>
 #include <k3dsdk/type_registry.h>
 #include <k3dsdk/types.h>
 
 #include <QColor>
 #include <QString>
+#include <QUrl>
 #include <QVariant>
 
 #include <boost/any.hpp>
@@ -50,7 +52,8 @@ k3d::bool_t,
 k3d::double_t,
 k3d::int32_t,
 boost::mpl::pair<k3d::string_t, QString>,
-boost::mpl::pair<k3d::color, QColor>
+boost::mpl::pair<k3d::color, QColor>,
+QObject*
 > k3d_qt_types;
 
 namespace detail
@@ -71,7 +74,7 @@ struct any_to_variant
 
 		const T* tried_cast = boost::any_cast<const T>(&m_from);
 		if(tried_cast != nullptr)
-			m_result = QVariant(*tried_cast);
+			m_result = QVariant::fromValue(*tried_cast);
 	}
 
 	// Called if source and target types differ
@@ -182,6 +185,20 @@ inline boost::any convert(const QVariant& From)
 		k3d::log() << warning << "Failed to convert QVariant of type " << From.typeName() << " to a QVariant" << std::endl;
 
 	return result;
+}
+
+/// Convert boost::filesystem::path to QUrl
+template<>
+inline QUrl convert(const boost::filesystem::path& Path)
+{
+	return QUrl::fromLocalFile(k3d::convert<QString>(Path.generic_string()));
+}
+
+/// Convert QUrl to boost::filesystem::path
+template<>
+inline boost::filesystem::path convert(const QUrl& Path)
+{
+	return boost::filesystem::path(convert<k3d::string_t>(Path.toLocalFile()));
 }
 
 } // namespace k3d

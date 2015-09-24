@@ -237,6 +237,11 @@ const boost::filesystem::path get_home_directory()
 	return home;
 }
 
+const boost::filesystem::path get_options_directory()
+{
+	return get_home_directory() / boost::filesystem::path(".k3d");
+}
+
 const boost::filesystem::path get_temp_directory()
 {
 	static boost::filesystem::path temp_directory;

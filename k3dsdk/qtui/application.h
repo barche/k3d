@@ -24,7 +24,10 @@
 	\author Tim Shead (tshead@k-3d.com)
 */
 
+#include <k3dsdk/qtui/utility.h>
+
 #include <QApplication>
+#include <QUrl>
 
 namespace k3d
 {
@@ -42,8 +45,20 @@ class application :
 	public QApplication
 {
 	Q_OBJECT
+	Q_PROPERTY(QStringList qml_types READ qml_types NOTIFY qml_types_changed)
 public:
 	application(int &argc, char **argv);
+
+	/// Get the URL for the Qml template associated with the given type
+	Q_INVOKABLE QUrl qml_template(const QString& type);
+
+	inline QStringList qml_types()
+	{
+		return registered_types();
+	}
+
+signals:
+	void qml_types_changed(QStringList);
 
 public slots:
 	void on_new_document();

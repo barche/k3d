@@ -28,6 +28,7 @@
 #include <k3dsdk/result.h>
 
 #include <k3dsdk/qtui/application.h>
+#include <k3dsdk/qtui/convert.h>
 
 #include <QtQml>
 
@@ -43,6 +44,11 @@ namespace qtui
 application::application(int &argc, char **argv) : QApplication(argc, argv)
 {
 	QObject::connect(this, &QApplication::aboutToQuit, this, &application::on_about_to_quit);
+}
+
+QUrl application::qml_template(const QString &type)
+{
+	return get_template_url(convert<k3d::string_t>(type));
 }
 
 void application::on_new_document()

@@ -1,5 +1,5 @@
-#ifndef K3DSDK_QTUI_DOCUMENT_H
-#define K3DSDK_QTUI_DOCUMENT_H
+#ifndef K3DSDK_QTUI_SPLIT_VIEW_H
+#define K3DSDK_QTUI_SPLIT_VIEW_H
 
 // K-3D
 // Copyright (c) 1995-2010, Timothy M. Shead
@@ -21,49 +21,54 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 /** \file
-	\author Tim Shead (tshead@k-3d.com)
+	\author Bart Janssens
 */
 
-#include <k3dsdk/qtui/node_wrapper.h>
-#include <k3dsdk/qtui/property_wrapper.h>
+#include <k3dsdk/qtui/gui_element.h>
 
-#include <QObject>
+//Q_DECLARE_METATYPE(Qt::Orientation)
 
 namespace k3d
 {
 
-class idocument;
-
 namespace qtui
 {
 
-/// Populates a newly-created document to provide users with a good out-of-box experience.
-void populate_new_document(idocument& Document);
+/////////////////////////////////////////////////////////////////////////////
+// split_view
 
-/// Wrapper class for a document, allowing access from QML
-class document_model : public QObject
+/// Root for a set of K-3D widgets
+class split_view :
+	public QQuickItem, public gui_element
 {
 	Q_OBJECT
-	Q_PROPERTY(property_wrapper* title MEMBER m_title CONSTANT)
+	Q_CLASSINFO("qml_type_name", "SplitView")
+	Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE set_orientation NOTIFY orientation_changed)
 public:
-	document_model(idocument& Document);
+	split_view(QQuickItem *parent = 0);
+	~split_view();
 
-	Q_INVOKABLE node_wrapper lookup_by_name(const QString& Name);
+	//Q_ENUMS(Qt::Orientation)
+
+	Qt::Orientation orientation() const
+	{
+		return m_orientation;
+	}
+
+	void set_orientation(const Qt::Orientation Orientation);
 
 signals:
-	void documentClosing();
+	void orientation_changed(Qt::Orientation);
 
+protected:
+	virtual void componentComplete();
 private:
-	idocument& m_document;
-
-	void on_document_close();
-
-	property_wrapper* m_title;
+	Qt::Orientation m_orientation = Qt::Horizontal;
 };
 
 } // namespace qtui
 
 } // namespace k3d
 
-#endif // !K3DSDK_QTUI_DOCUMENT_H
+#endif // !K3DSDK_QTUI_SPLIT_VIEW_H
 

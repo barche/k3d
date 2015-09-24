@@ -32,6 +32,9 @@
 
 #include <k3dsdk/qtui/convert.h>
 #include <k3dsdk/qtui/property_wrapper.h>
+#include <k3dsdk/qtui/utility.h>
+
+k3d::qtui::qml_meta_type_registrator<k3d::qtui::property_wrapper*> register_property_wrapper("property_wrapper*");
 
 namespace k3d
 {

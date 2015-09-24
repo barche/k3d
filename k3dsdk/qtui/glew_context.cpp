@@ -23,6 +23,7 @@
 
 #include <k3dsdk/qtui/glew_context.h>
 
+#include <iostream>
 
 namespace k3d
 {

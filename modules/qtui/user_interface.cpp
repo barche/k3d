@@ -36,6 +36,7 @@
 #include <k3dsdk/iscript_engine.h>
 #include <k3dsdk/module.h>
 #include <k3dsdk/node.h>
+#include <k3dsdk/options.h>
 #include <k3dsdk/plugin.h>
 #include <k3dsdk/share.h>
 
@@ -46,6 +47,7 @@
 #include <QIcon>
 #include <QLoggingCategory>
 #include <QQmlContext>
+#include <QQuickItem>
 #include <QSurfaceFormat>
 
 #include <boost/scoped_ptr.hpp>
@@ -149,6 +151,14 @@ const k3d::ievent_loop::arguments_t user_interface::parse_startup_arguments(cons
 
 	m_engine.reset(new QQmlEngine());
 	m_engine->rootContext()->setContextProperty("k3d", m_application.get());
+
+	const std::string qtui_default_interface = "qtui_default_interface";
+	if(k3d::options::get_path(qtui_default_interface).empty())
+	{
+		k3d::options::set_path(qtui_default_interface, k3d::system::get_options_directory() / "default_document_window.qml");
+	}
+
+	m_engine->rootContext()->setContextProperty("default_document_window_qml", k3d::convert<QUrl>(k3d::options::get_path(qtui_default_interface)));
 
 	QObject::connect(m_engine.get(), &QQmlEngine::quit, m_application.get(), &QApplication::quit);
 
@@ -316,7 +326,7 @@ void user_interface::build_document_window(k3d::idocument &Document)
 
 
 	QObject* document_window = m_document_window_component->create(document_context);
-	document_window->setParent(document_context); // Ensures deletion
+	document_context->setParent(document_window); // Ensures deletion
 }
 
 k3d::iplugin_factory& user_interface::get_factory()

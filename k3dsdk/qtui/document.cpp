@@ -140,11 +140,17 @@ document_model::document_model(idocument &Document) :
 	m_document(Document)
 {
 	m_title = new property_wrapper(Document.title(), this);
+	m_document.close_signal().connect(boost::bind(&document_model::on_document_close, this));
 }
 
 node_wrapper document_model::lookup_by_name(const QString &Name)
 {
 	return node_wrapper(k3d::node::lookup_one(m_document, k3d::convert<string_t>(Name)));
+}
+
+void document_model::on_document_close()
+{
+	emit documentClosing();
 }
 
 } // namespace qtui

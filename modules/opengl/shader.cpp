@@ -58,7 +58,7 @@ public:
 	/// Request deletion of the shader, if it is no longer used
 	void request_delete()
 	{
-		if(glIsProgram(m_cached_shader))
+		if(m_cached_shader != 0 && glIsProgram(m_cached_shader))
 			glDeleteProgram(m_cached_shader);
 	}
 

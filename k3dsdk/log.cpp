@@ -157,7 +157,7 @@ void log_cerr(const time_t Timestamp, const log_level_t Level, const std::string
 
 void log_file(const time_t Timestamp, const log_level_t Level, const std::string& Message)
 {
-	static std::ofstream logfile((system::get_home_directory() / boost::filesystem::path(".k3d") / boost::filesystem::path("k3d.log")).native().c_str());
+	static std::ofstream logfile((system::get_options_directory() / boost::filesystem::path("k3d.log")).native().c_str());
   if(Level > g_log_minimum_level)
     return;
 

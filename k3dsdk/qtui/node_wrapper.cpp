@@ -32,6 +32,10 @@
 #include <k3dsdk/qtui/convert.h>
 #include <k3dsdk/qtui/node_wrapper.h>
 
+#include <k3dsdk/qtui/utility.h>
+
+k3d::qtui::qml_meta_type_registrator<k3d::qtui::node_wrapper> register_node_wrapper("node_wrapper");
+
 namespace k3d
 {
 

@@ -321,10 +321,13 @@ private:
 
 	void cleanup()
 	{
-		glDeleteVertexArrays(1, &m_vertex_array);
-		glDeleteBuffers(1, &m_vertex_buffer);
-		m_vertex_array = 0;
-		m_vertex_buffer = 0;
+		if(m_vertex_array != 0 && m_vertex_buffer != 0)
+		{
+			glDeleteVertexArrays(1, &m_vertex_array);
+			glDeleteBuffers(1, &m_vertex_buffer);
+			m_vertex_array = 0;
+			m_vertex_buffer = 0;
+		}
 	}
 
 	void on_option_changed(k3d::ihint*)

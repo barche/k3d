@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/qml-templates">
+        <file>dynamic_gui_item.qml</file>
+    </qresource>
+    <qresource prefix="/qml">
+        <file>detail/dynamic_gui_item_mousearea.qml</file>
+        <file>detail/split_view.qml</file>
+        <file>detail/ListDialog.qml</file>
+        <file>detail/dynamic_gui_item_decoration.qml</file>
+    </qresource>
+</RCC>

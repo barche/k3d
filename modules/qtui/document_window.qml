@@ -6,13 +6,13 @@ import QtQuick.Layouts 1.1
 import K3D 1.0
 
 ApplicationWindow {
+	id: mainWindow
 	visible: true
 	width: 1024
 	height: 768
-    title: document.title.value
+	title: document.title.value
 
-	menuBar: MenuBar
-	{
+	menuBar: MenuBar {
 		Menu
 		{
 			title: qsTr("File")
@@ -34,43 +34,21 @@ ApplicationWindow {
 		}
 	}
 
-	SplitView
-	{
+	DynamicGuiRoot {
+		id: gui_root
 		anchors.fill: parent
-		orientation: Qt.Horizontal
+		config_file: default_document_window_qml
 
-		Rectangle
-		{
-			id: sideBarArea
-			width: 100
-			Layout.maximumWidth: 400
-			color: "lightblue"
-			Text {
-				text: "Sidebar"
-				anchors.centerIn: parent
-			}
-		}
-
-		Viewport
-		{
-			id: viewportArea
-			Layout.minimumWidth: 50
-			Layout.fillWidth: true
-			state: document.lookup_by_name("Default Viewport State")
-
-			Text {
-				text: "ViewPort"
-				anchors.centerIn: parent
-			}
+		Connections {
+			target: document
+			onDocumentClosing: gui_root.save_config()
 		}
 	}
 
-	FileDialog
-	{
+	FileDialog {
 		id: openFile
 		nameFilters: ["K-3D documents (*.k3d)"]
 		onAccepted: console.log("Chosen file:", fileUrl)
 	}
-
 }
 

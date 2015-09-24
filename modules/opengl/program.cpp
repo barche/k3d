@@ -130,7 +130,7 @@ public:
 
 	~program()
 	{
-		if(glIsProgramPipeline(m_program_id))
+		if(m_program_id != 0 && glIsProgramPipeline(m_program_id))
 			glDeleteProgramPipelines(1, &m_program_id);
 	}
 

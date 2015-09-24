@@ -51,6 +51,8 @@ void setenv(const string_t& Variable);
 
 /// Safely returns the user's home directory
 const boost::filesystem::path get_home_directory();
+/// Safely returns the user's options directory
+const boost::filesystem::path get_options_directory();
 /// Safely returns the user's temp directory
 const boost::filesystem::path get_temp_directory();
 /// Returns a unique temporary file path

@@ -30,6 +30,8 @@
 #include <k3dsdk/qtui/node_wrapper.h>
 #include <k3dsdk/signal_system.h>
 
+#include <k3dsdk/qtui/gui_element.h>
+
 #include <QQuickFramebufferObject>
 
 namespace k3d
@@ -43,21 +45,28 @@ namespace qtui
 
 /// The viewport widget for the Qt interface
 class viewport :
-	public QQuickFramebufferObject
+	public QQuickFramebufferObject, public gui_element
 {
 	Q_OBJECT
-	Q_PROPERTY(node_wrapper state READ state WRITE set_state NOTIFY state_changed)
+	Q_CLASSINFO("qml_type_name", "Viewport")
+	Q_PROPERTY(node_wrapper viewport_state READ state WRITE set_state NOTIFY state_changed)
+	Q_PROPERTY(QString viewport_state_name READ state_name WRITE set_state_name NOTIFY state_name_changed)
 public:
 	viewport(QQuickItem *parent = 0);
+
+	virtual void componentComplete();
 
 	Renderer *createRenderer() const;
 
 	/// gl_engine property implementation
-	const node_wrapper& state() { return m_state; }
+	const node_wrapper& state() const { return m_state; }
+	QString state_name() const;
 	void set_state(const node_wrapper& State);
+	void set_state_name(const QString& StateName);
 
 signals:
 	void state_changed(node_wrapper);
+	void state_name_changed(QString);
 
 protected:
 	QSGNode* updatePaintNode(QSGNode *node, QQuickItem::UpdatePaintNodeData *nodeData);

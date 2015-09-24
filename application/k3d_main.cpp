@@ -154,7 +154,7 @@ void set_default_options(k3d::bool_t& Quit, k3d::bool_t& Error)
 {
 	// Setup default paths based on the location of the executable ...
 	const boost::filesystem::path executable_dir = k3d::system::executable_path().branch_path();
-	const boost::filesystem::path user_dir = k3d::system::get_home_directory() / boost::filesystem::path(".k3d");
+	const boost::filesystem::path user_dir = k3d::system::get_options_directory();
 
 	g_default_ngui_path = executable_dir / boost::filesystem::path("../" K3D_LIBDIR "/k3d/plugins/k3d-ngui.module");
 	g_default_nui_path = executable_dir / boost::filesystem::path("../" K3D_LIBDIR "/k3d/plugins/k3d-nui.module");
